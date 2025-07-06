@@ -21,3 +21,6 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 
 Route::apiResource('products', ProductController::class);
 Route::post('products/{id}/restore', [ProductController::class, 'restore']);
+Route::get('products-filtered', [ProductController::class, 'getFilteredProducts']);
+Route::get('products-categories', [ProductController::class, 'getCategories']);
+Route::get('products-stats', [ProductController::class, 'getStats']);
