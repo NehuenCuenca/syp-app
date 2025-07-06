@@ -28,10 +28,25 @@ class UpdateProductRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'sku.unique' => 'This SKU is already in use.',
-            'suggested_sale_price.gte' => 'The suggested sale price must be greater than or equal to the average purchase price.',
-            'current_stock.min' => 'The current stock cannot be negative.',
-            'min_stock_alert.min' => 'The minimum stock alert cannot be negative.',
+            'sku.unique' => 'Este SKU ya está en uso.',
+            'suggested_sale_price.gte' => 'El precio de venta sugerido debe ser mayor o igual al precio promedio de compra.',
+            'current_stock.min' => 'El stock actual no puede ser negativo.',
+            'min_stock_alert.min' => 'La alerta de stock mínimo no puede ser negativa.',
+        ];
+    }
+
+    /**
+     * Get custom attributes for validator errors.
+     *
+     * @return array<string, string>
+     */
+    public function attributes(): array
+    {
+        return [
+            'sku' => 'SKU',
+            'suggested_sale_price' => 'precio de venta sugerido',
+            'current_stock' => 'stock actual',
+            'min_stock_alert' => 'alerta de stock minimo',
         ];
     }
 }

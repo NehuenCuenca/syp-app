@@ -28,19 +28,37 @@ class StoreProductRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'sku.required' => 'The SKU is required',
-            'sku.unique' => 'This SKU is already in use',
-            'name.required' => 'The product name is required',
-            'avg_purchase_price.required' => 'The average purchase price is required',
-            'avg_purchase_price.min' => 'The average purchase price must be greater than zero',
-            'suggested_sale_price.required' => 'The suggested sale price is required',
-            'suggested_sale_price.min' => 'The suggested sale price must be greater than zero',
-            'suggested_sale_price.gte' => 'The suggested sale price must be greater than or equal to the average purchase price',
-            'current_stock.required' => 'The current stock is required',
-            'current_stock.min' => 'The current stock cannot be negative',
-            'min_stock_alert.required' => 'The minimum stock alert is required',
-            'min_stock_alert.min' => 'The minimum stock alert cannot be negative',
-            'category.required' => 'The category is required',
+            'sku.required' => 'El SKU es obligatorio',
+            'sku.unique' => 'Este SKU ya está en uso',
+            'name.required' => 'El nombre del producto es obligatorio',
+            'avg_purchase_price.required' => 'El precio promedio de compra es obligatorio',
+            'avg_purchase_price.min' => 'El precio promedio de compra debe ser mayor que cero',
+            'suggested_sale_price.required' => 'El precio de venta sugerido es obligatorio',
+            'suggested_sale_price.min' => 'El precio de venta sugerido debe ser mayor que cero',
+            'suggested_sale_price.gte' => 'El precio de venta sugerido debe ser mayor o igual al precio promedio de compra',
+            'current_stock.required' => 'El stock actual es obligatorio',
+            'current_stock.min' => 'El stock actual no puede ser negativo',
+            'min_stock_alert.required' => 'La alerta de stock mínimo es obligatoria',
+            'min_stock_alert.min' => 'La alerta de stock mínimo no puede ser negativa',
+            'category.required' => 'La categoría es obligatoria',
+        ];
+    }
+
+    /**
+     * Get custom attributes for validator errors.
+     *
+     * @return array<string, string>
+     */
+    public function attributes(): array
+    {
+        return [
+            'sku' => 'SKU',
+            'name' => 'nombre',
+            'avg_purchase_price' => 'precio de compra promedio',
+            'suggested_sale_price' => 'precio de venta sugerido',
+            'current_stock' => 'stock actual',
+            'min_stock_alert' => 'alerta de stock minimo',
+            'category' => 'categoria',
         ];
     }
 }
