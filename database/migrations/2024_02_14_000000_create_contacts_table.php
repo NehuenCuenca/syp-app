@@ -15,12 +15,13 @@ return new class extends Migration
             $table->id();
             $table->string('company_name');
             $table->string('contact_name');
-            $table->string('email');
-            $table->string('phone');
-            $table->text('address');
-            $table->enum('contact_type', ['client', 'supplier', 'employee', 'other']);
-            $table->timestamp('registered_at');
+            $table->string('email')->nullable();
+            $table->string('phone')->nullable();
+            $table->text('address')->nullable();
+            $table->enum('contact_type', ['cliente', 'proveedor', 'empleado', 'otro']);
+            $table->timestamp('registered_at')->nullable();
             $table->timestamps();
+            $table->softDeletesTz();
         });
     }
 

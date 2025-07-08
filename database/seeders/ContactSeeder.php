@@ -16,7 +16,7 @@ class ContactSeeder extends Seeder
             'email' => 'john.doe@acme.com',
             'phone' => '(555) 123-4567',
             'address' => '123 Business Ave, Suite 100, Enterprise City, 12345',
-            'contact_type' => 'client',
+            'contact_type' => 'cliente',
             'registered_at' => now(),
         ]);
 

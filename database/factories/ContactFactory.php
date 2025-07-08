@@ -17,7 +17,7 @@ class ContactFactory extends Factory
             'email' => fake()->unique()->safeEmail(),
             'phone' => fake()->phoneNumber(),
             'address' => fake()->address(),
-            'contact_type' => fake()->randomElement(['client', 'supplier', 'employee', 'other']),
+            'contact_type' => fake()->randomElement(['cliente', 'proveedor', 'empleado', 'otro']),
             'registered_at' => fake()->dateTimeBetween('-1 year', 'now'),
         ];
     }

@@ -4,10 +4,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Contact extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     protected $fillable = [
         'company_name',
@@ -22,4 +23,25 @@ class Contact extends Model
     protected $casts = [
         'registered_at' => 'datetime'
     ];
+    
+    // Scopes para filtrar por tipo de contacto
+    public function scopeClients($query)
+    {
+        return $query->where('contact_type', 'cliente');
+    }
+
+    public function scopeSuppliers($query)
+    {
+        return $query->where('contact_type', 'proveedor');
+    }
+
+    public function scopeEmployees($query)
+    {
+        return $query->where('contact_type', 'empleado');
+    }
+
+    public function scopeOther($query)
+    {
+        return $query->where('contact_type', 'otro');
+    }
 }
