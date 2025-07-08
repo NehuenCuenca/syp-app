@@ -171,18 +171,7 @@ class ProductController extends Controller
             
             return response()->json([
                 'success' => true,
-                'data' => $products->items(),
-                'pagination' => [
-                    'current_page' => $products->currentPage(),
-                    'per_page' => $products->perPage(),
-                    'total' => $products->total(),
-                    'last_page' => $products->lastPage(),
-                    'from' => $products->firstItem(),
-                    'to' => $products->lastItem(),
-                    'has_more_pages' => $products->hasMorePages(),
-                    'next_page_url' => $products->nextPageUrl(),
-                    'prev_page_url' => $products->previousPageUrl()
-                ],
+                'filtered_products' => $products,
                 'filters_applied' => $filters
             ]);
             

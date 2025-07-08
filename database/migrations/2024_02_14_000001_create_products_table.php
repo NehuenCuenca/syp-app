@@ -22,9 +22,6 @@ return new class extends Migration
             $table->integer('min_stock_alert')->default(5);
             $table->string('category');
             $table->timestamps();
-        });
-
-        Schema::table('products', function (Blueprint $table) {
             $table->softDeletesTz();
         });
     }
@@ -34,10 +31,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('products', function (Blueprint $table) {
-            $table->dropSoftDeletesTz();
-        });
-
         Schema::dropIfExists('products');
     }
 };
