@@ -2,7 +2,9 @@
 
 namespace App\Exceptions;
 
+use Illuminate\Auth\AuthenticationException;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
+use Illuminate\Http\Request;
 use Throwable;
 
 class Handler extends ExceptionHandler
@@ -26,5 +28,24 @@ class Handler extends ExceptionHandler
         $this->reportable(function (Throwable $e) {
             //
         });
+    }
+
+    /**
+     * Convert an authentication exception into a response.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  \Illuminate\Auth\AuthenticationException  $exception
+     * @return \Illuminate\Http\Response|\Illuminate\Http\JsonResponse
+     */
+    protected function unauthenticated( $request, AuthenticationException $exception)
+    {
+        // Verifica si la solicitud es una API o si espera una respuesta JSON
+        // Laravel automáticamente revisa el encabezado 'Accept' o si es una solicitud AJAX
+        if ($request->expectsJson()) {
+            return response()->json(['message' => 'No autenticado. Por favor, inicie sesión.'], 401);
+        }
+
+        // Si no es una API (ej. una solicitud web), redirige a la ruta 'login' (comportamiento por defecto)
+        return redirect()->guest($exception->redirectTo() ?? route('login'));
     }
 }
