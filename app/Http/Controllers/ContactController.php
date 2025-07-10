@@ -147,12 +147,18 @@ class ContactController extends Controller
      */
     public function destroy(Contact $contact): JsonResponse
     {
-        $contact->delete();
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Contacto eliminado exitosamente.'
-        ]);
+        try {
+            $contact->delete();
+            return response()->json(null, Response::HTTP_NO_CONTENT);
+        } catch (QueryException $e) {
+            return response()->json([
+                'message' => 'No se puede eliminar este contacto porque se está utilizando en pedidos.'
+            ], Response::HTTP_CONFLICT);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Error al eliminar el contacto.'
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
     }
 
     /**

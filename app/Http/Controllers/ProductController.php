@@ -19,7 +19,12 @@ class ProductController extends Controller
     {
         try {
             $products = Product::all();            
-            return response()->json($products);
+            return response()->json([
+                'success' => true,
+                'data' => $products,
+                'message' => 'Todos los productos recuperados exitosamente.',
+                'total' => $products->count()
+            ]);
         } catch (QueryException $e) {
             return response()->json([
                 'message' => 'Error al recuperar los productos.'
