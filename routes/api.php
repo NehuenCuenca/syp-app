@@ -26,16 +26,18 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout'])->name('api.logout');
     Route::get('/user', [AuthController::class, 'user'])->name('api.user');
 
-
+    Route::prefix('contacts')->group(function () {
+        Route::patch('/{id}/restore', [ContactController::class, 'restore'])->name('contacts.restore');
+        Route::get('/filtered', [ContactController::class, 'getFilteredContacts'])->name('contacts.filtered');
+        Route::get('/types', [ContactController::class, 'getContactsTypes'])->name('contacts.types');
+    });
     Route::apiResource('contacts', ContactController::class);
-    Route::patch('contacts/{id}/restore', [ContactController::class, 'restore']);
-    Route::get('contacts-filtered', [ContactController::class, 'getFilteredContacts']);
-    Route::get('contacts-types', [ContactController::class, 'getContactsTypes']);
 
-
+    Route::prefix('products')->group(function () {
+        Route::patch('/{id}/restore', [ProductController::class, 'restore'])->name('products.restore');
+        Route::get('/filtered', [ProductController::class, 'getFilteredProducts'])->name('products.filtered');
+        Route::get('/categories', [ProductController::class, 'getCategories'])->name('products.categories');
+        Route::get('/stats', [ProductController::class, 'getStats'])->name('products.stats');
+    });
     Route::apiResource('products', ProductController::class);
-    Route::patch('products/{id}/restore', [ProductController::class, 'restore']);
-    Route::get('products-filtered', [ProductController::class, 'getFilteredProducts']);
-    Route::get('products-categories', [ProductController::class, 'getCategories']);
-    Route::get('products-stats', [ProductController::class, 'getStats']);
 });
