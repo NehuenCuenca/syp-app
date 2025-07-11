@@ -28,8 +28,8 @@ class OrderFactory extends Factory
             'actual_delivery_date' => $shouldHaveActualDelivery ? 
                 fake()->dateTimeBetween($estimatedDeliveryDate, '+35 days')->format('Y-m-d') : 
                 null,
-            'order_type' => fake()->randomElement(['Purchase_In', 'Sale_Out']),
-            'order_status' => fake()->randomElement(['Pending', 'Processing', 'Completed', 'Cancelled', 'Returned']),
+            'order_type' => fake()->randomElement(['Compra_Entrante', 'Venta_Saliente']),
+            'order_status' => fake()->randomElement(['Pendiente', 'Completado', 'Cancelado', 'Devuelto']),
             'total_gross' => $totalGross,
             'total_taxes' => $totalTaxes,
             'total_net' => $totalNet,

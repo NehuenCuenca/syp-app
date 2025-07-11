@@ -12,7 +12,7 @@ class OrderSeeder extends Seeder
     public function run(): void
     {
         // Get existing user and contact
-        $user = User::where('email', 'admin@example.com')->first() ?? User::factory()->create();
+        $user = User::where('email', 'Admin@example.com')->first() ?? User::factory()->create();
         $contact = Contact::where('email', 'john.doe@acme.com')->first() ?? Contact::factory()->create();
 
         // Create a typical sale order
@@ -21,8 +21,8 @@ class OrderSeeder extends Seeder
             'id_user_creator' => $user->id,
             'estimated_delivery_date' => now()->addDays(7)->format('Y-m-d'),
             'actual_delivery_date' => null,
-            'order_type' => 'Sale_Out',
-            'order_status' => 'Processing',
+            'order_type' => 'Venta_Saliente',
+            'order_status' => 'Pendiente',
             'total_gross' => 1250.00,
             'total_taxes' => 262.50, // 21% VAT
             'total_net' => 1512.50,
@@ -31,7 +31,7 @@ class OrderSeeder extends Seeder
 
         // Create 5 random orders
         Order::factory(5)->create([
-            'id_user_creator' => $user->id // All orders created by admin
+            'id_user_creator' => $user->id // All orders created by Admin
         ]);
     }
 }
