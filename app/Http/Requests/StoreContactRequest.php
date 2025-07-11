@@ -28,7 +28,7 @@ class StoreContactRequest extends FormRequest
             'email' => 'nullable|email|unique:contacts,email|max:255',
             'phone' => 'nullable|string|max:255',
             'address' => 'nullable|string',
-            'contact_type' => ['required', Rule::in(['cliente', 'proveedor', 'empleado', 'otro'])],
+            'contact_type' => ['required', Rule::in(['Cliente', 'Proveedor', 'Empleado', 'Otro'])],
             'registered_at' => 'nullable|date',
         ];
     }
@@ -62,7 +62,7 @@ class StoreContactRequest extends FormRequest
             'address.string' => 'La dirección debe ser un texto.',
             
             'contact_type.required' => 'El tipo de contacto es obligatorio.',
-            'contact_type.in' => 'El tipo de contacto debe ser: cliente, proveedor, empleado u otro.',
+            'contact_type.in' => 'El tipo de contacto debe ser: Cliente, Proveedor, Empleado u Otro.',
             
             'registered_at.required' => 'La fecha de registro es obligatoria.',
             'registered_at.date' => 'La fecha de registro debe ser una fecha válida.',

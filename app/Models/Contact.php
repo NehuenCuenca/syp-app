@@ -27,21 +27,21 @@ class Contact extends Model
     // Scopes para filtrar por tipo de contacto
     public function scopeClients($query)
     {
-        return $query->where('contact_type', 'cliente');
+        return $query->where('contact_type', 'Cliente');
     }
 
     public function scopeSuppliers($query)
     {
-        return $query->where('contact_type', 'proveedor');
+        return $query->where('contact_type', 'Proveedor');
     }
 
     public function scopeEmployees($query)
     {
-        return $query->where('contact_type', 'empleado');
+        return $query->where('contact_type', 'Empleado');
     }
 
     public function scopeOther($query)
     {
-        return $query->where('contact_type', 'otro');
+        return $query->where('contact_type', 'Otro');
     }
 }

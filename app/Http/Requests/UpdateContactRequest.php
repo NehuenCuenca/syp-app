@@ -34,7 +34,7 @@ class UpdateContactRequest extends FormRequest
             ],
             'phone' => 'string|max:255',
             'address' => 'string',
-            'contact_type' => [Rule::in(['cliente', 'proveedor', 'empleado', 'otro'])],
+            'contact_type' => [Rule::in(['Cliente', 'Proveedor', 'Empleado', 'Otro'])],
             'registered_at' => 'date',
         ];
     }
@@ -68,7 +68,7 @@ class UpdateContactRequest extends FormRequest
             'address.string' => 'La dirección debe ser un texto.',
             
             'contact_type.required' => 'El tipo de contacto es obligatorio.',
-            'contact_type.in' => 'El tipo de contacto debe ser: cliente, proveedor, empleado u otro.',
+            'contact_type.in' => 'El tipo de contacto debe ser: Cliente, Proveedor, Empleado u Otro.',
             
             'registered_at.required' => 'La fecha de registro es obligatoria.',
             'registered_at.date' => 'La fecha de registro debe ser una fecha válida.',

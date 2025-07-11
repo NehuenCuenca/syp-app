@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string('email')->nullable();
             $table->string('phone')->nullable();
             $table->text('address')->nullable();
-            $table->enum('contact_type', ['cliente', 'proveedor', 'empleado', 'otro']);
+            $table->enum('contact_type', ['Cliente', 'Proveedor', 'Empleado', 'Otro']);
             $table->timestamp('registered_at')->nullable();
             $table->timestamps();
             $table->softDeletesTz();
