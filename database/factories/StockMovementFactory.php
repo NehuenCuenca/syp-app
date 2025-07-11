@@ -15,25 +15,25 @@ class StockMovementFactory extends Factory
     public function definition(): array
     {
         $movementTypes = [
-            'Purchase_In',
-            'Sale_Out',
-            'Positive_Adjustment',
-            'Negative_Adjustment',
-            'Client_Return',
-            'Supplier_Return'
+            'Compra_Entrante',
+            'Venta_Saliente',
+            'Ajuste_Positivo',
+            'Ajuste_Negativo',
+            'Devolucion_Cliente',
+            'Devolucion_Proveedor'
         ];
 
         $movementType = fake()->randomElement($movementTypes);
         $quantity = fake()->numberBetween(1, 100);
 
         // For Sale_Out and Negative_Adjustment, make quantity negative
-        if (in_array($movementType, ['Sale_Out', 'Negative_Adjustment'])) {
+        if (in_array($movementType, ['Venta_Saliente', 'Ajuste_Negativo'])) {
             $quantity *= -1;
         }
 
         return [
             'id_product' => Product::factory(),
-            'id_order' => $movementType === 'Purchase_In' || $movementType === 'Sale_Out' 
+            'id_order' => $movementType === 'Compra_Entrante' || $movementType === 'Venta_Saliente' 
                 ? Order::factory() 
                 : null,
             'id_user_responsible' => User::factory(),
@@ -53,7 +53,7 @@ class StockMovementFactory extends Factory
     {
         return $this->state(function (array $attributes) {
             return [
-                'movement_type' => 'Purchase_In',
+                'movement_type' => 'Compra_Entrante',
                 'quantity_moved' => fake()->numberBetween(1, 100),
                 'external_reference' => fake()->bothify('PO##-####')
             ];
@@ -64,7 +64,7 @@ class StockMovementFactory extends Factory
     {
         return $this->state(function (array $attributes) {
             return [
-                'movement_type' => 'Sale_Out',
+                'movement_type' => 'Venta_Saliente',
                 'quantity_moved' => fake()->numberBetween(-100, -1),
                 'external_reference' => fake()->bothify('SO##-####')
             ];
@@ -76,7 +76,7 @@ class StockMovementFactory extends Factory
         return $this->state(function (array $attributes) use ($positive) {
             $quantity = fake()->numberBetween(1, 50);
             return [
-                'movement_type' => $positive ? 'Positive_Adjustment' : 'Negative_Adjustment',
+                'movement_type' => $positive ? 'Ajuste_Positivo' : 'Ajuste_Negativo',
                 'quantity_moved' => $positive ? $quantity : -$quantity,
                 'external_reference' => fake()->bothify('ADJ##-####')
             ];

@@ -21,12 +21,12 @@ return new class extends Migration
                   ->constrained('users', 'id')
                   ->onDelete('restrict');
             $table->enum('movement_type', [
-                'Purchase_In',
-                'Sale_Out',
-                'Positive_Adjustment',
-                'Negative_Adjustment',
-                'Client_Return',
-                'Supplier_Return'
+                'Compra_Entrante',
+                'Venta_Saliente',
+                'Ajuste_Positivo',
+                'Ajuste_Negativo',
+                'Devolucion_Cliente',
+                'Devolucion_Proveedor'
             ]);
             $table->integer('quantity_moved');
             $table->timestamp('movement_date')

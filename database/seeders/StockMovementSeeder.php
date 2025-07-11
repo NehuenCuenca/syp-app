@@ -11,8 +11,8 @@ class StockMovementSeeder extends Seeder
 {
     public function run(): void
     {
-        // Get admin user for the typical movement
-        $admin = User::where('email', 'admin@example.com')->first() ?? User::factory()->create();
+        // Get Admin user for the typical movement
+        $Admin = User::where('email', 'Admin@example.com')->first() ?? User::factory()->create();
         
         // Get first product for the typical movement
         $product = Product::first() ?? Product::factory()->create();
@@ -21,8 +21,8 @@ class StockMovementSeeder extends Seeder
         StockMovement::create([
             'id_product' => $product->id,
             'id_order' => null, // Initial stock movement
-            'id_user_responsible' => $admin->id,
-            'movement_type' => 'Purchase_In',
+            'id_user_responsible' => $Admin->id,
+            'movement_type' => 'Compra_Entrante',
             'quantity_moved' => 100,
             'movement_date' => now(),
             'external_reference' => 'INIT-001',
@@ -33,7 +33,7 @@ class StockMovementSeeder extends Seeder
         StockMovement::factory()
             ->count(10)
             ->create([
-                'id_user_responsible' => $admin->id // All movements created by admin
+                'id_user_responsible' => $Admin->id // All movements created by Admin
             ]);
     }
 }
