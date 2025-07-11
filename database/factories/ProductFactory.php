@@ -22,7 +22,7 @@ class ProductFactory extends Factory
             'suggested_sale_price' => $avgPrice * $markup,
             'current_stock' => fake()->numberBetween(0, 100),
             'min_stock_alert' => fake()->numberBetween(5, 20),
-            'category' => fake()->randomElement(['Electronics', 'Office Supplies', 'Furniture', 'Tools', 'Software'])
+            'category' => fake()->randomElement(['Cigarrillos', 'Encendedores', 'Preservativos', 'Naipes', 'Pilas'])
         ];
     }
 }

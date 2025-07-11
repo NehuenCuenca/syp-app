@@ -18,7 +18,7 @@ class ProductSeeder extends Seeder
             'suggested_sale_price' => 49.99,
             'current_stock' => 15,
             'min_stock_alert' => 5,
-            'category' => 'Office Supplies'
+            'category' => 'Pilas'
         ]);
 
         // Create 15 random products
