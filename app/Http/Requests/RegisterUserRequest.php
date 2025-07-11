@@ -31,8 +31,8 @@ class RegisterUserRequest extends FormRequest
             // 'confirmed' asegura que exista un campo 'password_confirmation' y que coincida.
             'password' => ['required', 'string', 'confirmed', Password::defaults()],
 
-            // 'role': opcional (nullable), string, y su valor debe ser 'admin' o 'user'.
-            'role' => ['nullable', 'string', 'in:admin,user'],
+            // 'role': opcional (nullable), string, y su valor debe ser 'Admin' o 'Usuario'.
+            'role' => ['nullable', 'string', 'in:Admin,user'],
         ];
     }
 
@@ -65,7 +65,7 @@ class RegisterUserRequest extends FormRequest
 
             // Mensajes para 'role'
             'role.string' => 'El rol debe ser una cadena de texto.',
-            'role.in' => 'El rol seleccionado no es válido. Debe ser "admin" o "user".',
+            'role.in' => 'El rol seleccionado no es válido. Debe ser "Admin" o "Usuario".',
         ];
     }
 }

@@ -18,18 +18,18 @@ class UserFactory extends Factory
             'username' => fake()->unique()->userName(),
             'email' => fake()->unique()->safeEmail(),
             'password' => Hash::make('password'),
-            'role' => 'user',
+            'role' => 'Usuario',
         ];
     }
 
     /**
-     * Configure the factory to create an admin user.
+     * Configure the factory to create an Admin user.
      */
     public function admin(): static
     {
         return $this->state(function (array $attributes) {
             return [
-                'role' => 'admin',
+                'role' => 'Admin',
             ];
         });
     }
