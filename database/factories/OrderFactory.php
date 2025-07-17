@@ -43,7 +43,7 @@ class OrderFactory extends Factory
     public function purchase(): static
     {
         return $this->state(function (array $attributes) {
-            return ['order_type' => 'Purchase_In'];
+            return ['order_type' => 'Compra_Entrante'];
         });
     }
 
@@ -53,7 +53,7 @@ class OrderFactory extends Factory
     public function sale(): static
     {
         return $this->state(function (array $attributes) {
-            return ['order_type' => 'Sale_Out'];
+            return ['order_type' => 'Venta_Saliente'];
         });
     }
 }
