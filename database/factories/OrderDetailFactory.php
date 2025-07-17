@@ -30,7 +30,7 @@ class OrderDetailFactory extends Factory
     public function forOrder(Order $order): Factory
     {
         return $this->state(function (array $attributes) use ($order) {
-            return ['id_order' => $order->id_order];
+            return ['id_order' => $order->id];
         });
     }
 
