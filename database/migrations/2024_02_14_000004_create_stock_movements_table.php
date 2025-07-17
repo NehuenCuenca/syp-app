@@ -9,13 +9,13 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('stock_movements', function (Blueprint $table) {
-            $table->id('id_movement');
+            $table->id();
             $table->foreignId('id_product')
                   ->constrained('products', 'id')
                   ->onDelete('restrict');
             $table->foreignId('id_order')
                   ->nullable()
-                  ->constrained('orders', 'id_order')
+                  ->constrained('orders', 'id')
                   ->onDelete('restrict');
             $table->foreignId('id_user_responsible')
                   ->constrained('users', 'id')

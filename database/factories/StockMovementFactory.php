@@ -26,7 +26,7 @@ class StockMovementFactory extends Factory
         $movementType = fake()->randomElement($movementTypes);
         $quantity = fake()->numberBetween(1, 100);
 
-        // For Sale_Out and Negative_Adjustment, make quantity negative
+        // For Venta_Saliente and Ajuste_Negativo, make quantity negative
         if (in_array($movementType, ['Venta_Saliente', 'Ajuste_Negativo'])) {
             $quantity *= -1;
         }
@@ -35,7 +35,7 @@ class StockMovementFactory extends Factory
             'id_product' => Product::factory(),
             'id_order' => $movementType === 'Compra_Entrante' || $movementType === 'Venta_Saliente' 
                 ? Order::factory() 
-                : null,
+                : 1,
             'id_user_responsible' => User::factory(),
             'movement_type' => $movementType,
             'quantity_moved' => $quantity,

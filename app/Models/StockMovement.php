@@ -10,7 +10,7 @@ class StockMovement extends Model
 {
     use HasFactory;
 
-    protected $primaryKey = 'id_movement';
+    // protected $primaryKey = 'id_movement';
 
     protected $fillable = [
         'id_product',
