@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ContactController;
+use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProductController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -40,4 +41,14 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/stats', [ProductController::class, 'getStats'])->name('products.stats');
     });
     Route::apiResource('products', ProductController::class);
+
+    // Ruta adicional para filtros y ordenamiento
+    Route::get('/orders/filters', [OrderController::class, 'getFilters'])
+        ->name('orders.filters');
+        
+    Route::get('/orders/filtered', [OrderController::class, 'getFilteredOrders'])
+        ->name('orders.filtered');
+
+    // Rutas resource para Orders
+    Route::resource('orders', OrderController::class);
 });
