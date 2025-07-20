@@ -14,8 +14,9 @@ class ProductSeeder extends Seeder
             'sku' => 'LP1001',
             'name' => 'Professional Laptop Stand',
             'description' => 'Ergonomic aluminum laptop stand with adjustable height and angle. Compatible with all laptop sizes.',
-            'avg_purchase_price' => 25.00,
-            'suggested_sale_price' => 49.99,
+            'buy_price' => 25.00,
+            'profit_percentage' => 1.5,
+            'sale_price' => 37.50,
             'current_stock' => 15,
             'min_stock_alert' => 5,
             'category' => 'Pilas'

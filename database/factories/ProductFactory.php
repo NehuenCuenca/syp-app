@@ -18,8 +18,9 @@ class ProductFactory extends Factory
             'sku' => fake()->unique()->regexify('[A-Z]{2}[0-9]{4}'),
             'name' => fake()->words(3, true),
             'description' => fake()->paragraph(),
-            'avg_purchase_price' => $avgPrice,
-            'suggested_sale_price' => $avgPrice * $markup,
+            'buy_price' => $avgPrice,
+            'profit_percentage' => $markup,
+            'sale_price' => $avgPrice * $markup,
             'current_stock' => fake()->numberBetween(0, 100),
             'min_stock_alert' => fake()->numberBetween(5, 20),
             'category' => fake()->randomElement(['Cigarrillos', 'Encendedores', 'Preservativos', 'Naipes', 'Pilas'])

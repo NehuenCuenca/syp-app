@@ -15,7 +15,7 @@ class OrderDetailFactory extends Factory
     {
         $product = Product::inRandomOrder()->first();
         $quantity = fake()->numberBetween(1, 10);
-        $unit_price = $product ? $product->suggested_sale_price : fake()->randomFloat(2, 10, 1000);
+        $unit_price = $product ? $product->sale_price : fake()->randomFloat(2, 10, 1000);
         $line_subtotal = $quantity * $unit_price;
 
         return [
@@ -38,7 +38,7 @@ class OrderDetailFactory extends Factory
     {
         return $this->state(function (array $attributes) use ($product, $quantity) {
             $qty = $quantity ?? fake()->numberBetween(1, 10);
-            $unit_price = $product->suggested_sale_price;
+            $unit_price = $product->sale_price;
             $line_subtotal = $qty * $unit_price;
 
             return [

@@ -24,15 +24,15 @@ class FilterProductsRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'min_price' => 'nullable|numeric|min:0',
-            'max_price' => 'nullable|numeric|min:0|gte:min_price',
+            'min_sale_price' => 'nullable|numeric|min:0',
+            'max_sale_price' => 'nullable|numeric|min:0|gte:min_sale_price',
             'min_stock' => 'nullable|integer|min:0',
             'per_page' => 'nullable|integer|min:1|max:100',
             'page' => 'nullable|integer|min:1',
             'sort_by' => [
                 'nullable',
                 'string',
-                'in:name,sku,category,current_stock,min_stock_alert,suggested_sale_price,avg_purchase_price,created_at,updated_at'
+                'in:name,sku,category,current_stock,min_stock_alert,sale_price,buy_price,created_at,updated_at'
             ],
             'sort_order' => 'nullable|string|in:asc,desc',
             'category' => 'nullable|string|max:255',
@@ -49,11 +49,11 @@ class FilterProductsRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'min_price.numeric' => 'El precio mínimo debe ser un número válido.',
-            'min_price.min' => 'El precio mínimo no puede ser negativo.',
-            'max_price.numeric' => 'El precio máximo debe ser un número válido.',
-            'max_price.min' => 'El precio máximo no puede ser negativo.',
-            'max_price.gte' => 'El precio máximo debe ser mayor o igual al precio mínimo.',
+            'min_sale_price.numeric' => 'El precio mínimo de venta debe ser un número válido.',
+            'min_sale_price.min' => 'El precio mínimo de venta no puede ser negativo.',
+            'max_sale_price.numeric' => 'El precio máximo de venta debe ser un número válido.',
+            'max_sale_price.min' => 'El precio máximo de venta no puede ser negativo.',
+            'max_sale_price.gte' => 'El precio máximo de venta debe ser mayor o igual al precio mínimo de venta.',
             'min_stock.integer' => 'El stock mínimo debe ser un número entero.',
             'min_stock.min' => 'El stock mínimo no puede ser negativo.',
             'per_page.integer' => 'La cantidad por página debe ser un número entero.',
@@ -77,8 +77,8 @@ class FilterProductsRequest extends FormRequest
     public function attributes(): array
     {
         return [
-            'min_price' => 'precio mínimo',
-            'max_price' => 'precio máximo',
+            'min_sale_price' => 'precio mínimo de venta',
+            'max_sale_price' => 'precio máximo de venta',
             'min_stock' => 'stock mínimo',
             'per_page' => 'elementos por página',
             'page' => 'página',
@@ -120,8 +120,8 @@ class FilterProductsRequest extends FormRequest
             'category' => $this->input('category'),
             'low_stock' => $this->boolean('low_stock'),
             'search' => $this->input('search'),
-            'min_price' => $this->integer('min_price'),
-            'max_price' => $this->integer('max_price'),
+            'min_sale_price' => $this->integer('min_sale_price'),
+            'max_sale_price' => $this->integer('max_sale_price'),
             'min_stock' => $this->integer('min_stock'),
             'sort_by' => $this->input('sort_by', 'created_at'),
             'sort_order' => $this->input('sort_order', 'desc'),

@@ -16,8 +16,9 @@ return new class extends Migration
             $table->string('sku')->unique();
             $table->string('name');
             $table->text('description')->nullable();
-            $table->decimal('avg_purchase_price', 10, 2);
-            $table->decimal('suggested_sale_price', 10, 2);
+            $table->decimal('buy_price', 10, 2);
+            $table->decimal('profit_percentage', 10, 2);
+            $table->decimal('sale_price', 10, 2);
             $table->integer('current_stock')->default(0);
             $table->integer('min_stock_alert')->default(5);
             $table->string('category');

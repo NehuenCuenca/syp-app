@@ -36,7 +36,7 @@ class OrderController extends Controller
             ->orderBy('company_name')
             ->get();
 
-        $products = Product::select('id', 'sku', 'name', 'current_stock', 'suggested_sale_price', 'avg_purchase_price')
+        $products = Product::select('id', 'sku', 'name', 'current_stock', 'buy_price', 'sale_price')
             ->orderBy('name')
             ->get();
 
@@ -147,7 +147,7 @@ class OrderController extends Controller
             ->orderBy('company_name')
             ->get();
 
-        $products = Product::select('id', 'sku', 'name', 'current_stock', 'suggested_sale_price', 'avg_purchase_price')
+        $products = Product::select('id', 'sku', 'name', 'current_stock', 'sale_price', 'buy_price')
             ->orderBy('name')
             ->get();
 

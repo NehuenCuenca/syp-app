@@ -147,12 +147,12 @@ class ProductController extends Controller
                 });
             }
             
-            if (!empty($filters['min_price'])) {
-                $query->where('suggested_sale_price', '>=', $filters['min_price']);
+            if (!empty($filters['min_sale_price'])) {
+                $query->where('sale_price', '>=', $filters['min_sale_price']);
             }
             
-            if (!empty($filters['max_price'])) {
-                $query->where('suggested_sale_price', '<=', $filters['max_price']);
+            if (!empty($filters['max_sale_price'])) {
+                $query->where('sale_price', '<=', $filters['max_sale_price']);
             }
             
             if (!empty($filters['min_stock'])) {
@@ -222,9 +222,8 @@ class ProductController extends Controller
                 'low_stock_products' => Product::whereRaw('current_stock < min_stock_alert')->count(),
                 'out_of_stock_products' => Product::where('current_stock', 0)->count(),
                 'total_categories' => Product::distinct('category')->count(),
-                'avg_stock_value' => Product::selectRaw('AVG(current_stock * suggested_sale_price) as avg_value')
-                    ->first()
-                    ->avg_value ?? 0
+                // 'total_stock_value' => Product::sum('buy_price * current_stock'),
+                'average_profit_percentage' => floatval(Product::avg('profit_percentage')),
             ];
             
             return response()->json([
