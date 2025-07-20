@@ -3,6 +3,7 @@
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\OrderController;
+use App\Http\Controllers\OrderDetailController;
 use App\Http\Controllers\ProductController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -51,4 +52,16 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Rutas resource para Orders
     Route::resource('orders', OrderController::class);
+
+    Route::resource('order-details', OrderDetailController::class, [
+        'names' => [
+            'index' => 'order-details.index',
+            'create' => 'order-details.create',
+            'store' => 'order-details.store',
+            'show' => 'order-details.show',
+            'edit' => 'order-details.edit',
+            'update' => 'order-details.update',
+            'destroy' => 'order-details.destroy'
+        ]
+    ]);
 });

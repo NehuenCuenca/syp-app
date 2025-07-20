@@ -67,6 +67,15 @@ class OrderDetail extends Model
     }
 
     /**
+     * Get the stock movements related to this order detail.
+     */
+    public function stockMovements()
+    {
+        return $this->hasMany(StockMovement::class, 'id_order', 'id_order')
+            ->where('id_product', $this->id_product);
+    }
+
+    /**
      * Scope: Filter by order
      */
     public function scopeForOrder($query, int $orderId)
