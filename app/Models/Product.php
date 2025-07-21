@@ -29,4 +29,18 @@ class Product extends Model
         'current_stock' => 'integer',
         'min_stock_alert' => 'integer'
     ];
+
+    /**
+     * Get all categories of products
+     */
+    public static function getCategories(): array
+    {
+        return Product::select('category')
+                ->distinct()
+                ->whereNotNull('category')
+                ->where('category', '!=', '')
+                ->orderBy('category')
+                ->pluck('category')
+                ->toArray();
+    }
 }

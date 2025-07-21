@@ -118,6 +118,27 @@ class ProductController extends Controller
         }
     }
 
+    public const ALLOWED_SORT_FIELDS  = [
+        'category', 'low_stock', 'search', 'min_sale_price', 'max_sale_price', 'min_stock',
+    ];
+    public const ALLOWED_SORT_DIRECTIONS = ['asc', 'desc'];
+
+    /**
+     * Get filters to be used in the index view
+     */
+    public function getFilters()
+    {
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'product_categories' => Product::getCategories(),
+                'sort_by' => self::ALLOWED_SORT_FIELDS,
+                'sort_direction' => self::ALLOWED_SORT_DIRECTIONS
+            ],
+            'message' => 'Datos para filtrar productos obtenidos exitosamente'
+        ]);
+    }
+
     /**
      * Get paginated products with optional filters
      * 
@@ -193,27 +214,6 @@ class ProductController extends Controller
         }
     }
     
-    public function getCategories(): JsonResponse
-    {
-        try {
-            $categories = Product::select('category')
-                ->distinct()
-                ->whereNotNull('category')
-                ->where('category', '!=', '')
-                ->orderBy('category')
-                ->pluck('category');
-                
-            return response()->json([
-                'success' => true,
-                'data' => $categories
-            ]);
-        } catch (QueryException $e) {
-            return response()->json([
-                'message' => 'Error al recuperar las categorías.'
-            ], Response::HTTP_INTERNAL_SERVER_ERROR);
-        }
-    }
-    
     public function getStats(): JsonResponse
     {
         try {
@@ -222,7 +222,6 @@ class ProductController extends Controller
                 'low_stock_products' => Product::whereRaw('current_stock < min_stock_alert')->count(),
                 'out_of_stock_products' => Product::where('current_stock', 0)->count(),
                 'total_categories' => Product::distinct('category')->count(),
-                // 'total_stock_value' => Product::sum('buy_price * current_stock'),
                 'average_profit_percentage' => floatval(Product::avg('profit_percentage')),
             ];
             
