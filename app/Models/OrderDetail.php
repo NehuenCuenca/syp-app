@@ -198,20 +198,5 @@ class OrderDetail extends Model
                 $orderDetail->line_subtotal = $orderDetail->calculateLineSubtotal();
             }
         });
-
-        // Actualizar totales del pedido después de crear
-        static::created(function ($orderDetail) {
-            $orderDetail->order->calculateTotals();
-        });
-
-        // Actualizar totales del pedido después de actualizar
-        static::updated(function ($orderDetail) {
-            $orderDetail->order->calculateTotals();
-        });
-
-        // Actualizar totales del pedido después de eliminar
-        static::deleted(function ($orderDetail) {
-            $orderDetail->order->calculateTotals();
-        });
     }
 }

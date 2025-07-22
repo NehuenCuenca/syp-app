@@ -73,6 +73,7 @@ class OrderController extends Controller
 
             $totalGross = 0;
             $totalTaxes = 0;
+            $totalNet = 0;
 
             // Crear los detalles del pedido
             foreach ($request->order_details as $detail) {
@@ -81,7 +82,7 @@ class OrderController extends Controller
                 $product = Product::find($detail['id_product']);
                 $stockToDiscount = ($detail['quantity'] >= $product->current_stock) ? $product->current_stock : $detail['quantity'];
 
-                OrderDetail::create([
+                $detailRecord = OrderDetail::create([
                     'id_order' => $order->id,
                     'id_product' => $detail['id_product'],
                     'quantity' => $stockToDiscount,
@@ -89,23 +90,24 @@ class OrderController extends Controller
                     'line_subtotal' => $lineSubtotal,
                 ]);
 
+                if( $order->getIsPurchaseAttribute() ){
+                    $product->update(['buy_price' => $detail['unit_price_at_order']]);
+                }
+
                 if( $order->getIsSaleAttribute() ){
-                    $this->createStockMovement($order, [
-                        'id_product' => $detail['id_product'],
-                        'quantity' => -$stockToDiscount
-                    ]);
+                    $this->createStockMovement($order, $detailRecord);
                 }
             }
 
             // Calcular totales (asumiendo 21% de IVA)
             //$totalTaxes = $totalGross * 0.21;
-            $totalNet = $totalGross + $totalTaxes;
-
+            $totalNet = (float)($request->filled('total_net') ? $request->integer('total_net') : ($totalGross + $totalTaxes));
+            
             // Actualizar totales del pedido
             $order->update([
                 'total_gross' => $totalGross,
                 'total_taxes' => $totalTaxes,
-                'total_net' => ($request->missing('total_net')) ? $totalNet : $request->total_net,
+                'total_net' => $totalNet
             ]);
 
             DB::commit();
@@ -114,7 +116,7 @@ class OrderController extends Controller
             
             return response()->json([
                 'message' => 'Pedido creado exitosamente',
-                'order' => $order->load(['contact', 'userCreator', 'orderDetails.product']),
+                'order' => $order->load(['contact', 'userCreator', 'orderDetails.product'])
             ], 201);
 
         } catch (\Exception $e) {
@@ -181,9 +183,9 @@ class OrderController extends Controller
                 'estimated_delivery_date' => $request->estimated_delivery_date,
                 'actual_delivery_date' => $request->actual_delivery_date,
                 'notes' => $request->notes,
-                'total_gross' => $request->total_gross,
-                'total_taxes' => $request->total_taxes,
-                'total_net' => $request->total_net
+                'total_gross' => $request->total_gross ?? $order->total_gross,
+                'total_taxes' => $request->total_taxes ?? $order->total_taxes,
+                'total_net' => $request->total_net ?? $order->total_net
             ]);
 
             // Manejar cambios de estado y movimientos de stock
@@ -255,33 +257,42 @@ class OrderController extends Controller
      */
     private function handleStatusChange(Order $order, string $oldStatus, string $newStatus)
     {
+        $fromPendingToCompleted  = $oldStatus === 'Pendiente' && $newStatus === 'Completado'; //Venta: -                     //Compra: createStockMovement 
+        $fromPendingToCanceled   = $oldStatus === 'Pendiente' && $newStatus === 'Cancelado';  //Venta: revertStockMovements  //Compra: -
+        $fromCompletedToPending  = $oldStatus === 'Completado' && $newStatus === 'Pendiente'; //Venta: -                     //Compra: revertStockMovements
+        $fromCompletedToReturned = $oldStatus === 'Completado' && $newStatus === 'Devuelto';  //Venta: createReturnMovements //Compra: createReturnMovements
+        $fromCanceledToPending   = $oldStatus === 'Cancelado' && $newStatus === 'Pendiente';  //Venta: createStockMovement   //Compra: -
+        $fromReturnedToPending   = $oldStatus === 'Devuelto' && $newStatus === 'Pendiente';   //Venta: createStockMovement   //Compra: -
+        $fromReturnedToCompleted = $oldStatus === 'Devuelto' && $newStatus === 'Completado';  //Venta: createStockMovement   //Compra: createStockMovement
+
         if($order->getIsSaleAttribute()){
-            // Si cambia de completado a no completado
-            if ($oldStatus === 'Completado' && $newStatus !== 'Completado') {
+            if($fromPendingToCanceled){
                 $this->revertStockMovements($order);
             }
-            // Si cambia a devuelto desde completado
-            elseif ($oldStatus === 'Completado' && $newStatus === 'Devuelto') {
+
+            elseif ($fromCompletedToReturned){
                 $this->createReturnMovements($order);
+            }
+            
+            elseif ($fromCanceledToPending || $fromReturnedToPending || $fromReturnedToCompleted){
+                foreach ($order->orderDetails as $detail) {
+                    $this->createStockMovement($order, $detail);
+                }
             }
         }  
         
         if($order->getIsPurchaseAttribute()){
-            // Si cambia de no completado a completado
-            if ($oldStatus !== 'Completado' && $newStatus === 'Completado') {
+            if ($fromPendingToCompleted || $fromReturnedToCompleted) {
                 foreach ($order->orderDetails as $detail) {
-                    $this->createStockMovement($order, [
-                        'id_product' => $detail->id_product,
-                        'quantity' => $detail->quantity
-                    ]);
+                    $this->createStockMovement($order, $detail);
                 }
             }
-            // Si cambia de completado a no completado
-            elseif ($oldStatus === 'Completado' && $newStatus !== 'Completado') {
+            
+            elseif ($fromCompletedToPending) {
                 $this->revertStockMovements($order);
             }
-            // Si cambia a devuelto desde completado
-            elseif ($oldStatus === 'Completado' && $newStatus === 'Devuelto') {
+            
+            elseif ($fromCompletedToReturned) {
                 $this->createReturnMovements($order);
             }
         }
@@ -290,24 +301,24 @@ class OrderController extends Controller
     /**
      * Crear movimiento de stock para un detalle del pedido
      */
-    private function createStockMovement(Order $order, array $detail)
+    private function createStockMovement(Order $order, OrderDetail $detail)
     {
-        $movementType = $order->order_type === 'Compra_Entrante' ? 'Compra_Entrante' : 'Venta_Saliente';
-        // $quantity = $order->order_type === 'Compra_Entrante' ? $detail['quantity'] : -$detail['quantity'];
+        $movementType = $order->getIsPurchaseAttribute() ? 'Compra_Entrante' : 'Venta_Saliente';
+        $quantity = ($order->getIsPurchaseAttribute()) ? $detail->quantity : -$detail->quantity;
 
         StockMovement::create([
-            'id_product' => $detail['id_product'],
+            'id_product' => $detail->id_product,
             'id_order' => $order->id,
             'id_user_responsible' => $order->id_user_creator,
             'movement_type' => $movementType,
-            'quantity_moved' => $detail['quantity'],
+            'quantity_moved' => $quantity,
             'movement_date' => now(),
             'notes' => "Movimiento automático por pedido #{$order->id}",
         ]);
 
         // Actualizar stock actual del producto si es una compra entrante
-        $product = Product::find($detail['id_product']);
-        $product->increment('current_stock', $detail['quantity']);
+        $product = Product::find($detail->id_product);
+        $product->increment('current_stock', $quantity);
     }
 
     /**
@@ -316,25 +327,26 @@ class OrderController extends Controller
      */
     private function revertStockMovements(Order $order)
     {
-        $movements = StockMovement::where('id_order', $order->id)->get();
+        $orderDetails = OrderDetail::where('id_order', $order->id)->get();
         
-        foreach ($movements as $movement) {
+        foreach ($orderDetails as $detail) {
             $movementType = $order->getIsPurchaseAttribute() ? 'Ajuste_Negativo' : 'Ajuste_Positivo';
+            $quantity = $order->order_type === 'Compra_Entrante' ? -$detail['quantity'] : $detail['quantity'];
 
             // Crear movimiento inverso
             StockMovement::create([
-                'id_product' => $movement->id_product,
+                'id_product' => $detail->id_product,
                 'id_order' => $order->id,
                 'id_user_responsible' => auth()->id() ?? $order->id_user_creator,
                 'movement_type' => $movementType,
-                'quantity_moved' => -$movement->quantity_moved,
+                'quantity_moved' => $quantity,
                 'movement_date' => now(),
                 'notes' => "Reversión de movimiento por cambio de estado del pedido #{$order->id}",
             ]);
 
             // Actualizar stock
-            $product = Product::find($movement->id_product);
-            $product->decrement('current_stock', $movement->quantity_moved);
+            $product = Product::find($detail->id_product);
+            $product->decrement('current_stock', $quantity);
         }
     }
 
