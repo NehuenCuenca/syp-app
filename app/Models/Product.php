@@ -23,9 +23,9 @@ class Product extends Model
     ];
 
     protected $casts = [
-        'buy_price' => 'float',
-        'profit_percentage' => 'float',
-        'sale_price' => 'float',
+        'buy_price' => 'decimal:2',
+        'profit_percentage' => 'decimal:2',
+        'sale_price' => 'decimal:2',
         'current_stock' => 'integer',
         'min_stock_alert' => 'integer'
     ];
