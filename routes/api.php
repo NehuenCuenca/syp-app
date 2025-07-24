@@ -5,6 +5,7 @@ use App\Http\Controllers\ContactController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\OrderDetailController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\StockMovementController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -63,6 +64,18 @@ Route::middleware('auth:sanctum')->group(function () {
             'edit' => 'order-details.edit',
             'update' => 'order-details.update',
             'destroy' => 'order-details.destroy'
+        ]
+    ]);
+
+    Route::resource('stock-movements', StockMovementController::class, [
+        'names' => [
+            'index' => 'stock-movements.index',
+            'create' => 'stock-movements.create',
+            'store' => 'stock-movements.store',
+            'show' => 'stock-movements.show',
+            'edit' => 'stock-movements.edit',
+            'update' => 'stock-movements.update',
+            'destroy' => 'stock-movements.destroy',
         ]
     ]);
 });
