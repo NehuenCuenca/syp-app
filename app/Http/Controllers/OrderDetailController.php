@@ -84,7 +84,8 @@ class OrderDetailController extends Controller
                 'id_product' => $orderData['id_product'],
                 'quantity' => $orderData['quantity'],
                 'unit_price_at_order' => $orderData['unit_price_at_order'],
-                'line_subtotal' => $lineSubtotal
+                'line_subtotal' => $lineSubtotal,
+                'discount_percentage_by_unit' => $orderData['discount_percentage_by_unit'] ?? 0,
             ]);
             
             // Manejar stock y movimientos para ventas salientes
@@ -249,7 +250,8 @@ class OrderDetailController extends Controller
                 'id_product' => $newData['id_product'],
                 'quantity' => $newData['quantity'],
                 'unit_price_at_order' => $newData['unit_price_at_order'],
-                'line_subtotal' => $lineSubtotal
+                'line_subtotal' => $lineSubtotal,
+                'discount_percentage_by_unit' => $newData['discount_percentage_by_unit'],
             ]);
             
             // Actualizar totales del pedido
@@ -336,7 +338,7 @@ class OrderDetailController extends Controller
         $order = Order::findOrFail($orderId);
         $totalGross = $order->orderDetails()->sum('line_subtotal');
 
-        $totalTaxes = $totalGross * 0.21; // 21% de IVA como ejemplo
+        $totalTaxes = 0; // 21% de IVA como ejemplo
         $totalNet = $totalGross + $totalTaxes;
         
         $order->update([

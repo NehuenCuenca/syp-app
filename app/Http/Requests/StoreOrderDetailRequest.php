@@ -49,6 +49,12 @@ class StoreOrderDetailRequest extends FormRequest
                 'numeric',
                 'min:0',
                 'max:999999.99'
+            ],
+            'order_detail.discount_percentage_by_unit' => [
+                'required',
+                'numeric',
+                'min:0',
+                'max:1'
             ]
         ];
     }
@@ -86,6 +92,11 @@ class StoreOrderDetailRequest extends FormRequest
             'order_detail.unit_price_at_order.numeric' => 'El precio unitario debe ser un número válido.',
             'order_detail.unit_price_at_order.min' => 'El precio unitario no puede ser negativo.',
             'order_detail.unit_price_at_order.max' => 'El precio unitario no puede ser mayor a 999,999.99.',
+
+            'order_detail.discount_percentage_by_unit.required' => 'El descuento por unidad es obligatorio.',
+            'order_detail.discount_percentage_by_unit.numeric' => 'El descuento por unidad debe ser un número válido.',
+            'order_detail.discount_percentage_by_unit.min' => 'El descuento por unidad debe ser al menos 0.',
+            'order_detail.discount_percentage_by_unit.max' => 'El descuento por unidad no puede ser mayor a 1.',
         ];
     }
 
@@ -101,7 +112,8 @@ class StoreOrderDetailRequest extends FormRequest
             'order_detail' => 'detalles del pedido',
             'order_detail.id_product' => 'ID del producto',
             'order_detail.quantity' => 'cantidad',
-            'order_detail.unit_price_at_order' => 'precio unitario'
+            'order_detail.unit_price_at_order' => 'precio unitario',
+            'order_detail.discount_percentage_by_unit' => 'descuento por unidad'
         ];
     }
 
