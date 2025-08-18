@@ -18,6 +18,7 @@ return new class extends Migration
                   ->onDelete('restrict');
             $table->integer('quantity');
             $table->decimal('unit_price_at_order', 10, 2);
+            $table->decimal('discount_percentage_by_unit', 10, 2);
             $table->decimal('line_subtotal', 10, 2);
             $table->timestamps();
         });

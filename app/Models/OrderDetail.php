@@ -33,6 +33,7 @@ class OrderDetail extends Model
         'id_product',
         'quantity',
         'unit_price_at_order',
+        'discount_percentage_by_unit',
         'line_subtotal',
     ];
 
@@ -42,6 +43,7 @@ class OrderDetail extends Model
     protected $casts = [
         'quantity' => 'integer',
         'unit_price_at_order' => 'decimal:2',
+        'discount_percentage_by_unit' => 'decimal:2',
         'line_subtotal' => 'decimal:2',
     ];
 
@@ -163,12 +165,20 @@ class OrderDetail extends Model
             : -$this->quantity;
     }
 
+/**
+     * Method: Calculate discount subtotal
+     */
+    public function calculateDiscountSubtotal(): float
+    {
+        return $this->discount_percentage_by_unit * $this->quantity * $this->unit_price_at_order;
+    }
+
     /**
-     * Method: Calculate line subtotal
+     * Method: Calculate line subtotal with discount
      */
     public function calculateLineSubtotal(): float
     {
-        return $this->quantity * $this->unit_price_at_order;
+        return ($this->quantity * $this->unit_price_at_order) - $this->calculateDiscountSubtotal();
     }
 
     /**
@@ -194,7 +204,7 @@ class OrderDetail extends Model
 
         // Calcular subtotal antes de actualizar
         static::updating(function ($orderDetail) {
-            if ($orderDetail->isDirty(['quantity', 'unit_price_at_order'])) {
+            if ($orderDetail->isDirty(['quantity', 'unit_price_at_order', 'discount_percentage_by_unit'])) {
                 $orderDetail->line_subtotal = $orderDetail->calculateLineSubtotal();
             }
         });
