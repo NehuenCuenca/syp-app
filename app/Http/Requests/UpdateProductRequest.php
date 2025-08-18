@@ -20,7 +20,7 @@ class UpdateProductRequest extends FormRequest
             'buy_price' => ['numeric', 'min:0'],
             'profit_percentage' => ['decimal:1', 'min:1.1', 'max:1.9'],
             'sale_price' => ['numeric', 'min:0', 'gte:buy_price'],
-            'current_stock' => ['integer', 'min:0'],
+            'current_stock' => ['missing'], //['integer', 'min:0'],
             'min_stock_alert' => ['integer', 'min:0'],
             'category' => ['string', 'max:100'],
         ];
@@ -35,6 +35,7 @@ class UpdateProductRequest extends FormRequest
             'profit_percentage.max' => 'El porcentaje de ganancia debe ser menor o igual que 1.9',
             'sale_price.gte' => 'El precio de venta sugerido debe ser mayor o igual al precio promedio de compra.',
             'current_stock.min' => 'El stock actual no puede ser negativo.',
+            'current_stock.missing' => 'El stock actual no puede ser editado desde este controlador.',
             'min_stock_alert.min' => 'La alerta de stock mínimo no puede ser negativa.',
         ];
     }

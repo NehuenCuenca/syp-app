@@ -73,12 +73,14 @@ class OrderController extends Controller
 
             $totalGross = 0;
             $totalTaxes = 0;
+            $totalDiscount = 0;
             $totalNet = 0;
 
             // Crear los detalles del pedido
             foreach ($request->order_details as $detail) {
-                $lineSubtotal = $detail['quantity'] * $detail['unit_price_at_order'];
-                $totalGross += $lineSubtotal;
+                $lineGrossSubtotal = $detail['quantity'] * $detail['unit_price_at_order'];
+                $totalDiscount += $detail['quantity'] * $detail['unit_price_at_order'] * $detail['discount_percentage_by_unit'];
+                $totalGross += $lineGrossSubtotal;
                 $product = Product::find($detail['id_product']);
                 $stockToDiscount = ($detail['quantity'] >= $product->current_stock) ? $product->current_stock : $detail['quantity'];
 
@@ -87,7 +89,7 @@ class OrderController extends Controller
                     'id_product' => $detail['id_product'],
                     'quantity' => $stockToDiscount,
                     'unit_price_at_order' => $detail['unit_price_at_order'],
-                    'line_subtotal' => $lineSubtotal,
+                    'discount_percentage_by_unit' => $detail['discount_percentage_by_unit'] ?? 0,
                 ]);
 
                 if( $order->getIsPurchaseAttribute() ){
@@ -101,7 +103,7 @@ class OrderController extends Controller
 
             // Calcular totales (asumiendo 21% de IVA)
             //$totalTaxes = $totalGross * 0.21;
-            $totalNet = (float)($request->filled('total_net') ? $request->integer('total_net') : ($totalGross + $totalTaxes));
+            $totalNet = (float)($request->filled('total_net') ? $request->integer('total_net') : ($totalGross + $totalTaxes - $totalDiscount));
             
             // Actualizar totales del pedido
             $order->update([
