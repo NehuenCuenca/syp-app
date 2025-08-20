@@ -106,7 +106,8 @@ class Order extends Model
      */
     public function userCreator(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'id_user_creator');
+        // return $this->belongsTo(User::class, 'id_user_creator');
+        return $this->belongsTo(User::class, 'id_user_creator', 'id');
     }
 
     /**
@@ -123,6 +124,15 @@ class Order extends Model
     public function stockMovements(): HasMany
     {
         return $this->hasMany(StockMovement::class, 'id_order');
+    }
+
+    /**
+     * Scope para filtrar pedidos exportables
+     */
+    public function scopeExportable($query)
+    {
+        return $query->where('order_type', 'Venta_Saliente')
+                    ->where('order_status', 'Completado');
     }
 
     /**

@@ -4,6 +4,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\OrderDetailController;
+use App\Http\Controllers\OrderExportController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\StockMovementController;
 use Illuminate\Http\Request;
@@ -51,6 +52,16 @@ Route::middleware('auth:sanctum')->group(function () {
         
     Route::get('/orders/filtered', [OrderController::class, 'getFilteredOrders'])
         ->name('orders.filtered');
+
+    // Exportar pedido a Excel
+    Route::get('/orders/{orderId}/export-excel', [OrderExportController::class, 'exportOrderToExcel'])
+        ->name('orders.export.excel')
+        ->where('orderId', '[0-9]+');
+    
+    // Verificar si un pedido es exportable
+    Route::get('/orders/{orderId}/check-exportable', [OrderExportController::class, 'checkOrderExportability'])
+        ->name('orders.check.exportable')
+        ->where('orderId', '[0-9]+');
 
     // Rutas resource para Orders
     Route::resource('orders', OrderController::class);
