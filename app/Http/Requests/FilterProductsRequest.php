@@ -32,10 +32,10 @@ class FilterProductsRequest extends FormRequest
             'sort_by' => [
                 'nullable',
                 'string',
-                'in:name,sku,category,current_stock,min_stock_alert,sale_price,buy_price,created_at,updated_at'
+                'in:name,sku,id_category,current_stock,min_stock_alert,sale_price,buy_price,created_at,updated_at'
             ],
             'sort_order' => 'nullable|string|in:asc,desc',
-            'category' => 'nullable|string|max:255',
+            'id_category' => 'nullable|integer|exists:categories,id',
             'search' => 'nullable|string|max:255',
             'low_stock' => 'nullable|boolean'
         ];
@@ -63,7 +63,7 @@ class FilterProductsRequest extends FormRequest
             'page.min' => 'El número de página debe ser al menos 1.',
             'sort_by.in' => 'El campo de ordenamiento no es válido.',
             'sort_order.in' => 'El orden debe ser "asc" o "desc".',
-            'category.max' => 'La categoría no puede tener más de 255 caracteres.',
+            'id_category.exists' => 'La categoría especificada no existe.',
             'search.max' => 'El término de búsqueda no puede tener más de 255 caracteres.',
             'low_stock.boolean' => 'El filtro de stock bajo debe ser verdadero o falso.'
         ];
@@ -84,7 +84,7 @@ class FilterProductsRequest extends FormRequest
             'page' => 'página',
             'sort_by' => 'campo de ordenamiento',
             'sort_order' => 'orden',
-            'category' => 'categoría',
+            'id_category' => 'categoría',
             'search' => 'búsqueda',
             'low_stock' => 'stock bajo'
         ];
@@ -117,7 +117,7 @@ class FilterProductsRequest extends FormRequest
     public function getFilters(): array
     {
         return [
-            'category' => $this->input('category'),
+            'id_category' => $this->input('id_category'),
             'low_stock' => $this->boolean('low_stock'),
             'search' => $this->input('search'),
             'min_sale_price' => $this->integer('min_sale_price'),

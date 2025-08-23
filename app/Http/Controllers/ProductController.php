@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\FilterProductsRequest;
 use App\Http\Requests\StoreProductRequest;
 use App\Http\Requests\UpdateProductRequest;
+use App\Models\Category;
 use App\Models\Product;
 use Exception;
 use Illuminate\Http\JsonResponse;
@@ -18,7 +19,7 @@ class ProductController extends Controller
     public function index(): JsonResponse
     {
         try {
-            $products = Product::all();            
+            $products = Product::with(['category'])->get();            
             return response()->json([
                 'success' => true,
                 'data' => $products,
@@ -35,7 +36,20 @@ class ProductController extends Controller
     public function store(StoreProductRequest $request): JsonResponse
     {
         try {
-            $product = Product::create($request->validated());
+            // dd($request->input('id_category'));
+            $product = Product::create($request->only([
+                'sku',
+                'name',
+                'description',
+                'buy_price',
+                'profit_percentage',
+                'sale_price',
+                'current_stock',
+                'min_stock_alert',
+                'id_category',
+            ]));
+            
+            $product->category;
             return response()->json($product, Response::HTTP_CREATED);
         } catch (QueryException $e) {
             // Manejar errores específicos de BD
@@ -46,20 +60,30 @@ class ProductController extends Controller
             }
             
             return response()->json([
-                'message' => 'Error al crear el producto.'
+                'message' => 'Error al crear el producto.',
+                'error' => $e->getMessage()
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
 
     public function show(Product $product): JsonResponse
     {
+        $product->category;
         return response()->json($product);
     }
 
     public function update(UpdateProductRequest $request, Product $product): JsonResponse
     {
         try {
-            $product->update($request->validated());
+            //actualizar categoria si es nueva
+            if($request->input('id_category')){
+                $category = Category::firstOrCreate(['name' => $request->input('category', 'Sin categoría')]);
+                $request->merge(['id_category' => $category->id]);
+            }
+            
+            $product->update($request->all());
+            $product->category;
+
             return response()->json($product);
         } catch (QueryException $e) {
             if ($e->getCode() === '23000') {
@@ -102,6 +126,7 @@ class ProductController extends Controller
             
             $product = Product::onlyTrashed()->findOrFail($id);
             $product->restore();
+            $product->category;
 
             return response()->json([
                 'message' => 'Producto correctamente restaurado.',
@@ -119,7 +144,7 @@ class ProductController extends Controller
     }
 
     public const ALLOWED_SORT_FIELDS  = [
-        'category', 'low_stock', 'search', 'min_sale_price', 'max_sale_price', 'min_stock',
+        'id_category', 'low_stock', 'search', 'min_sale_price', 'max_sale_price', 'min_stock',
     ];
     public const ALLOWED_SORT_DIRECTIONS = ['asc', 'desc'];
 
@@ -131,7 +156,7 @@ class ProductController extends Controller
         return response()->json([
             'success' => true,
             'data' => [
-                'product_categories' => Product::getCategories(),
+                'categories' => Category::all(),
                 'sort_by' => self::ALLOWED_SORT_FIELDS,
                 'sort_direction' => self::ALLOWED_SORT_DIRECTIONS
             ],
@@ -152,8 +177,8 @@ class ProductController extends Controller
             $query = Product::query();
             
             // Aplicar filtros
-            if (!empty($filters['category'])) {
-                $query->where('category', 'like', '%' . $filters['category'] . '%');
+            if (!empty($filters['id_category'])) {
+                $query->where('id_category', $filters['id_category']);
             }
             
             if ($filters['low_stock']) {
@@ -188,6 +213,7 @@ class ProductController extends Controller
             
             // Agregar información adicional
             $products->getCollection()->transform(function ($product) {
+                $product->category;
                 $product->is_low_stock = $product->current_stock < $product->min_stock_alert;
                 $product->stock_percentage = $product->min_stock_alert > 0 
                     ? round(($product->current_stock / $product->min_stock_alert) * 100, 2) 
@@ -221,7 +247,7 @@ class ProductController extends Controller
                 'total_products' => Product::count(),
                 'low_stock_products' => Product::whereRaw('current_stock < min_stock_alert')->count(),
                 'out_of_stock_products' => Product::where('current_stock', 0)->count(),
-                'total_categories' => Product::distinct('category')->count(),
+                'total_categories' => Category::count(),
                 'average_profit_percentage' => floatval(Product::avg('profit_percentage')),
             ];
             

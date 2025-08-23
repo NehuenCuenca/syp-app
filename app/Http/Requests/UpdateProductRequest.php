@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Category;
 use Illuminate\Foundation\Http\FormRequest;
 
 class UpdateProductRequest extends FormRequest
@@ -53,6 +54,19 @@ class UpdateProductRequest extends FormRequest
             'sale_price' => 'precio de venta sugerido',
             'current_stock' => 'stock actual',
             'min_stock_alert' => 'alerta de stock minimo',
+            'category' => 'categoria',
         ];
+    }
+
+    /**
+     * Prepare the data for validation.
+     */
+    protected function prepareForValidation(): void
+    {
+        // crear categoria si no existe
+        $category = Category::firstOrCreate(['name' => $this->input('category', 'Sin categoría')]);
+        $this->merge([
+            'id_category' => $category->id
+        ]);
     }
 }

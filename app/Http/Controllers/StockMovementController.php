@@ -17,7 +17,8 @@ class StockMovementController extends Controller
      */
     public function index(): JsonResponse
     {
-        $stockMovements = StockMovement::with(['product', 'order', 'userResponsible'])
+        $stockMovements = StockMovement::with(['product.category', 'order', 'userResponsible'])
+
             ->orderBy('movement_date', 'desc')
             ->paginate(15);
 

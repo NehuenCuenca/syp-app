@@ -20,7 +20,7 @@ class OrderController extends Controller
      */
     public function index()
     {
-        $orders = Order::with(['contact', 'userCreator', 'orderDetails.product'])
+        $orders = Order::with(['contact', 'userCreator', 'orderDetails.product.category'])
             ->orderBy('created_at', 'desc')
             ->paginate(15);
         
@@ -36,7 +36,8 @@ class OrderController extends Controller
             ->orderBy('company_name')
             ->get();
 
-        $products = Product::select('id', 'sku', 'name', 'current_stock', 'buy_price', 'sale_price')
+        $products = Product::with('category:id,name')
+            ->select('id', 'sku', 'name', 'current_stock', 'buy_price', 'sale_price', 'id_category')
             ->orderBy('name')
             ->get();
 
@@ -118,7 +119,7 @@ class OrderController extends Controller
             
             return response()->json([
                 'message' => 'Pedido creado exitosamente',
-                'order' => $order->load(['contact', 'userCreator', 'orderDetails.product'])
+                'order' => $order->load(['contact', 'userCreator', 'orderDetails.product.category'])
             ], 201);
 
         } catch (\Exception $e) {
@@ -136,7 +137,7 @@ class OrderController extends Controller
     public function show(Order $order)
     {
         return response()->json(
-            $order->load(['contact', 'userCreator', 'orderDetails.product'])
+            $order->load(['contact', 'userCreator', 'orderDetails.product.category'])
         );
     }
 
@@ -145,13 +146,14 @@ class OrderController extends Controller
      */
     public function edit(Order $order)
     {
-        $order->load(['contact', 'userCreator', 'orderDetails.product']);
+        $order->load(['contact', 'userCreator', 'orderDetails.product.category']);
 
         $contacts = Contact::select('id', 'company_name', 'contact_name', 'contact_type')
             ->orderBy('company_name')
             ->get();
 
-        $products = Product::select('id', 'sku', 'name', 'current_stock', 'sale_price', 'buy_price')
+        $products = Product::with('category:id,name')
+            ->select('id', 'sku', 'name', 'current_stock', 'sale_price', 'buy_price', 'id_category')
             ->orderBy('name')
             ->get();
 
@@ -438,7 +440,7 @@ class OrderController extends Controller
      */
     public function getFilteredOrders(Request $request)
     {
-        $query = Order::with(['contact', 'userCreator', 'orderDetails.product']);
+        $query = Order::with(['contact', 'userCreator', 'orderDetails.product.category']);
 
         // Filtros
         if ($request->filled('order_type')) {
