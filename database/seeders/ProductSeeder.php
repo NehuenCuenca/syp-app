@@ -19,7 +19,7 @@ class ProductSeeder extends Seeder
             'sale_price' => 37.50,
             'current_stock' => 15,
             'min_stock_alert' => 5,
-            'category' => 'Pilas'
+            'id_category' => 1
         ]);
 
         // Create 15 random products

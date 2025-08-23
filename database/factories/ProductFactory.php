@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Models\Category;
 use App\Models\Product;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -13,6 +14,7 @@ class ProductFactory extends Factory
     {
         $avgPrice = fake()->randomFloat(2, 10, 1000);
         $markup = fake()->randomFloat(2, 1.2, 2.0); // 20% to 100% markup
+        $totalCategories = Category::count();
 
         return [
             'sku' => fake()->unique()->regexify('[A-Z]{2}[0-9]{4}'),
@@ -23,7 +25,7 @@ class ProductFactory extends Factory
             'sale_price' => $avgPrice * $markup,
             'current_stock' => fake()->numberBetween(0, 100),
             'min_stock_alert' => fake()->numberBetween(5, 20),
-            'category' => fake()->randomElement(['Cigarrillos', 'Encendedores', 'Preservativos', 'Naipes', 'Pilas'])
+            'id_category' => fake()->numberBetween(1, $totalCategories),
         ];
     }
 }
