@@ -19,7 +19,7 @@ class Product extends Model
         'sale_price',
         'current_stock',
         'min_stock_alert',
-        'category'
+        'id_category'
     ];
 
     protected $casts = [
@@ -30,17 +30,8 @@ class Product extends Model
         'min_stock_alert' => 'integer'
     ];
 
-    /**
-     * Get all categories of products
-     */
-    public static function getCategories(): array
+    public function category()
     {
-        return Product::select('category')
-                ->distinct()
-                ->whereNotNull('category')
-                ->where('category', '!=', '')
-                ->orderBy('category')
-                ->pluck('category')
-                ->toArray();
+        return $this->belongsTo(Category::class, 'id_category', 'id');
     }
 }

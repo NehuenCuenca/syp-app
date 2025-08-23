@@ -21,7 +21,8 @@ return new class extends Migration
             $table->decimal('sale_price', 10, 2);
             $table->integer('current_stock')->default(0);
             $table->integer('min_stock_alert')->default(5);
-            $table->string('category');
+            $table->unsignedBigInteger('id_category');
+            $table->foreign('id_category')->references('id')->on('categories')->onDelete('cascade');
             $table->timestamps();
             $table->softDeletesTz();
         });
