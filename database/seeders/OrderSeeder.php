@@ -19,12 +19,9 @@ class OrderSeeder extends Seeder
         Order::create([
             'id_contact' => $contact->id,
             'id_user_creator' => $user->id,
-            'estimated_delivery_date' => now()->addDays(7)->format('Y-m-d'),
             'actual_delivery_date' => null,
             'order_type' => 'Venta_Saliente',
             'order_status' => 'Pendiente',
-            'total_gross' => 1250.00,
-            'total_taxes' => 262.50, // 21% VAT
             'total_net' => 1512.50,
             'notes' => 'Standard office equipment order for Acme Corporation'
         ]);

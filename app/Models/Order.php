@@ -27,12 +27,9 @@ class Order extends Model
     protected $fillable = [
         'id_contact',
         'id_user_creator',
-        'estimated_delivery_date',
         'actual_delivery_date',
         'order_type',
         'order_status',
-        'total_gross',
-        'total_taxes',
         'total_net',
         'notes',
     ];
@@ -41,10 +38,7 @@ class Order extends Model
      * The attributes that should be cast.
      */
     protected $casts = [
-        'estimated_delivery_date' => 'date',
         'actual_delivery_date' => 'date',
-        'total_gross' => 'decimal:2',
-        'total_taxes' => 'decimal:2',
         'total_net' => 'decimal:2',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
@@ -284,17 +278,10 @@ class Order extends Model
     /**
      * Method: Calculate and update order totals
      */
-    public function calculateTotals(float $taxRate = 0.21): void
+    public function calculateTotals(): void
     {
-        $totalGross = $this->orderDetails->sum('line_subtotal');
-        $totalTaxes = $totalGross * $taxRate;
-        $totalNet = $totalGross + $totalTaxes;
-
-        $this->update([
-            'total_gross' => $totalGross,
-            'total_taxes' => $totalTaxes,
-            'total_net' => $totalNet,
-        ]);
+        $totalNet = $this->orderDetails->sum('line_subtotal');
+        $this->update(['total_net' => $totalNet]);
     }
 
     /**

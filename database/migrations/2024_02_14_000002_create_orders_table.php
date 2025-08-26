@@ -15,21 +15,17 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('id_contact');
             $table->unsignedBigInteger('id_user_creator');
-            $table->timestamp('created_at')->useCurrent();
-            $table->timestamp('updated_at')->useCurrent()->useCurrentOnUpdate();
-            $table->date('estimated_delivery_date')->nullable();
             $table->date('actual_delivery_date')->nullable();
             $table->enum('order_type', ['Compra_Entrante', 'Venta_Saliente']);
             $table->enum('order_status', ['Pendiente', 'Completado', 'Cancelado', 'Devuelto'])->default('Pendiente');
-            $table->decimal('total_gross', 10, 2)->nullable();
-            $table->decimal('total_taxes', 10, 2)->nullable();
             $table->decimal('total_net', 10, 2)->nullable();
             $table->text('notes')->nullable();
+            $table->timestamp('created_at')->useCurrent();
+            $table->timestamp('updated_at')->useCurrent()->useCurrentOnUpdate();
             
             // Índices
             $table->index(['order_type', 'order_status']);
             $table->index('created_at');
-            $table->index('estimated_delivery_date');
             $table->index('actual_delivery_date');
             
             // Claves foráneas
