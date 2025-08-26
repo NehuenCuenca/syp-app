@@ -18,7 +18,6 @@ class StockMovementController extends Controller
     public function index(): JsonResponse
     {
         $stockMovements = StockMovement::with(['product.category', 'order', 'userResponsible'])
-
             ->orderBy('movement_date', 'desc')
             ->paginate(15);
 
@@ -78,7 +77,7 @@ class StockMovementController extends Controller
             DB::commit();
 
             // Cargar las relaciones para la respuesta
-            $stockMovement->load(['product', 'order', 'userResponsible']);
+            $stockMovement->load(['product.category', 'order', 'userResponsible']);
 
             return response()->json([
                 'success' => true,
@@ -101,7 +100,7 @@ class StockMovementController extends Controller
      */
     public function show(StockMovement $stockMovement): JsonResponse
     {
-        $stockMovement->load(['product', 'order', 'userResponsible']);
+        $stockMovement->load(['product.category', 'order', 'userResponsible']);
 
         return response()->json([
             'success' => true,
@@ -155,7 +154,7 @@ class StockMovementController extends Controller
 
             DB::commit();
 
-            $stockMovement->load(['product', 'order', 'userResponsible']);
+            $stockMovement->load(['product.category', 'order', 'userResponsible']);
 
             return response()->json([
                 'success' => true,

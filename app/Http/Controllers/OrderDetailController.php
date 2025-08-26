@@ -336,15 +336,10 @@ class OrderDetailController extends Controller
     private function updateOrderTotals($orderId)
     {
         $order = Order::findOrFail($orderId);
-        $totalGross = $order->orderDetails()->sum('line_subtotal');
-
-        $totalTaxes = 0; // 21% de IVA como ejemplo
-        $totalNet = $totalGross + $totalTaxes;
         
-        $order->update([
-            'total_gross' => $totalGross,
-            'total_taxes' => $totalTaxes,
-            'total_net' => $totalNet
-        ]);
+        $totalGross = $order->orderDetails()->sum('line_subtotal');
+        $totalNet = $totalGross;
+        
+        $order->update(['total_net' => $totalNet]);
     }
 }
