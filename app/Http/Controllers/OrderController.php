@@ -65,16 +65,14 @@ class OrderController extends Controller
             $order = Order::create([
                 'id_contact' => $request->id_contact,
                 'id_user_creator' => $request->id_user_creator,
-                'estimated_delivery_date' => $request->estimated_delivery_date,
                 'order_type' => $request->order_type,
                 'order_status' => $request->order_status ?? 'Pendiente',
                 'notes' => $request->notes,
                 'total_net' => $request->total_net ?? 0,
             ]);
 
-            $totalGross = 0;
-            $totalTaxes = 0;
             $totalDiscount = 0;
+            $totalGross = 0;
             $totalNet = 0;
 
             // Crear los detalles del pedido
@@ -102,16 +100,8 @@ class OrderController extends Controller
                 }
             }
 
-            // Calcular totales (asumiendo 21% de IVA)
-            //$totalTaxes = $totalGross * 0.21;
-            $totalNet = (float)($request->filled('total_net') ? $request->integer('total_net') : ($totalGross + $totalTaxes - $totalDiscount));
-            
-            // Actualizar totales del pedido
-            $order->update([
-                'total_gross' => $totalGross,
-                'total_taxes' => $totalTaxes,
-                'total_net' => $totalNet
-            ]);
+            $totalNet = (float)($request->filled('total_net') ? $request->integer('total_net') : ($totalGross - $totalDiscount));
+            $order->update(['total_net' => $totalNet ]);
 
             DB::commit();
 
@@ -184,11 +174,8 @@ class OrderController extends Controller
             // Actualizar el pedido
             $order->update([
                 'id_contact' => $request->id_contact,
-                'estimated_delivery_date' => $request->estimated_delivery_date,
                 'actual_delivery_date' => $request->actual_delivery_date,
                 'notes' => $request->notes,
-                'total_gross' => $request->total_gross ?? $order->total_gross,
-                'total_taxes' => $request->total_taxes ?? $order->total_taxes,
                 'total_net' => $request->total_net ?? $order->total_net
             ]);
 
@@ -380,38 +367,11 @@ class OrderController extends Controller
         }
     }
 
-    /**
-     * 
-     * Crea movimientos de stock de un pedido que fue eliminado
-     */
-    /* private function createDeletedStockMovements(Order $order)
-    {
-        $movements = StockMovement::where('id_order', $order->id)->get();
-        
-        foreach ($movements as $movement) {
-            $movementType = $order->getIsPurchaseAttribute() ? 'Ajuste_Negativo' : 'Ajuste_Positivo';
-
-            // Crear movimiento inverso
-            StockMovement::create([
-                'id_product' => $movement->id_product,
-                'id_order' => null,
-                'id_user_responsible' => auth()->id() ?? $order->id_user_creator,
-                'movement_type' => $movementType,
-                'quantity_moved' => -$movement->quantity_moved,
-                'movement_date' => now(),
-                'notes' => "Reversión de movimiento por cambio de estado del pedido #{$order->id}",
-            ]);
-
-            // Actualizar stock
-            $product = Product::find($movement->id_product);
-            $product->decrement('current_stock', $movement->quantity_moved);
-        }
-    } */
 
     public const ALLOWED_SORT_FIELDS  = [
-            'id', 'created_at', 'estimated_delivery_date', 
-            'actual_delivery_date', 'order_type', 'order_status', 
-            'total_gross', 'total_taxes', 'total_net'
+            'id', 'created_at', 
+            'actual_delivery_date', 'order_type', 
+            'order_status', 'total_net'
     ];
     public const ALLOWED_SORT_DIRECTIONS = ['asc', 'desc'];
 
@@ -480,9 +440,9 @@ class OrderController extends Controller
         $sortDirection = $request->get('sort_direction', 'desc');
         
         $allowedSortFields = [
-            'id', 'created_at', 'estimated_delivery_date', 
-            'actual_delivery_date', 'order_type', 'order_status', 
-            'total_gross', 'total_taxes', 'total_net'
+            'id', 'created_at', 
+            'actual_delivery_date', 'order_type',
+            'order_status', 'total_net'
         ];
 
         if (in_array($sortBy, $allowedSortFields)) {

@@ -25,7 +25,6 @@ class StoreOrderRequest extends FormRequest
         return [
             'id_contact' => 'required|integer|exists:contacts,id',
             'id_user_creator' => 'required|integer|exists:users,id',
-            'estimated_delivery_date' => 'nullable|date|after_or_equal:today',
             'order_type' => 'required|in:Compra_Entrante,Venta_Saliente',
             'order_status' => 'nullable|in:Pendiente',
             'notes' => 'nullable|string|max:1000',
@@ -55,9 +54,6 @@ class StoreOrderRequest extends FormRequest
             'id_user_creator.required' => 'El usuario creador es obligatorio.',
             'id_user_creator.integer' => 'El usuario creador debe ser un número entero.',
             'id_user_creator.exists' => 'El usuario creador seleccionado no existe.',
-            
-            'estimated_delivery_date.date' => 'La fecha estimada de entrega debe ser una fecha válida.',
-            'estimated_delivery_date.after_or_equal' => 'La fecha estimada de entrega no puede ser anterior a hoy.',
             
             'order_type.required' => 'El tipo de pedido es obligatorio.',
             'order_type.in' => 'El tipo de pedido debe ser: Compra_Entrante o Venta_Saliente.',

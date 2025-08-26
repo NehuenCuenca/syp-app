@@ -23,13 +23,10 @@ class UpdateOrderRequest extends FormRequest
     {
         return [
             'id_contact' => 'sometimes|required|integer|exists:contacts,id',
-            'estimated_delivery_date' => 'nullable|date',
             'actual_delivery_date' => 'nullable|date',
             'order_type' => 'missing|in:Compra_Entrante,Venta_Saliente',
             'order_status' => 'sometimes|required|in:Pendiente,Completado,Cancelado,Devuelto',
             'notes' => 'nullable|string|max:1000',
-            'total_gross' => 'sometimes|numeric|min:0',
-            'total_taxes' => 'sometimes|numeric|min:0',
             'total_net' => 'sometimes|numeric|min:0',
             
             // Validaciones para los detalles del pedido (opcionales en actualización)
@@ -49,13 +46,9 @@ class UpdateOrderRequest extends FormRequest
             'id_contact.integer' => 'El contacto debe ser un número entero.',
             'id_contact.exists' => 'El contacto seleccionado no existe.',
             
-            'estimated_delivery_date.date' => 'La fecha estimada de entrega debe ser una fecha válida.',
-            
             'actual_delivery_date.date' => 'La fecha real de entrega debe ser una fecha válida.',
             
             'order_type.missing' => 'El tipo de pedido no puede ser editado.',
-            // 'order_type.required' => 'El tipo de pedido es obligatorio.',
-            // 'order_type.in' => 'El tipo de pedido debe ser: Compra_Entrante o Venta_Saliente.',
             
             'order_status.required' => 'El estado del pedido es obligatorio.',
             'order_status.in' => 'El estado del pedido debe ser: Pendiente, Completado, Cancelado o Devuelto.',
@@ -96,11 +89,6 @@ class UpdateOrderRequest extends FormRequest
             if ($this->has('order_status')) {
                 $this->validateStatusChange($validator);
             }
-            
-            // Validación de fechas
-            if ($this->has('actual_delivery_date') && $this->has('estimated_delivery_date')) {
-                $this->validateDeliveryDates($validator);
-            }
         });
     }
 
@@ -133,24 +121,6 @@ class UpdateOrderRequest extends FormRequest
         }
     }
 
-    /**
-     * Validar fechas de entrega
-     */
-    private function validateDeliveryDates($validator)
-    {
-        $estimatedDate = $this->input('estimated_delivery_date');
-        $actualDate = $this->input('actual_delivery_date');
-
-        if ($estimatedDate && $actualDate) {
-            if (strtotime($actualDate) < strtotime($estimatedDate)) {
-                // Solo advertencia, no error
-                $validator->errors()->add(
-                    'actual_delivery_date',
-                    'La fecha real de entrega es anterior a la fecha estimada.'
-                );
-            }
-        }
-    }
 
     /**
      * Handle a failed validation attempt.
