@@ -64,7 +64,7 @@ class OrderDetailController extends Controller
             }
             
             // Verificar disponibilidad de stock para ventas salientes
-            if ($order->order_type === 'Venta_Saliente') {
+            if ($order->order_type === 'Venta') {
                 $product = Product::findOrFail($orderData['id_product']);
                 
                 if ($product->current_stock < $orderData['quantity']) {
@@ -89,7 +89,7 @@ class OrderDetailController extends Controller
             ]);
             
             // Manejar stock y movimientos para ventas salientes
-            if ($order->order_type === 'Venta_Saliente') {
+            if ($order->order_type === 'Venta') {
                 // Descontar stock
                 $product = Product::findOrFail($orderData['id_product']);
                 $product->decrement('current_stock', $orderData['quantity']);
@@ -99,7 +99,7 @@ class OrderDetailController extends Controller
                     'id_product' => $orderData['id_product'],
                     'id_order' => $orderId,
                     'id_user_responsible' => Auth::id(),
-                    'movement_type' => 'Venta_Saliente',
+                    'movement_type' => 'Venta',
                     'quantity_moved' => -$orderData['quantity'], // Negativo para salida
                     'movement_date' => now(),
                     'notes' => 'Descuento de stock por detalle de pedido #' . $order->id
@@ -173,7 +173,7 @@ class OrderDetailController extends Controller
             }
             
             // Manejar cambios para ventas salientes
-            if ($order->order_type === 'Venta_Saliente') {
+            if ($order->order_type === 'Venta') {
                 
                 if ($productChanged) {
                     // Revertir stock del producto anterior
@@ -183,7 +183,7 @@ class OrderDetailController extends Controller
                     // Eliminar movimiento de stock anterior
                     StockMovement::where('id_order', $order->id)
                         ->where('id_product', $orderDetail->id_product)
-                        ->where('movement_type', 'Venta_Saliente')
+                        ->where('movement_type', 'Venta')
                         ->where('quantity_moved', -$orderDetail->quantity)
                         ->delete();
                     
@@ -205,7 +205,7 @@ class OrderDetailController extends Controller
                         'id_product' => $newData['id_product'],
                         'id_order' => $order->id,
                         'id_user_responsible' => Auth::id(),
-                        'movement_type' => 'Venta_Saliente',
+                        'movement_type' => 'Venta',
                         'quantity_moved' => -$newData['quantity'],
                         'movement_date' => now(),
                         'notes' => 'Descuento de stock por actualización de detalle de pedido #' . $order->id
@@ -231,7 +231,7 @@ class OrderDetailController extends Controller
                     // Actualizar movimiento de stock existente
                     $stockMovement = StockMovement::where('id_order', $order->id)
                         ->where('id_product', $orderDetail->id_product)
-                        ->where('movement_type', 'Venta_Saliente')
+                        ->where('movement_type', 'Venta')
                         ->first();
                     
                     if ($stockMovement) {
@@ -294,7 +294,7 @@ class OrderDetailController extends Controller
             }
             
             // Manejar reversión de stock para ventas salientes
-            if ($order->order_type === 'Venta_Saliente') {
+            if ($order->order_type === 'Venta') {
                 // Revertir stock
                 $product = Product::findOrFail($orderDetail->id_product);
                 $product->increment('current_stock', $orderDetail->quantity);
@@ -302,7 +302,7 @@ class OrderDetailController extends Controller
                 // Eliminar movimiento de stock
                 StockMovement::where('id_order', $order->id)
                     ->where('id_product', $orderDetail->id_product)
-                    ->where('movement_type', 'Venta_Saliente')
+                    ->where('movement_type', 'Venta')
                     ->where('quantity_moved', -$orderDetail->quantity)
                     ->delete();
             }

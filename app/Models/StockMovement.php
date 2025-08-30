@@ -52,6 +52,13 @@ class StockMovement extends Model
      */
     protected $hidden = [];
 
+    const MOVEMENT_TYPE_PURCHASE = 'Compra';
+    const MOVEMENT_TYPE_SALE = 'Venta';
+    const MOVEMENT_TYPE_RETURN_CUSTOMER = 'Devolucion_Cliente';
+    const MOVEMENT_TYPE_RETURN_SUPPLIER = 'Devolucion_Proveedor';
+    const MOVEMENT_TYPE_ADJUST_POSITIVE = 'Ajuste_Positivo';
+    const MOVEMENT_TYPE_ADJUST_NEGATIVE = 'Ajuste_Negativo';
+
     /**
      * Boot the model.
      */
@@ -120,7 +127,7 @@ class StockMovement extends Model
      */
     public function scopeIncrements($query)
     {
-        return $query->whereIn('movement_type', ['Compra_Entrante', 'Devolucion_Cliente', 'Ajuste_Positivo']);
+        return $query->whereIn('movement_type', ['Compra', 'Devolucion_Cliente', 'Ajuste_Positivo']);
     }
 
     /**
@@ -128,7 +135,7 @@ class StockMovement extends Model
      */
     public function scopeDecrements($query)
     {
-        return $query->whereIn('movement_type', ['Venta_Saliente', 'Devolucion_Proveedor', 'Ajuste_Negativo']);
+        return $query->whereIn('movement_type', ['Venta', 'Devolucion_Proveedor', 'Ajuste_Negativo']);
     }
 
     /**
@@ -136,7 +143,7 @@ class StockMovement extends Model
      */
     public function isIncrement(): bool
     {
-        return in_array($this->movement_type, ['Compra_Entrante', 'Devolucion_Cliente', 'Ajuste_Positivo']);
+        return in_array($this->movement_type, ['Compra', 'Devolucion_Cliente', 'Ajuste_Positivo']);
     }
 
     /**
@@ -144,7 +151,7 @@ class StockMovement extends Model
      */
     public function isDecrement(): bool
     {
-        return in_array($this->movement_type, ['Venta_Saliente', 'Devolucion_Proveedor', 'Ajuste_Negativo']);
+        return in_array($this->movement_type, ['Venta', 'Devolucion_Proveedor', 'Ajuste_Negativo']);
     }
 
     /**
@@ -161,8 +168,8 @@ class StockMovement extends Model
     public function getMovementTypeDescriptionAttribute(): string
     {
         $descriptions = [
-            'Compra_Entrante' => 'Compra entrante',
-            'Venta_Saliente' => 'Venta saliente',
+            'Compra' => 'Compra entrante',
+            'Venta' => 'Venta saliente',
             'Ajuste_Positivo' => 'Ajuste positivo',
             'Ajuste_Negativo' => 'Ajuste negativo',
             'Devolucion_Cliente' => 'Devolución de cliente',
@@ -170,5 +177,35 @@ class StockMovement extends Model
         ];
 
         return $descriptions[$this->movement_type] ?? $this->movement_type;
+    }
+
+    public static function getMovementTypes(): array
+    {
+        return [
+            self::MOVEMENT_TYPE_PURCHASE,
+            self::MOVEMENT_TYPE_SALE,
+            self::MOVEMENT_TYPE_RETURN_CUSTOMER,
+            self::MOVEMENT_TYPE_RETURN_SUPPLIER,
+            self::MOVEMENT_TYPE_ADJUST_POSITIVE,
+            self::MOVEMENT_TYPE_ADJUST_NEGATIVE,
+        ];
+    }
+
+    public static function getIncrementMovementTypes(): array
+    {
+        return [
+            self::MOVEMENT_TYPE_PURCHASE,
+            self::MOVEMENT_TYPE_RETURN_CUSTOMER,
+            self::MOVEMENT_TYPE_ADJUST_POSITIVE,
+        ];
+    }
+
+    public static function getDecrementMovementTypes(): array
+    {
+        return [
+            self::MOVEMENT_TYPE_SALE,
+            self::MOVEMENT_TYPE_RETURN_SUPPLIER,
+            self::MOVEMENT_TYPE_ADJUST_NEGATIVE,
+        ];
     }
 }

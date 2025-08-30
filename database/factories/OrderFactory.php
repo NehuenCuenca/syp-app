@@ -24,7 +24,7 @@ class OrderFactory extends Factory
             'actual_delivery_date' => $shouldHaveActualDelivery ? 
                 fake()->dateTimeBetween($estimatedDeliveryDate, '+35 days')->format('Y-m-d') : 
                 null,
-            'order_type' => fake()->randomElement(['Compra_Entrante', 'Venta_Saliente']),
+            'order_type' => fake()->randomElement(['Compra', 'Venta']),
             'order_status' => fake()->randomElement(['Pendiente', 'Completado', 'Cancelado', 'Devuelto']),
             'total_net' => $totalNet,
             'notes' => fake()->optional(0.7)->text(200), // 70% chance of having notes
@@ -37,7 +37,7 @@ class OrderFactory extends Factory
     public function purchase(): static
     {
         return $this->state(function (array $attributes) {
-            return ['order_type' => 'Compra_Entrante'];
+            return ['order_type' => 'Compra'];
         });
     }
 
@@ -47,7 +47,7 @@ class OrderFactory extends Factory
     public function sale(): static
     {
         return $this->state(function (array $attributes) {
-            return ['order_type' => 'Venta_Saliente'];
+            return ['order_type' => 'Venta'];
         });
     }
 }

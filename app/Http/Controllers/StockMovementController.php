@@ -6,6 +6,7 @@ use App\Models\StockMovement;
 use App\Models\Product;
 use App\Http\Requests\StoreStockMovementRequest;
 use App\Http\Requests\UpdateStockMovementRequest;
+use App\Models\Order;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
@@ -27,6 +28,58 @@ class StockMovementController extends Controller
         ]);
     }
 
+    public function create()
+    {
+        $orders = Order::with('contact:id,company_name')
+                        ->select('id', 'id_contact', 'order_type', 'total_net', 'created_at')
+                        ->orderBy('created_at', 'desc')
+                        ->limit(10)
+                        ->get();
+
+        $products = Product::with('category:id,name')
+            ->select('id', 'sku', 'name', 'current_stock', 'id_category')
+            ->orderBy('name')
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'orders' => $orders,
+                'products' => $products,
+                'increment_movement_types' => StockMovement::getIncrementMovementTypes(),
+                'decrement_movement_types' => StockMovement::getDecrementMovementTypes(),
+            ],
+            'message' => 'Datos para crear movimiento de stock obtenidos exitosamente'
+        ]);
+    }
+
+    public function edit(StockMovement $stockMovement)
+    {
+
+        $orders = Order::with('contact:id,company_name')
+                        ->select('id', 'id_contact', 'order_type', 'total_net', 'created_at')
+                        ->orderBy('created_at', 'desc')
+                        ->limit(10)
+                        ->get();
+
+        $products = Product::with('category:id,name')
+            ->select('id', 'sku', 'name', 'current_stock', 'buy_price', 'sale_price', 'id_category')
+            ->orderBy('name')
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'stock_movement' => $stockMovement->load(['product.category', 'order.contact']),
+                'increment_movement_types' => StockMovement::getIncrementMovementTypes(),
+                'decrement_movement_types' => StockMovement::getDecrementMovementTypes(),
+                'orders' => $orders,
+                'products' => $products,
+            ],
+            'message' => 'Datos para editar el movimiento de stock obtenidos exitosamente'
+        ]);
+    }
+
     /**
      * Store a newly created resource in storage.
      */
@@ -41,8 +94,8 @@ class StockMovementController extends Controller
             $product = Product::findOrFail($validated['id_product']);
 
             // Determinar si es incremento o decremento según el tipo de movimiento
-            $incrementTypes = ['Compra_Entrante', 'Devolucion_Cliente', 'Ajuste_Positivo'];
-            $decrementTypes = ['Venta_Saliente', 'Devolucion_Proveedor', 'Ajuste_Negativo'];
+            $incrementTypes = ['Compra', 'Devolucion_Cliente', 'Ajuste_Positivo'];
+            $decrementTypes = ['Venta', 'Devolucion_Proveedor', 'Ajuste_Negativo'];
 
             $isIncrement = in_array($validated['movement_type'], $incrementTypes);
             $quantityMoved = $validated['quantity_moved'];
@@ -123,7 +176,7 @@ class StockMovementController extends Controller
             $product->current_stock -= $stockMovement->quantity_moved;
 
             // Determinar si es incremento o decremento según el nuevo tipo de movimiento
-            $incrementTypes = ['Compra_Entrante', 'Devolucion_Cliente', 'Ajuste_Positivo'];
+            $incrementTypes = ['Compra', 'Devolucion_Cliente', 'Ajuste_Positivo'];
             $isIncrement = in_array($validated['movement_type'], $incrementTypes);
             $quantityMoved = $validated['quantity_moved'];
 

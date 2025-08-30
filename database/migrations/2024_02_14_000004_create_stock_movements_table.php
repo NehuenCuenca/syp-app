@@ -21,8 +21,8 @@ return new class extends Migration
                   ->constrained('users', 'id')
                   ->onDelete('restrict');
             $table->enum('movement_type', [
-                'Compra_Entrante',
-                'Venta_Saliente',
+                'Compra',
+                'Venta',
                 'Ajuste_Positivo',
                 'Ajuste_Negativo',
                 'Devolucion_Cliente',

@@ -25,7 +25,7 @@ class StoreOrderRequest extends FormRequest
         return [
             'id_contact' => 'required|integer|exists:contacts,id',
             'id_user_creator' => 'required|integer|exists:users,id',
-            'order_type' => 'required|in:Compra_Entrante,Venta_Saliente',
+            'order_type' => 'required|in:Compra,Venta',
             'order_status' => 'nullable|in:Pendiente',
             'notes' => 'nullable|string|max:1000',
             'total_net' => 'sometimes|numeric|min:0',
@@ -56,7 +56,7 @@ class StoreOrderRequest extends FormRequest
             'id_user_creator.exists' => 'El usuario creador seleccionado no existe.',
             
             'order_type.required' => 'El tipo de pedido es obligatorio.',
-            'order_type.in' => 'El tipo de pedido debe ser: Compra_Entrante o Venta_Saliente.',
+            'order_type.in' => 'El tipo de pedido debe ser: Compra o Venta.',
             
             'order_status.in' => 'El estado inicial de un pedido debe ser: Pendiente.',
             
@@ -123,7 +123,7 @@ class StoreOrderRequest extends FormRequest
             }
 
             // Validación personalizada: verificar stock disponible para pedidos de venta
-            if ($this->order_type === 'Venta_Saliente' && $this->order_details) {
+            if ($this->order_type === 'Venta' && $this->order_details) {
                 foreach ($this->order_details as $index => $detail) {
                     $product = Product::find($detail['id_product']);
                     if ($product && $product->current_stock < $detail['quantity']) {

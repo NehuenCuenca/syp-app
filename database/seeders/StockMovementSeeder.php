@@ -22,7 +22,7 @@ class StockMovementSeeder extends Seeder
             'id_product' => $product->id,
             'id_order' => 1, // Initial stock movement
             'id_user_responsible' => $admin->id,
-            'movement_type' => 'Compra_Entrante',
+            'movement_type' => 'Compra',
             'quantity_moved' => 100,
             'movement_date' => now(),
             'external_reference' => 'INIT-001',

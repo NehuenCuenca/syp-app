@@ -49,11 +49,13 @@ class Order extends Model
      */
     protected $hidden = [];
 
+    protected $appends = ['order_alias'];
+
     /**
      * Constants for order types
      */
-    const ORDER_TYPE_PURCHASE = 'Compra_Entrante';
-    const ORDER_TYPE_SALE = 'Venta_Saliente';
+    const ORDER_TYPE_PURCHASE = 'Compra';
+    const ORDER_TYPE_SALE = 'Venta';
 
     /**
      * Constants for order statuses
@@ -63,6 +65,14 @@ class Order extends Model
     const STATUS_CANCELLED = 'Cancelado';
     const STATUS_RETURNED = 'Devuelto';
 
+    public function getOrderAliasAttribute()
+    {
+        return strtoupper($this->order_type) . ' ' 
+             . $this->contact->company_name 
+             . ' ($' . $this->total_net . ') '
+             . $this->created_at->format('Y-m-d');
+    }
+    
     /**
      * Get all order types
      */
@@ -125,7 +135,7 @@ class Order extends Model
      */
     public function scopeExportable($query)
     {
-        return $query->where('order_type', 'Venta_Saliente')
+        return $query->where('order_type', 'Venta')
                     ->where('order_status', 'Completado');
     }
 

@@ -42,7 +42,7 @@ class StoreStockMovementRequest extends FormRequest
             'movement_type' => [
                 'required',
                 'string',
-                'in:Compra_Entrante,Venta_Saliente,Ajuste_Positivo,Ajuste_Negativo,Devolucion_Cliente,Devolucion_Proveedor'
+                'in:Compra,Venta,Ajuste_Positivo,Ajuste_Negativo,Devolucion_Cliente,Devolucion_Proveedor'
             ],
             'external_reference' => [
                 'nullable',
@@ -95,7 +95,7 @@ class StoreStockMovementRequest extends FormRequest
             
             'movement_type.required' => 'El :attribute es obligatorio.',
             'movement_type.string' => 'El :attribute debe ser una cadena de texto.',
-            'movement_type.in' => 'El :attribute seleccionado no es válido. Los valores permitidos son: Compra_Entrante, Venta_Saliente, Ajuste_Positivo, Ajuste_Negativo, Devolucion_Cliente, Devolucion_Proveedor.',
+            'movement_type.in' => 'El :attribute seleccionado no es válido. Los valores permitidos son: Compra, Venta, Ajuste_Positivo, Ajuste_Negativo, Devolucion_Cliente, Devolucion_Proveedor.',
             
             'external_reference.string' => 'La :attribute debe ser una cadena de texto.',
             'external_reference.max' => 'La :attribute no puede exceder los :max caracteres.',

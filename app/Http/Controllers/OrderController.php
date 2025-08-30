@@ -294,7 +294,7 @@ class OrderController extends Controller
      */
     private function createStockMovement(Order $order, OrderDetail $detail)
     {
-        $movementType = $order->getIsPurchaseAttribute() ? 'Compra_Entrante' : 'Venta_Saliente';
+        $movementType = $order->getIsPurchaseAttribute() ? 'Compra' : 'Venta';
         $quantity = ($order->getIsPurchaseAttribute()) ? $detail->quantity : -$detail->quantity;
 
         StockMovement::create([
@@ -322,7 +322,7 @@ class OrderController extends Controller
         
         foreach ($orderDetails as $detail) {
             $movementType = $order->getIsPurchaseAttribute() ? 'Ajuste_Negativo' : 'Ajuste_Positivo';
-            $quantity = $order->order_type === 'Compra_Entrante' ? -$detail['quantity'] : $detail['quantity'];
+            $quantity = $order->order_type === 'Compra' ? -$detail['quantity'] : $detail['quantity'];
 
             // Crear movimiento inverso
             StockMovement::create([
@@ -346,10 +346,10 @@ class OrderController extends Controller
      */
     private function createReturnMovements(Order $order)
     {
-        $returnType = $order->order_type === 'Compra_Entrante' ? 'Devolucion_Proveedor' : 'Devolucion_Cliente';
+        $returnType = $order->order_type === 'Compra' ? 'Devolucion_Proveedor' : 'Devolucion_Cliente';
         
         foreach ($order->orderDetails as $detail) {
-            $quantity = $order->order_type === 'Compra_Entrante' ? -$detail->quantity : $detail->quantity;
+            $quantity = $order->order_type === 'Compra' ? -$detail->quantity : $detail->quantity;
             
             StockMovement::create([
                 'id_product' => $detail->id_product,
