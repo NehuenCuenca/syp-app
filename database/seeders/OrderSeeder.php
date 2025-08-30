@@ -12,7 +12,7 @@ class OrderSeeder extends Seeder
     public function run(): void
     {
         // Get existing user and contact
-        $user = User::where('email', 'Admin@example.com')->first() ?? User::factory()->create();
+        $user = User::where('email', 'sergioross73@hotmail.com')->first() ?? User::factory()->create();
         $contact = Contact::where('email', 'john.doe@acme.com')->first() ?? Contact::factory()->create();
 
         // Create a typical sale order
@@ -20,7 +20,7 @@ class OrderSeeder extends Seeder
             'id_contact' => $contact->id,
             'id_user_creator' => $user->id,
             'actual_delivery_date' => null,
-            'order_type' => 'Venta_Saliente',
+            'order_type' => 'Venta',
             'order_status' => 'Pendiente',
             'total_net' => 1512.50,
             'notes' => 'Standard office equipment order for Acme Corporation'

@@ -62,8 +62,8 @@ class OrderExportService
             return false;
         }
 
-        return $order->order_type === 'Venta_Saliente' && 
-               $order->order_status === 'Completado';
+        return $order->order_type === 'Venta' && 
+               ($order->order_status === 'Completado' || $order->order_status === 'Pendiente');
     }
 
     /**
@@ -114,7 +114,7 @@ class OrderExportService
     {
         $date = $order->created_at->format('Y-m-d');
         $orderId = str_pad($order->id, 6, '0', STR_PAD_LEFT);
-        
-        return "boleta_pedido_{$orderId}_{$date}_" . time() . ".xlsx";
+        $contact = str_replace(' ', '_', $order->contact->company_name);
+        return "boleta_pedido_{$contact}_{$orderId}_{$date}_" . time() . ".xlsx";
     }
 }
