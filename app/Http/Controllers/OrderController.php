@@ -81,7 +81,7 @@ class OrderController extends Controller
                 $totalDiscount += $detail['quantity'] * $detail['unit_price_at_order'] * $detail['discount_percentage_by_unit'];
                 $totalGross += $lineGrossSubtotal;
                 $product = Product::find($detail['id_product']);
-                $stockToDiscount = ($detail['quantity'] >= $product->current_stock) ? $product->current_stock : $detail['quantity'];
+                $stockToDiscount = ($detail['quantity'] >= $product->current_stock && $order->getIsSaleAttribute()) ? $product->current_stock : $detail['quantity'];
 
                 $detailRecord = OrderDetail::create([
                     'id_order' => $order->id,
