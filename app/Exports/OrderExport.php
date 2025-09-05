@@ -12,19 +12,20 @@ use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Style\Border;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
-use PhpOffice\PhpSpreadsheet\Style\Font;
 
 class OrderExport implements FromCollection, WithHeadings, WithMapping, WithStyles, WithCustomStartCell, ShouldAutoSize
 {
     private array $orderData;
     private bool $includeHeader;
+    private string $ticketType;
     private int $headerRowsCount = 0;
 
-    public function __construct(array $orderData, bool $includeHeader = true)
+    public function __construct(array $orderData, bool $includeHeader = true, string $ticketType = 'PRESUPUESTO X')
     {
         $this->orderData = $orderData;
         $this->includeHeader = $includeHeader;
-        $this->headerRowsCount = $includeHeader ? 6 : 0; // 6 filas para el encabezado
+        $this->ticketType = $ticketType;
+        $this->headerRowsCount = $includeHeader ? 6 : 2; // 6 filas para el encabezado
     }
 
     /**
@@ -60,7 +61,7 @@ class OrderExport implements FromCollection, WithHeadings, WithMapping, WithStyl
             $row->product_name,
             number_format($row->quantity, 0),
             '$' . number_format($row->unit_price_at_order, 2, ',', '.'),
-            number_format($row->discount_percentage_by_unit, 2) . '%',
+            number_format(($row->discount_percentage_by_unit*100), 0) . '%',
             '$' . number_format($row->line_subtotal, 2, ',', '.')
         ];
     }
@@ -82,31 +83,33 @@ class OrderExport implements FromCollection, WithHeadings, WithMapping, WithStyl
         $order = $this->orderData['order'];
         $orderDetails = $this->orderData['order_details'];
         $currentRow = 1;
+        // Título principal
+        $sheet->setCellValue('A1', $this->ticketType);
+        $sheet->mergeCells('A1:F1');
 
         // Agregar encabezado si está habilitado
         if ($this->includeHeader) {
-            // Título principal
-            $sheet->setCellValue('A1', 'BOLETA DE VENTA');
-            $sheet->mergeCells('A1:F1');
-            
             $currentRow = 3; // Saltar una fila
 
             // Información del encabezado
-            $sheet->setCellValue("A{$currentRow}", 'Fecha de Venta:');
+            $sheet->setCellValue("A{$currentRow}", 'Fecha:');
             $sheet->setCellValue("B{$currentRow}", $order->created_at->format('d/m/Y H:i'));
             $currentRow++;
 
             $sheet->setCellValue("A{$currentRow}", 'Comprador:');
-            $comprador = $order->contact ? $order->contact->company_name . ' - ' . $order->contact->contact_name : 'N/A';
+            $comprador = $order->contact ? "{$order->contact->company_name}" : 'N/A';
             $sheet->setCellValue("B{$currentRow}", $comprador);
             $currentRow++;
 
             $sheet->setCellValue("A{$currentRow}", 'Vendedor:');
-            $vendedor = $order->userCreator ? $order->userCreator->username : 'N/A';
-            $sheet->setCellValue("B{$currentRow}", $vendedor);
-            
+            $vendedor = $order->userCreator ? "{$order->userCreator->username} (TEL:{$order->userCreator->phone})" : 'N/A';
+            $sheet->setCellValue("B{$currentRow}", $vendedor);    
+
             $currentRow += 2; // Saltar filas antes de la tabla
+        } else {
+            $currentRow = 3;
         }
+        
 
         // La tabla de datos comienza en $currentRow
         $tableStartRow = $currentRow;
@@ -124,23 +127,23 @@ class OrderExport implements FromCollection, WithHeadings, WithMapping, WithStyl
         // APLICAR ESTILOS
         $styles = [];
 
-        // Estilos del encabezado si está incluido
-        if ($this->includeHeader) {
             // Título principal
-            $styles['A1:F1'] = [
-                'font' => [
-                    'bold' => true,
-                    'size' => 16,
-                ],
-                'alignment' => [
-                    'horizontal' => Alignment::HORIZONTAL_CENTER,
-                ],
-                'fill' => [
-                    'fillType' => Fill::FILL_SOLID,
-                    'startColor' => ['argb' => 'FFE6E6E6']
-                ]
-            ];
+        $styles['A1:F1'] = [
+            'font' => [
+                'bold' => true,
+                'size' => 16,
+            ],
+            'alignment' => [
+                'horizontal' => Alignment::HORIZONTAL_CENTER,
+            ],
+            'fill' => [
+                'fillType' => Fill::FILL_SOLID,
+                'startColor' => ['argb' => 'FFE6E6E6']
+            ]
+        ];
 
+        // Estilos del encabezado si está incluido
+        if ($this->includeHeader) { 
             // Información del encabezado
             $styles['A3:A5'] = [
                 'font' => ['bold' => true],

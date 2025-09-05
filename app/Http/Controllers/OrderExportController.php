@@ -30,13 +30,14 @@ class OrderExportController extends Controller
         try {
             // Validar parámetros de entrada
             $request->validate([
-                'include_header' => 'boolean' // Toggle para incluir encabezado
+                'include_header' => 'boolean', // Toggle para incluir encabezado
+                'ticket_type' => 'string', // Tipo de ticket
             ]);
 
             $includeHeader = $request->boolean('include_header', true);
-
+            $ticketType = $request->string('ticket_type', 'PRESUPUESTO X');
             // Generar archivo Excel usando el servicio
-            $filePath = $this->orderExportService->exportOrderToExcel($orderId, $includeHeader);
+            $filePath = $this->orderExportService->exportOrderToExcel($orderId, $includeHeader, $ticketType);
 
             // Retornar archivo para descarga
             
@@ -65,10 +66,11 @@ class OrderExportController extends Controller
             $isExportable = $this->orderExportService->isOrderExportable($orderId);
             
             return response()->json([
-                'exportable' => $isExportable,
+                'is_exportable' => $isExportable,
                 'message' => $isExportable 
                     ? 'El pedido puede ser exportado' 
-                    : 'El pedido no cumple con los criterios para exportación'
+                    : 'El pedido no cumple con los criterios para exportación',
+                'ticket_types' => $this->orderExportService->getTicketTypes()
             ]);
 
         } catch (\Exception $e) {

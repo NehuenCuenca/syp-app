@@ -3,7 +3,6 @@
 namespace App\Services;
 
 use App\Models\Order;
-use App\Models\OrderDetail;
 use App\Exports\OrderExport;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Facades\Excel;
@@ -17,7 +16,7 @@ class OrderExportService
      * @param bool $includeHeader
      * @return string Ruta del archivo generado
      */
-    public function exportOrderToExcel(int $orderId, bool $includeHeader = true): string
+    public function exportOrderToExcel(int $orderId, bool $includeHeader = true, $ticketType = 'Presupuesto X'): string
     {
         // Verificar que el pedido sea exportable
         if (!$this->isOrderExportable($orderId)) {
@@ -40,7 +39,7 @@ class OrderExportService
 
         // Crear el archivo Excel directamente
         Excel::store(
-            new OrderExport($orderData, $includeHeader),
+            new OrderExport($orderData, $includeHeader, $ticketType),
             'temp/' . $fileName,
             'local'
         );
@@ -116,5 +115,13 @@ class OrderExportService
         $orderId = str_pad($order->id, 6, '0', STR_PAD_LEFT);
         $contact = str_replace(' ', '_', $order->contact->company_name);
         return "boleta_pedido_{$contact}_{$orderId}_{$date}_" . time() . ".xlsx";
+    }
+
+    public function getTicketTypes(): array
+    {
+        return [
+            'PRESUPUESTO X',
+            'BOLETA DE VENTA',
+        ];
     }
 }
