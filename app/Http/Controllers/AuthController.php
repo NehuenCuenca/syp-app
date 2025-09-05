@@ -25,6 +25,7 @@ class AuthController extends Controller
             $user = User::create([
                 'username' => $request->username,
                 'email' => $request->email,
+                'phone' => $request->phone,
                 'password' => Hash::make($request->password),
                 'role' => $request->role ?? 'user',
             ]);
@@ -37,6 +38,7 @@ class AuthController extends Controller
                     'id_user' => $user->id_user,
                     'username' => $user->username,
                     'email' => $user->email,
+                    'phone' => $user->phone,
                     'role' => $user->role,
                 ],
                 'token' => $token,
@@ -76,6 +78,7 @@ class AuthController extends Controller
                     'id_user' => $user->id_user,
                     'username' => $user->username,
                     'email' => $user->email,
+                    'phone' => $user->phone,
                     'role' => $user->role,
                 ],
                 'token' => $token,
@@ -129,6 +132,7 @@ class AuthController extends Controller
                 'id_user' => $request->user()->id_user,
                 'username' => $request->user()->username,
                 'email' => $request->user()->email,
+                'phone' => $request->user()->phone,
                 'role' => $request->user()->role,
             ]
         ], 200);

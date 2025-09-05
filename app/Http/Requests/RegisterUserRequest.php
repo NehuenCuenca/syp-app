@@ -26,6 +26,7 @@ class RegisterUserRequest extends FormRequest
             'username' => ['required', 'string', 'max:50', 'unique:users,username'],
 
             'email' => ['required', 'string', 'email', 'max:100', 'unique:users,email'],
+            'phone' => ['required', 'string', 'max:50'],
 
             // Usamos Password::defaults() para incluir reglas de seguridad por defecto de Laravel (ej. al menos una mayúscula, un número, un símbolo).
             // 'confirmed' asegura que exista un campo 'password_confirmation' y que coincida.
@@ -56,6 +57,10 @@ class RegisterUserRequest extends FormRequest
             'email.email' => 'El correo electrónico debe tener un formato válido.',
             'email.max' => 'El correo electrónico no debe exceder los 100 caracteres.',
             'email.unique' => 'Este correo electrónico ya está registrado.',
+            
+            'phone.required' => 'El número de teléfono es obligatorio.',
+            'phone.string' => 'El número de teléfono debe ser una cadena de texto.',
+            'phone.max' => 'El número de teléfono no debe exceder los 50 caracteres.',
 
             // Mensajes para 'password'
             'password.required' => 'La contraseña es obligatoria.',
