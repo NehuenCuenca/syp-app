@@ -64,6 +64,24 @@ class OrderExportService
         return $order->order_type === 'Venta' && 
                ($order->order_status === 'Completado' || $order->order_status === 'Pendiente');
     }
+    
+    /**
+     *  Verificar si un pedido tiene detalles de productos de una categoría determinada
+     * 
+     * @param int $orderId
+     * @return bool
+     */
+    public function hasCategory(int $orderId, int $categoryId): bool
+    {
+        $order = Order::find($orderId);
+        
+        // Verificar si el pedido tiene detalles de productos de la categoría
+        $hasCategory = $order->orderDetails()->whereHas('product', function ($query) use ($categoryId) {
+            $query->where('id_category', $categoryId);
+        })->exists();
+
+        return $hasCategory;
+    }
 
     /**
      * Obtener datos completos del pedido

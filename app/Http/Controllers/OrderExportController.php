@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Exports\OrderExport;
+use App\Models\Category;
 use App\Services\OrderExportService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
@@ -36,6 +37,12 @@ class OrderExportController extends Controller
 
             $includeHeader = $request->boolean('include_header', true);
             $ticketType = $request->string('ticket_type', 'PRESUPUESTO X');
+
+            //Get if an order has details of products belonging to a certain category
+            $specialCategoryId = Category::where('name', 'Analgésicos')->first()->id;
+            $hasSpecialCategory = $this->orderExportService->hasCategory($orderId, $specialCategoryId);
+            $includeHeader = ($hasSpecialCategory) ? false : true;
+
             // Generar archivo Excel usando el servicio
             $filePath = $this->orderExportService->exportOrderToExcel($orderId, $includeHeader, $ticketType);
 
