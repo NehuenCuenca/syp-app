@@ -11,6 +11,7 @@ class Contact extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
+        'code',
         'company_name',
         'contact_name',
         'email',
@@ -33,15 +34,5 @@ class Contact extends Model
     public function scopeSuppliers($query)
     {
         return $query->where('contact_type', 'Proveedor');
-    }
-
-    public function scopeEmployees($query)
-    {
-        return $query->where('contact_type', 'Empleado');
-    }
-
-    public function scopeOther($query)
-    {
-        return $query->where('contact_type', 'Otro');
     }
 }

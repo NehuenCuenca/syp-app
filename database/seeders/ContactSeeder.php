@@ -11,6 +11,7 @@ class ContactSeeder extends Seeder
     {
         // Create a typical contact
         Contact::create([
+            'code' => 'CLI-ACME-001',
             'company_name' => 'Acme Corporation',
             'contact_name' => 'John Doe',
             'email' => 'john.doe@acme.com',

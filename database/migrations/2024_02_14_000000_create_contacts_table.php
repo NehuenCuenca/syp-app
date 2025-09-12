@@ -13,12 +13,13 @@ return new class extends Migration
     {
         Schema::create('contacts', function (Blueprint $table) {
             $table->id();
+            $table->string('code')->unique();
             $table->string('company_name');
             $table->string('contact_name');
             $table->string('email')->nullable();
             $table->string('phone')->nullable();
             $table->text('address')->nullable();
-            $table->enum('contact_type', ['Cliente', 'Proveedor', 'Empleado', 'Otro']);
+            $table->enum('contact_type', ['Cliente', 'Proveedor']);
             $table->timestamp('registered_at')->nullable();
             $table->timestamps();
             $table->softDeletesTz();

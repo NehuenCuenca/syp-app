@@ -11,13 +11,19 @@ class ContactFactory extends Factory
 
     public function definition(): array
     {
+        $type = $this->faker->randomElement(['Cliente', 'Proveedor']);
+        $typePrefix = ($type === 'Cliente') ? 'CLI' : 'PROV';
+        $companyName = $this->faker->company();
+        $code = $typePrefix . '-' . strtoupper(substr(preg_replace('/\s+/', '', $companyName), 0, 4)) . '-' . $this->faker->unique()->numberBetween(100, 999);
+
         return [
-            'company_name' => fake()->company(),
+            'code' => $code,
+            'company_name' => $companyName,
             'contact_name' => fake()->name(),
             'email' => fake()->unique()->safeEmail(),
             'phone' => fake()->phoneNumber(),
             'address' => fake()->address(),
-            'contact_type' => fake()->randomElement(['Cliente', 'Proveedor', 'Empleado', 'Otro']),
+            'contact_type' => $type,
             'registered_at' => fake()->dateTimeBetween('-1 year', 'now'),
         ];
     }
