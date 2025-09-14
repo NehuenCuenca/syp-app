@@ -20,14 +20,9 @@ return new class extends Migration
             $table->foreignId('id_user_responsible')
                   ->constrained('users', 'id')
                   ->onDelete('restrict');
-            $table->enum('movement_type', [
-                'Compra',
-                'Venta',
-                'Ajuste_Positivo',
-                'Ajuste_Negativo',
-                'Devolucion_Cliente',
-                'Devolucion_Proveedor'
-            ]);
+            $table->foreignId('id_movement_type')
+                  ->constrained('movement_types', 'id')
+                  ->onDelete('restrict');
             $table->integer('quantity_moved');
             $table->timestamp('movement_date')
                   ->useCurrent();

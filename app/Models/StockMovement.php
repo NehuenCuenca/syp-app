@@ -27,7 +27,7 @@ class StockMovement extends Model
         'id_product',
         'id_order',
         'id_user_responsible',
-        'movement_type',
+        'id_movement_type',
         'quantity_moved',
         'movement_date',
         'external_reference',
@@ -51,13 +51,6 @@ class StockMovement extends Model
      * The attributes that should be hidden for serialization.
      */
     protected $hidden = [];
-
-    const MOVEMENT_TYPE_PURCHASE = 'Compra';
-    const MOVEMENT_TYPE_SALE = 'Venta';
-    const MOVEMENT_TYPE_RETURN_CUSTOMER = 'Devolucion_Cliente';
-    const MOVEMENT_TYPE_RETURN_SUPPLIER = 'Devolucion_Proveedor';
-    const MOVEMENT_TYPE_ADJUST_POSITIVE = 'Ajuste_Positivo';
-    const MOVEMENT_TYPE_ADJUST_NEGATIVE = 'Ajuste_Negativo';
 
     /**
      * Boot the model.
@@ -83,6 +76,14 @@ class StockMovement extends Model
     }
 
     /**
+     * Get the movement type that this stock movement is associated with.
+     */
+    public function movementType(): BelongsTo
+    {
+        return $this->belongsTo(MovementType::class, 'id_movement_type');
+    }
+
+    /**
      * Get the order that this stock movement is associated with.
      */
     public function order(): BelongsTo
@@ -96,14 +97,6 @@ class StockMovement extends Model
     public function userResponsible(): BelongsTo
     {
         return $this->belongsTo(User::class, 'id_user_responsible');
-    }
-
-    /**
-     * Scope para filtrar por tipo de movimiento
-     */
-    public function scopeByMovementType($query, $movementType)
-    {
-        return $query->where('movement_type', $movementType);
     }
 
     /**
@@ -123,38 +116,6 @@ class StockMovement extends Model
     }
 
     /**
-     * Scope para movimientos de incremento de stock
-     */
-    public function scopeIncrements($query)
-    {
-        return $query->whereIn('movement_type', ['Compra', 'Devolucion_Cliente', 'Ajuste_Positivo']);
-    }
-
-    /**
-     * Scope para movimientos de decremento de stock
-     */
-    public function scopeDecrements($query)
-    {
-        return $query->whereIn('movement_type', ['Venta', 'Devolucion_Proveedor', 'Ajuste_Negativo']);
-    }
-
-    /**
-     * Determinar si el movimiento es un incremento de stock
-     */
-    public function isIncrement(): bool
-    {
-        return in_array($this->movement_type, ['Compra', 'Devolucion_Cliente', 'Ajuste_Positivo']);
-    }
-
-    /**
-     * Determinar si el movimiento es un decremento de stock
-     */
-    public function isDecrement(): bool
-    {
-        return in_array($this->movement_type, ['Venta', 'Devolucion_Proveedor', 'Ajuste_Negativo']);
-    }
-
-    /**
      * Obtener la cantidad absoluta del movimiento
      */
     public function getAbsoluteQuantityAttribute(): int
@@ -162,50 +123,18 @@ class StockMovement extends Model
         return abs($this->quantity_moved);
     }
 
-    /**
-     * Obtener descripción legible del tipo de movimiento
-     */
-    public function getMovementTypeDescriptionAttribute(): string
-    {
-        $descriptions = [
-            'Compra' => 'Compra entrante',
-            'Venta' => 'Venta saliente',
-            'Ajuste_Positivo' => 'Ajuste positivo',
-            'Ajuste_Negativo' => 'Ajuste negativo',
-            'Devolucion_Cliente' => 'Devolución de cliente',
-            'Devolucion_Proveedor' => 'Devolución a proveedor'
-        ];
-
-        return $descriptions[$this->movement_type] ?? $this->movement_type;
-    }
-
     public static function getMovementTypes(): array
     {
-        return [
-            self::MOVEMENT_TYPE_PURCHASE,
-            self::MOVEMENT_TYPE_SALE,
-            self::MOVEMENT_TYPE_RETURN_CUSTOMER,
-            self::MOVEMENT_TYPE_RETURN_SUPPLIER,
-            self::MOVEMENT_TYPE_ADJUST_POSITIVE,
-            self::MOVEMENT_TYPE_ADJUST_NEGATIVE,
-        ];
+        return MovementType::all()->pluck('name')->toArray();
     }
 
     public static function getIncrementMovementTypes(): array
     {
-        return [
-            self::MOVEMENT_TYPE_PURCHASE,
-            self::MOVEMENT_TYPE_RETURN_CUSTOMER,
-            self::MOVEMENT_TYPE_ADJUST_POSITIVE,
-        ];
+        return MovementType::getIncrementMovementTypes();
     }
 
     public static function getDecrementMovementTypes(): array
     {
-        return [
-            self::MOVEMENT_TYPE_SALE,
-            self::MOVEMENT_TYPE_RETURN_SUPPLIER,
-            self::MOVEMENT_TYPE_ADJUST_NEGATIVE,
-        ];
+        return MovementType::getDecrementMovementTypes();
     }
 }
