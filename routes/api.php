@@ -39,8 +39,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::prefix('products')->group(function () {
         Route::patch('/{id}/restore', [ProductController::class, 'restore'])->name('products.restore');
-        Route::get('/filters', [ProductController::class, 'getFilters'])
-        ->name('orders.filters');
+        Route::get('/filters', [ProductController::class, 'getFilters'])->name('orders.filters');
         Route::get('/filtered', [ProductController::class, 'getFilteredProducts'])->name('products.filtered');
         Route::get('/stats', [ProductController::class, 'getStats'])->name('products.stats');
     });
@@ -62,6 +61,14 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/orders/{orderId}/check-exportable', [OrderExportController::class, 'checkOrderExportability'])
         ->name('orders.check.exportable')
         ->where('orderId', '[0-9]+');
+
+    // Make a route to get the order details
+    Route::get('/orders/{order}/details', [OrderController::class, 'getOrderDetails'])
+    ->name('orders.details');
+    
+    // Make a route to get the stock movements
+    Route::get('/orders/{order}/stock-movements', [OrderController::class, 'getStockMovements'])
+    ->name('orders.stock-movements');
 
     // Rutas resource para Orders
     Route::resource('orders', OrderController::class);

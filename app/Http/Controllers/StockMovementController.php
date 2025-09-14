@@ -6,6 +6,7 @@ use App\Models\StockMovement;
 use App\Models\Product;
 use App\Http\Requests\StoreStockMovementRequest;
 use App\Http\Requests\UpdateStockMovementRequest;
+use App\Models\MovementType;
 use App\Models\Order;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
@@ -46,8 +47,8 @@ class StockMovementController extends Controller
             'data' => [
                 'orders' => $orders,
                 'products' => $products,
-                'increment_movement_types' => StockMovement::getIncrementMovementTypes(),
-                'decrement_movement_types' => StockMovement::getDecrementMovementTypes(),
+                'increment_movement_types' => MovementType::getIncrementMovementTypes(),
+                'decrement_movement_types' => MovementType::getDecrementMovementTypes(),
             ],
             'message' => 'Datos para crear movimiento de stock obtenidos exitosamente'
         ]);
@@ -71,8 +72,8 @@ class StockMovementController extends Controller
             'success' => true,
             'data' => [
                 'stock_movement' => $stockMovement->load(['product.category', 'order.contact']),
-                'increment_movement_types' => StockMovement::getIncrementMovementTypes(),
-                'decrement_movement_types' => StockMovement::getDecrementMovementTypes(),
+                'increment_movement_types' => MovementType::getIncrementMovementTypes(),
+                'decrement_movement_types' => MovementType::getDecrementMovementTypes(),
                 'orders' => $orders,
                 'products' => $products,
             ],
@@ -94,10 +95,7 @@ class StockMovementController extends Controller
             $product = Product::findOrFail($validated['id_product']);
 
             // Determinar si es incremento o decremento según el tipo de movimiento
-            $incrementTypes = ['Compra', 'Devolucion_Cliente', 'Ajuste_Positivo'];
-            $decrementTypes = ['Venta', 'Devolucion_Proveedor', 'Ajuste_Negativo'];
-
-            $isIncrement = in_array($validated['movement_type'], $incrementTypes);
+            $isIncrement = in_array($validated['movement_type'], MovementType::getIncrementMovementTypes());
             $quantityMoved = $validated['quantity_moved'];
 
             // Verificar stock suficiente para decrementos
@@ -113,7 +111,7 @@ class StockMovementController extends Controller
                 'id_product' => $validated['id_product'],
                 'id_order' => $validated['id_order'] ?? null,
                 'id_user_responsible' => Auth::id(),
-                'movement_type' => $validated['movement_type'],
+                'id_movement_type' => MovementType::where('name', $validated['movement_type'])->first()->id,
                 'quantity_moved' => $isIncrement ? $quantityMoved : -$quantityMoved,
                 'external_reference' => $validated['external_reference'] ?? null,
                 'notes' => $validated['notes'] ?? null,
@@ -176,8 +174,7 @@ class StockMovementController extends Controller
             $product->current_stock -= $stockMovement->quantity_moved;
 
             // Determinar si es incremento o decremento según el nuevo tipo de movimiento
-            $incrementTypes = ['Compra', 'Devolucion_Cliente', 'Ajuste_Positivo'];
-            $isIncrement = in_array($validated['movement_type'], $incrementTypes);
+            $isIncrement = in_array($validated['movement_type'], MovementType::getIncrementMovementTypes());
             $quantityMoved = $validated['quantity_moved'];
 
             // Verificar stock suficiente para decrementos
@@ -190,7 +187,7 @@ class StockMovementController extends Controller
 
             // Actualizar el movimiento con la nueva cantidad con signo
             $stockMovement->update([
-                'movement_type' => $validated['movement_type'],
+                'id_movement_type' => MovementType::where('name', $validated['movement_type'])->first()->id,
                 'quantity_moved' => $isIncrement ? $quantityMoved : -$quantityMoved,
                 'external_reference' => $validated['external_reference'] ?? $stockMovement->external_reference,
                 'notes' => $validated['notes'] ?? $stockMovement->notes

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreOrderRequest;
 use App\Http\Requests\UpdateOrderRequest;
 use App\Models\Contact;
+use App\Models\MovementType;
 use App\Models\Order;
 use App\Models\OrderDetail;
 use App\Models\StockMovement;
@@ -127,7 +128,7 @@ class OrderController extends Controller
     public function show(Order $order)
     {
         return response()->json(
-            $order->load(['contact', 'userCreator', 'orderDetails.product.category'])
+            $order->load(['contact', 'userCreator', 'orderDetails.product.category', 'stockMovements'])
         );
     }
 
@@ -301,7 +302,7 @@ class OrderController extends Controller
             'id_product' => $detail->id_product,
             'id_order' => $order->id,
             'id_user_responsible' => $order->id_user_creator,
-            'movement_type' => $movementType,
+            'id_movement_type' => MovementType::where('name', $movementType)->first()->id,
             'quantity_moved' => $quantity,
             'movement_date' => now(),
             'notes' => "Movimiento automático por pedido #{$order->id}",
@@ -321,7 +322,7 @@ class OrderController extends Controller
         $orderDetails = OrderDetail::where('id_order', $order->id)->get();
         
         foreach ($orderDetails as $detail) {
-            $movementType = $order->getIsPurchaseAttribute() ? 'Ajuste_Negativo' : 'Ajuste_Positivo';
+            $movementType = $order->getIsPurchaseAttribute() ? 'Ajuste Negativo' : 'Ajuste Positivo';
             $quantity = $order->order_type === 'Compra' ? -$detail['quantity'] : $detail['quantity'];
 
             // Crear movimiento inverso
@@ -329,7 +330,7 @@ class OrderController extends Controller
                 'id_product' => $detail->id_product,
                 'id_order' => $order->id,
                 'id_user_responsible' => auth()->id() ?? $order->id_user_creator,
-                'movement_type' => $movementType,
+                'id_movement_type' => MovementType::where('name', $movementType)->first()->id,
                 'quantity_moved' => $quantity,
                 'movement_date' => now(),
                 'notes' => "Reversión de movimiento por cambio de estado del pedido #{$order->id}",
@@ -346,7 +347,7 @@ class OrderController extends Controller
      */
     private function createReturnMovements(Order $order)
     {
-        $returnType = $order->order_type === 'Compra' ? 'Devolucion_Proveedor' : 'Devolucion_Cliente';
+        $returnType = $order->order_type === 'Compra' ? 'Devolucion Proveedor' : 'Devolucion Cliente';
         
         foreach ($order->orderDetails as $detail) {
             $quantity = $order->order_type === 'Compra' ? -$detail->quantity : $detail->quantity;
@@ -355,7 +356,7 @@ class OrderController extends Controller
                 'id_product' => $detail->id_product,
                 'id_order' => $order->id,
                 'id_user_responsible' => auth()->id() ?? $order->id_user_creator,
-                'movement_type' => $returnType,
+                'id_movement_type' => MovementType::where('name', $returnType)->first()->id,
                 'quantity_moved' => $quantity,
                 'movement_date' => now(),
                 'notes' => "Devolución del pedido #{$order->id}",
@@ -454,5 +455,25 @@ class OrderController extends Controller
         $orders = $query->paginate($perPage);
 
         return response()->json($orders);
+    }
+
+    public function getOrderDetails(Order $order)
+    {
+        $order->load(['orderDetails.product.category']);
+        return response()->json([
+            'success' => true,
+            'data' => $order->orderDetails,
+            'message' => 'Detalles del pedido obtenidos exitosamente'
+        ]);
+    }
+
+    public function getStockMovements(Order $order)
+    {
+        $order->load(['stockMovements.product.category']);
+        return response()->json([
+            'success' => true,
+            'data' => $order->stockMovements,
+            'message' => 'Movimientos de stock obtenidos exitosamente'
+        ]);
     }
 }

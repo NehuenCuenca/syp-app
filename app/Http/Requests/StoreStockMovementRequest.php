@@ -42,7 +42,7 @@ class StoreStockMovementRequest extends FormRequest
             'movement_type' => [
                 'required',
                 'string',
-                'in:Compra,Venta,Ajuste_Positivo,Ajuste_Negativo,Devolucion_Cliente,Devolucion_Proveedor'
+                'in:Compra,Venta,Ajuste Positivo,Ajuste Negativo,Devolucion Cliente,Devolucion Proveedor'
             ],
             'external_reference' => [
                 'nullable',

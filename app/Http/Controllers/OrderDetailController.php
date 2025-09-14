@@ -8,6 +8,7 @@ use App\Models\Product;
 use App\Models\StockMovement;
 use App\Http\Requests\StoreOrderDetailRequest;
 use App\Http\Requests\UpdateOrderDetailRequest;
+use App\Models\MovementType;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -99,7 +100,7 @@ class OrderDetailController extends Controller
                     'id_product' => $orderData['id_product'],
                     'id_order' => $orderId,
                     'id_user_responsible' => Auth::id(),
-                    'movement_type' => 'Venta',
+                    'id_movement_type' => MovementType::where('name', 'Venta')->first()->id,
                     'quantity_moved' => -$orderData['quantity'], // Negativo para salida
                     'movement_date' => now(),
                     'notes' => 'Descuento de stock por detalle de pedido #' . $order->id
@@ -183,7 +184,7 @@ class OrderDetailController extends Controller
                     // Eliminar movimiento de stock anterior
                     StockMovement::where('id_order', $order->id)
                         ->where('id_product', $orderDetail->id_product)
-                        ->where('movement_type', 'Venta')
+                        ->where('id_movement_type', MovementType::where('name', 'Venta')->first()->id)
                         ->where('quantity_moved', -$orderDetail->quantity)
                         ->delete();
                     
@@ -205,7 +206,7 @@ class OrderDetailController extends Controller
                         'id_product' => $newData['id_product'],
                         'id_order' => $order->id,
                         'id_user_responsible' => Auth::id(),
-                        'movement_type' => 'Venta',
+                        'id_movement_type' => MovementType::where('name', 'Venta')->first()->id,
                         'quantity_moved' => -$newData['quantity'],
                         'movement_date' => now(),
                         'notes' => 'Descuento de stock por actualización de detalle de pedido #' . $order->id
@@ -231,7 +232,7 @@ class OrderDetailController extends Controller
                     // Actualizar movimiento de stock existente
                     $stockMovement = StockMovement::where('id_order', $order->id)
                         ->where('id_product', $orderDetail->id_product)
-                        ->where('movement_type', 'Venta')
+                        ->where('id_movement_type', MovementType::where('name', 'Venta')->first()->id)
                         ->first();
                     
                     if ($stockMovement) {
@@ -302,7 +303,7 @@ class OrderDetailController extends Controller
                 // Eliminar movimiento de stock
                 StockMovement::where('id_order', $order->id)
                     ->where('id_product', $orderDetail->id_product)
-                    ->where('movement_type', 'Venta')
+                    ->where('id_movement_type', MovementType::where('name', 'Venta')->first()->id)
                     ->where('quantity_moved', -$orderDetail->quantity)
                     ->delete();
             }
