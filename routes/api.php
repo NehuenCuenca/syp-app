@@ -85,6 +85,12 @@ Route::middleware('auth:sanctum')->group(function () {
         ]
     ]);
 
+    Route::get('/stock-movements/filters', [StockMovementController::class, 'getFilters'])
+        ->name('stock-movements.filters');
+        
+    Route::get('/stock-movements/filtered', [StockMovementController::class, 'getFilteredMovements'])
+        ->name('stock-movements.filtered');
+
     Route::resource('stock-movements', StockMovementController::class, [
         'names' => [
             'index' => 'stock-movements.index',

@@ -9,6 +9,7 @@ use App\Http\Requests\UpdateStockMovementRequest;
 use App\Models\MovementType;
 use App\Models\Order;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 
@@ -254,5 +255,82 @@ class StockMovementController extends Controller
                 'message' => 'Error al eliminar el movimiento de stock: ' . $e->getMessage()
             ], 500);
         }
+    }
+
+    public const ALLOWED_SORT_FIELDS  = [
+            'id_order', 'id_product',
+            'id_movement_type', 'movement_date',
+    ];
+    public const ALLOWED_SORT_DIRECTIONS = ['asc', 'desc'];
+
+    /**
+     * Get filters to be used in the index view
+     */
+    public function getFilters()
+    {
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'orders' => Order::all()->select('order_alias', 'id'),
+                'products' => Product::all()->select('name', 'sku', 'id'),
+                'movement_types' => MovementType::all()->select('name', 'id'),
+                'date_from' => StockMovement::min('created_at'),
+                'date_to' => StockMovement::max('created_at'),
+                'sort_by' => self::ALLOWED_SORT_FIELDS,
+                'sort_direction' => self::ALLOWED_SORT_DIRECTIONS
+            ],
+            'message' => 'Datos para filtrar pedidos obtenidos exitosamente'
+        ]);
+    }
+
+    /**
+     * Get filtered and ordered movements
+     */
+    public function getFilteredMovements(Request $request)
+    {
+        $query = StockMovement::with(['product', 'movementType', 'order']);
+
+        // Filtros
+        if ($request->filled('id_order')) {
+            $query->where('id_order', $request->id_order);
+        }
+
+        if ($request->filled('id_product')) {
+            $query->where('id_product', $request->id_product);
+        }
+
+        if ($request->filled('id_movement_type')) { 
+            $query->where('id_movement_type', $request->id_movement_type);
+        }
+
+        if ($request->filled('date_from')) {
+            $query->whereDate('movement_date', '>=', $request->date_from);
+        }
+
+        if ($request->filled('date_to')) {
+            $query->whereDate('movement_date', '<=', $request->date_to);
+        }
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('external_reference', 'like', "%{$search}%")
+                  ->orWhere('notes', 'like', "%{$search}%");
+            });
+        }
+
+        // Ordenamiento
+        $sortBy = $request->get('sort_by', 'created_at');
+        $sortDirection = $request->get('sort_direction', 'desc');
+
+        if (in_array($sortBy, self::ALLOWED_SORT_FIELDS)) {
+            $query->orderBy($sortBy, $sortDirection);
+        }
+
+        // Paginación
+        $perPage = $request->get('per_page', 15);
+        $orders = $query->paginate($perPage);
+
+        return response()->json($orders);
     }
 }
