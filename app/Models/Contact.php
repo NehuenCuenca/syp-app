@@ -24,6 +24,15 @@ class Contact extends Model
     protected $casts = [
         'registered_at' => 'datetime'
     ];
+
+    protected $appends = [
+        'full_name'
+    ];
+
+    public function getFullNameAttribute()
+    {
+        return $this->contact_name . ' (' . $this->contact_type . ')';
+    }
     
     // Scopes para filtrar por tipo de contacto
     public function scopeClients($query)

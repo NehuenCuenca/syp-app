@@ -370,12 +370,18 @@ class OrderController extends Controller
 
 
     public const ALLOWED_SORT_FIELDS  = [
-            'id', 'created_at', 
-            'actual_delivery_date', 'order_type', 
-            'order_status', 'total_net'
+            'id' => 'ID', 
+            'created_at' => 'Fecha de creacion', 
+            'actual_delivery_date' => 'Fecha de entrega',
+            'order_type' => 'Tipo de pedido',
+            'order_status' => 'Estado de pedido',
+            'total_net' => 'Total neto'
     ];
-    public const ALLOWED_SORT_DIRECTIONS = ['asc', 'desc'];
 
+    public const ALLOWED_SORT_DIRECTIONS = [
+        'asc' => 'Ascendente',
+        'desc' => 'Descendente'
+    ];
 
     /**
      * Get filters to be used in the index view
@@ -387,7 +393,7 @@ class OrderController extends Controller
             'data' => [
                 'order_types' => Order::getOrderTypes(),
                 'order_statuses' => Order::getOrderStatuses(),
-                'contacts' => Contact::select('id', 'company_name', 'contact_type')->get(),
+                'contacts' => Contact::select('id', 'contact_name', 'contact_type')->get(),
                 'date_from' => Order::min('created_at'),
                 'date_to' => Order::max('created_at'),
                 'sort_by' => self::ALLOWED_SORT_FIELDS,
@@ -412,8 +418,8 @@ class OrderController extends Controller
             $query->where('order_status', $request->order_status);
         }
 
-        if ($request->filled('contact_id')) {
-            $query->where('id_contact', $request->contact_id);
+        if ($request->filled('id_contact')) {
+            $query->where('id_contact', $request->id_contact);
         }
 
         if ($request->filled('date_from')) {
@@ -427,26 +433,15 @@ class OrderController extends Controller
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
-                $q->where('id', 'like', "%{$search}%")
-                  ->orWhere('notes', 'like', "%{$search}%")
-                  ->orWhereHas('contact', function ($contactQuery) use ($search) {
-                      $contactQuery->where('company_name', 'like', "%{$search}%")
-                                 ->orWhere('contact_name', 'like', "%{$search}%");
-                  });
+                $q->where('notes', 'like', "%{$search}%");
             });
         }
 
         // Ordenamiento
         $sortBy = $request->get('sort_by', 'created_at');
         $sortDirection = $request->get('sort_direction', 'desc');
-        
-        $allowedSortFields = [
-            'id', 'created_at', 
-            'actual_delivery_date', 'order_type',
-            'order_status', 'total_net'
-        ];
 
-        if (in_array($sortBy, $allowedSortFields)) {
+        if (in_array($sortBy, array_keys(self::ALLOWED_SORT_FIELDS))) {
             $query->orderBy($sortBy, $sortDirection);
         }
 
