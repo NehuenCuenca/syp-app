@@ -17,7 +17,8 @@ class ContactController extends Controller
      */
     public function index(): JsonResponse
     {
-        $contacts = Contact::orderBy('created_at', 'desc')->get();
+        $contacts = Contact::select('id', 'code', 'company_name', 'contact_name', 'phone', 'contact_type')
+                            ->orderBy('created_at', 'desc')->get();
 
         return response()->json([
             'success' => true,
@@ -25,6 +26,51 @@ class ContactController extends Controller
             'message' => 'Todos los contactos recuperados exitosamente.',
             'total' => $contacts->count()
         ]);
+    }
+
+    public const ALLOWED_SORT_FIELDS  = [
+            'code' => 'Codigo', 
+            'company_name' => 'Nombre de negocio', 
+            'contact_name' => 'Nombre de contacto',
+            'contact_type' => 'Tipo de contacto',
+    ];
+
+    public const ALLOWED_SORT_DIRECTIONS = [
+        'asc' => 'Ascendente',
+        'desc' => 'Descendente'
+    ];
+
+    public function getFilters(): JsonResponse
+    {
+        try {
+            $contactTypes = Contact::select('contact_type')
+                ->distinct()
+                ->whereNotNull('contact_type')
+                ->where('contact_type', '!=', '')
+                ->orderBy('contact_type')
+                ->pluck('contact_type');
+
+            $contactCodes = Contact::select('code')
+                ->distinct()
+                ->whereNotNull('code')
+                ->where('code', '!=', '')
+                ->orderBy('code')
+                ->pluck('code');
+                
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'contact_types' => $contactTypes,
+                    'contact_codes' => $contactCodes,
+                    'sort_by' => self::ALLOWED_SORT_FIELDS,
+                    'sort_direction' => self::ALLOWED_SORT_DIRECTIONS
+                ]
+            ]);
+        } catch (QueryException $e) {
+            return response()->json([
+                'message' => 'Error al recuperar los tipos de contactos.'
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
     }
 
     /**
@@ -51,8 +97,11 @@ class ContactController extends Controller
 
         // Ordenamiento
         $sortBy = $request->get('sort_by', 'created_at');
-        $sortOrder = $request->get('sort_order', 'desc');
-        $query->orderBy($sortBy, $sortOrder);
+        $sortDirection = $request->get('sort_direction', 'desc');
+        if (in_array($sortBy, array_keys(self::ALLOWED_SORT_FIELDS))) {
+            $query->orderBy($sortBy, $sortDirection)
+                ->select('id', 'code', 'company_name', 'contact_name', 'phone', 'contact_type');
+        }
 
         // Paginación
         $perPage = $request->get('per_page', 15);
@@ -64,33 +113,12 @@ class ContactController extends Controller
             'filters_applied' => [
                 'search' => $search,
                 'sort_by' => $sortBy,
-                'sort_order' => $sortOrder,
+                'sort_direction' => $sortDirection,
                 'per_page' => $perPage,
                 'page' => $request->integer('page', 1)
             ],
             'message' => 'Contactos filtrados recuperados exitosamente.'
         ]);
-    }
-
-    public function getContactsTypes(): JsonResponse
-    {
-        try {
-            $contactTypes = Contact::select('contact_type')
-                ->distinct()
-                ->whereNotNull('contact_type')
-                ->where('contact_type', '!=', '')
-                ->orderBy('contact_type')
-                ->pluck('contact_type');
-                
-            return response()->json([
-                'success' => true,
-                'data' => $contactTypes
-            ]);
-        } catch (QueryException $e) {
-            return response()->json([
-                'message' => 'Error al recuperar los tipos de contactos.'
-            ], Response::HTTP_INTERNAL_SERVER_ERROR);
-        }
     }
 
     /**

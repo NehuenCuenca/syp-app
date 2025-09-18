@@ -33,7 +33,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('contacts')->group(function () {
         Route::patch('/{id}/restore', [ContactController::class, 'restore'])->name('contacts.restore');
         Route::get('/filtered', [ContactController::class, 'getFilteredContacts'])->name('contacts.filtered');
-        Route::get('/types', [ContactController::class, 'getContactsTypes'])->name('contacts.types');
+        Route::get('/filters', [ContactController::class, 'getFilters'])->name('contacts.filters');
     });
     Route::apiResource('contacts', ContactController::class);
 

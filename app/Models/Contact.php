@@ -26,13 +26,35 @@ class Contact extends Model
     ];
 
     protected $appends = [
-        'full_name'
+        'full_name',
+        'last_order'
     ];
+
+    public function orders()
+    {
+        return $this->hasMany(Order::class, 'id_contact');
+    }
 
     public function getFullNameAttribute()
     {
         return $this->contact_name . ' (' . $this->contact_type . ')';
     }
+
+    public function getLastOrderAttribute()
+{
+    $lastOrder = $this->orders()
+        ->select('id', 'order_type', 'order_status', 'created_at')
+        ->orderBy('created_at', 'desc')
+        ->first();
+    
+    if (!$lastOrder) {
+        return 'Ultimo pedido: ---';
+    }
+    
+    // Retornar un array con los datos necesarios y el alias creado manualmente
+    return  'Ultimo pedido: ' . strtoupper($lastOrder->order_status) . ' '
+                       . $lastOrder->created_at->format('Y-m-d');
+}
     
     // Scopes para filtrar por tipo de contacto
     public function scopeClients($query)
