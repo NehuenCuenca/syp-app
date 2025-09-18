@@ -143,10 +143,26 @@ class ProductController extends Controller
         }
     }
 
+    /* public const ALLOWED_SORT_FIELDS  = [
+        'id_category', 'buy_price',  
+        'sale_price', 'current_stock',
+        'created_at', 'name'
+    ]; */
     public const ALLOWED_SORT_FIELDS  = [
-        'id_category', 'low_stock', 'search', 'min_sale_price', 'max_sale_price', 'min_stock',
+        'id_category' => 'Categoria',   
+        'buy_price' => 'Precio de compra',   
+        'sale_price' => 'Precio de venta',   
+        'current_stock' => 'Stock minimo',   
+        'current_stock' => 'Stock minimo',   
+        'created_at' => 'Fecha de creacion',   
+        'name' => 'Nombre'
     ];
-    public const ALLOWED_SORT_DIRECTIONS = ['asc', 'desc'];
+
+
+    public const ALLOWED_SORT_DIRECTIONS = [
+        'asc' => 'Ascendente',
+        'desc' => 'Descendente'
+    ];
 
     /**
      * Get filters to be used in the index view
@@ -156,7 +172,7 @@ class ProductController extends Controller
         return response()->json([
             'success' => true,
             'data' => [
-                'categories' => Category::all(),
+                'categories' => Category::all()->select('id', 'name'),
                 'sort_by' => self::ALLOWED_SORT_FIELDS,
                 'sort_direction' => self::ALLOWED_SORT_DIRECTIONS
             ],
@@ -188,8 +204,7 @@ class ProductController extends Controller
             if (!empty($filters['search'])) {
                 $query->where(function ($q) use ($filters) {
                     $q->where('name', 'like', '%' . $filters['search'] . '%')
-                    ->orWhere('sku', 'like', '%' . $filters['search'] . '%')
-                    ->orWhere('description', 'like', '%' . $filters['search'] . '%');
+                        ->orWhere('sku', 'like', '%' . $filters['search'] . '%');
                 });
             }
             
@@ -206,8 +221,10 @@ class ProductController extends Controller
             }
             
             // Ordenamiento
-            $query->orderBy($filters['sort_by'], $filters['sort_order']);
-            
+            if (in_array($filters['sort_by'], array_keys(self::ALLOWED_SORT_FIELDS))) {
+                $query->orderBy($filters['sort_by'], $filters['sort_direction']);
+            }
+
             // Paginación
             $products = $query->paginate($filters['per_page']);
             
@@ -215,9 +232,6 @@ class ProductController extends Controller
             $products->getCollection()->transform(function ($product) {
                 $product->category;
                 $product->is_low_stock = $product->current_stock < $product->min_stock_alert;
-                $product->stock_percentage = $product->min_stock_alert > 0 
-                    ? round(($product->current_stock / $product->min_stock_alert) * 100, 2) 
-                    : 0;
                 return $product;
             });
             

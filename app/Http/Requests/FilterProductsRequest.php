@@ -34,7 +34,7 @@ class FilterProductsRequest extends FormRequest
                 'string',
                 'in:name,sku,id_category,current_stock,min_stock_alert,sale_price,buy_price,created_at,updated_at'
             ],
-            'sort_order' => 'nullable|string|in:asc,desc',
+            'sort_direction' => 'nullable|string|in:asc,desc',
             'id_category' => 'nullable|integer|exists:categories,id',
             'search' => 'nullable|string|max:255',
             'low_stock' => 'nullable|boolean'
@@ -62,7 +62,7 @@ class FilterProductsRequest extends FormRequest
             'page.integer' => 'El número de página debe ser un número entero.',
             'page.min' => 'El número de página debe ser al menos 1.',
             'sort_by.in' => 'El campo de ordenamiento no es válido.',
-            'sort_order.in' => 'El orden debe ser "asc" o "desc".',
+            'sort_direction.in' => 'El orden debe ser "asc" o "desc".',
             'id_category.exists' => 'La categoría especificada no existe.',
             'search.max' => 'El término de búsqueda no puede tener más de 255 caracteres.',
             'low_stock.boolean' => 'El filtro de stock bajo debe ser verdadero o falso.'
@@ -83,7 +83,7 @@ class FilterProductsRequest extends FormRequest
             'per_page' => 'elementos por página',
             'page' => 'página',
             'sort_by' => 'campo de ordenamiento',
-            'sort_order' => 'orden',
+            'sort_direction' => 'orden',
             'id_category' => 'categoría',
             'search' => 'búsqueda',
             'low_stock' => 'stock bajo'
@@ -124,7 +124,7 @@ class FilterProductsRequest extends FormRequest
             'max_sale_price' => $this->integer('max_sale_price'),
             'min_stock' => $this->integer('min_stock'),
             'sort_by' => $this->input('sort_by', 'created_at'),
-            'sort_order' => $this->input('sort_order', 'desc'),
+            'sort_direction' => $this->input('sort_direction', 'desc'),
             'per_page' => $this->integer('per_page', 15),
             'page' => $this->integer('page', 1)
         ];
