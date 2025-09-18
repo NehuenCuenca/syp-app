@@ -258,10 +258,15 @@ class StockMovementController extends Controller
     }
 
     public const ALLOWED_SORT_FIELDS  = [
-            'id_order', 'id_product',
-            'id_movement_type', 'movement_date',
+            'id_order' => 'Pedido',
+            'id_product' => 'Producto',
+            'id_movement_type' => 'Tipo de movimiento',
+            'movement_date' => 'Fecha del movimiento',
     ];
-    public const ALLOWED_SORT_DIRECTIONS = ['asc', 'desc'];
+    public const ALLOWED_SORT_DIRECTIONS = [
+        'asc' => 'Ascendente',
+        'desc' => 'Descendente'
+    ];
 
     /**
      * Get filters to be used in the index view
@@ -323,7 +328,7 @@ class StockMovementController extends Controller
         $sortBy = $request->get('sort_by', 'created_at');
         $sortDirection = $request->get('sort_direction', 'desc');
 
-        if (in_array($sortBy, self::ALLOWED_SORT_FIELDS)) {
+        if (in_array($sortBy, array_keys(self::ALLOWED_SORT_FIELDS))) {
             $query->orderBy($sortBy, $sortDirection);
         }
 
