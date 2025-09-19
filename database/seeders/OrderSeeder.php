@@ -20,6 +20,7 @@ class OrderSeeder extends Seeder
             'id_contact' => $contact->id,
             'id_user_creator' => $user->id,
             'actual_delivery_date' => null,
+            'code' => strtoupper(substr('Venta', 0, 3)) . '-' . now()->timestamp,
             'order_type' => 'Venta',
             'order_status' => 'Pendiente',
             'total_net' => 1512.50,

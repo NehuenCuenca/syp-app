@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('id_contact');
             $table->unsignedBigInteger('id_user_creator');
+            $table->text('code');
             $table->date('actual_delivery_date')->nullable();
             $table->enum('order_type', ['Compra', 'Venta']);
             $table->enum('order_status', ['Pendiente', 'Completado', 'Cancelado', 'Devuelto'])->default('Pendiente');

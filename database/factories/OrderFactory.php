@@ -14,17 +14,19 @@ class OrderFactory extends Factory
     public function definition(): array
     {
         $totalNet = fake()->randomFloat(2, 100, 10000);
-
+        $orderType = fake()->randomElement(['Compra', 'Venta']);
+        $todayTimestamp = now()->timestamp;
         $estimatedDeliveryDate = fake()->dateTimeBetween('now', '+30 days')->format('Y-m-d');
         $shouldHaveActualDelivery = fake()->boolean(70); // 70% chance of having actual delivery date
 
         return [
             'id_contact' => Contact::factory(),
             'id_user_creator' => User::factory(),
+            'code' => strtoupper(substr($orderType, 0, 3)) . '-' . $todayTimestamp,
             'actual_delivery_date' => $shouldHaveActualDelivery ? 
                 fake()->dateTimeBetween($estimatedDeliveryDate, '+35 days')->format('Y-m-d') : 
                 null,
-            'order_type' => fake()->randomElement(['Compra', 'Venta']),
+            'order_type' => $orderType,
             'order_status' => fake()->randomElement(['Pendiente', 'Completado', 'Cancelado', 'Devuelto']),
             'total_net' => $totalNet,
             'notes' => fake()->optional(0.7)->text(200), // 70% chance of having notes
