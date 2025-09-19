@@ -413,7 +413,7 @@ class OrderController extends Controller
     public function getFilteredOrders(Request $request)
     {
         $query = Order::with(['contact', 'userCreator']);
-
+        
         // Filtros
         if ($request->filled('order_type')) {
             $query->where('order_type', $request->order_type);
@@ -436,12 +436,13 @@ class OrderController extends Controller
         }
 
         $search = $request->get('search', '');
-        if ($request->filled('search')) {
+        if ($request->has('search')) {
             $query->where(function ($q) use ($search) {
-                $q->where('notes', 'like', "%{$search}%");
+                $q->where('code', 'like', "%{$search}%")
+                  ->orWhere('notes', 'like', "%{$search}%");
             });
         }
-
+        
         // Ordenamiento
         $sortBy = $request->get('sort_by', 'created_at');
         $sortDirection = $request->get('sort_direction', 'desc');
