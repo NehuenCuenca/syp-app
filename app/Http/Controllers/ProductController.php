@@ -224,7 +224,8 @@ class ProductController extends Controller
             return response()->json([
                 'success' => true,
                 'filtered_products' => $products,
-                'filters_applied' => $filters
+                'filters_applied' => $filters,
+                'message' => 'Productos filtrados recuperados exitosamente.'
             ]);
             
         } catch (QueryException $e) {

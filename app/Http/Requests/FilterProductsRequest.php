@@ -125,7 +125,7 @@ class FilterProductsRequest extends FormRequest
             'min_stock' => $this->integer('min_stock'),
             'sort_by' => $this->input('sort_by', 'created_at'),
             'sort_direction' => $this->input('sort_direction', 'desc'),
-            'per_page' => $this->integer('per_page', 15),
+            'per_page' => $this->integer('per_page', 9),
             'page' => $this->integer('page', 1)
         ];
     }
