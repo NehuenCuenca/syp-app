@@ -10,8 +10,6 @@ use App\Models\Product;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Response;
-use Illuminate\Http\Request;
-use Illuminate\Validation\ValidationException;
 use Illuminate\Database\QueryException;
 
 class ProductController extends Controller
@@ -19,7 +17,7 @@ class ProductController extends Controller
     public function index(): JsonResponse
     {
         try {
-            $products = Product::with(['category'])->get();            
+            $products = Product::select('id', 'sku', 'name', 'current_stock', 'min_stock_alert')->get();            
             return response()->json([
                 'success' => true,
                 'data' => $products,
@@ -36,7 +34,6 @@ class ProductController extends Controller
     public function store(StoreProductRequest $request): JsonResponse
     {
         try {
-            // dd($request->input('id_category'));
             $product = Product::create($request->only([
                 'sku',
                 'name',
@@ -68,8 +65,7 @@ class ProductController extends Controller
 
     public function show(Product $product): JsonResponse
     {
-        $product->category;
-        return response()->json($product);
+        return response()->json($product->load('category'));
     }
 
     public function update(UpdateProductRequest $request, Product $product): JsonResponse
@@ -143,21 +139,13 @@ class ProductController extends Controller
         }
     }
 
-    /* public const ALLOWED_SORT_FIELDS  = [
-        'id_category', 'buy_price',  
-        'sale_price', 'current_stock',
-        'created_at', 'name'
-    ]; */
     public const ALLOWED_SORT_FIELDS  = [
         'id_category' => 'Categoria',   
-        'buy_price' => 'Precio de compra',   
         'sale_price' => 'Precio de venta',   
-        'current_stock' => 'Stock minimo',   
-        'current_stock' => 'Stock minimo',   
+        'current_stock' => 'Stock actual',   
         'created_at' => 'Fecha de creacion',   
         'name' => 'Nombre'
     ];
-
 
     public const ALLOWED_SORT_DIRECTIONS = [
         'asc' => 'Ascendente',
@@ -169,10 +157,18 @@ class ProductController extends Controller
      */
     public function getFilters()
     {
+        $productCodes = Product::select('sku')
+                ->distinct()
+                ->whereNotNull('sku')
+                ->where('sku', '!=', '')
+                ->orderBy('sku')
+                ->pluck('sku');
+
         return response()->json([
             'success' => true,
             'data' => [
                 'categories' => Category::all()->select('id', 'name'),
+                'product_codes' => $productCodes,
                 'sort_by' => self::ALLOWED_SORT_FIELDS,
                 'sort_direction' => self::ALLOWED_SORT_DIRECTIONS
             ],
@@ -203,8 +199,8 @@ class ProductController extends Controller
             
             if (!empty($filters['search'])) {
                 $query->where(function ($q) use ($filters) {
-                    $q->where('name', 'like', '%' . $filters['search'] . '%')
-                        ->orWhere('sku', 'like', '%' . $filters['search'] . '%');
+                    $q->where('sku', 'like', '%' . $filters['search'] . '%')
+                        ->orWhere('name', 'like', '%' . $filters['search'] . '%');
                 });
             }
             
@@ -216,24 +212,14 @@ class ProductController extends Controller
                 $query->where('sale_price', '<=', $filters['max_sale_price']);
             }
             
-            if (!empty($filters['min_stock'])) {
-                $query->where('current_stock', '>=', $filters['min_stock']);
-            }
-            
             // Ordenamiento
             if (in_array($filters['sort_by'], array_keys(self::ALLOWED_SORT_FIELDS))) {
-                $query->orderBy($filters['sort_by'], $filters['sort_direction']);
+                $query->orderBy($filters['sort_by'], $filters['sort_direction'])
+                    ->select('id', 'sku', 'name', 'current_stock', 'min_stock_alert');
             }
 
             // Paginación
             $products = $query->paginate($filters['per_page']);
-            
-            // Agregar información adicional
-            $products->getCollection()->transform(function ($product) {
-                $product->category;
-                $product->is_low_stock = $product->current_stock < $product->min_stock_alert;
-                return $product;
-            });
             
             return response()->json([
                 'success' => true,

@@ -30,6 +30,13 @@ class Product extends Model
         'min_stock_alert' => 'integer'
     ];
 
+    protected $appends = ['is_low_stock'];
+
+    public function getIsLowStockAttribute()
+    {
+        return $this->current_stock <= $this->min_stock_alert;
+    }
+
     public function category()
     {
         return $this->belongsTo(Category::class, 'id_category', 'id');
