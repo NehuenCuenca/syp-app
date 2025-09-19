@@ -21,11 +21,16 @@ class OrderController extends Controller
      */
     public function index()
     {
-        $orders = Order::with(['contact', 'userCreator', 'orderDetails.product.category'])
+        $orders = Order::with(['contact', 'userCreator'])
             ->orderBy('created_at', 'desc')
-            ->paginate(15);
+            ->get();
         
-        return response()->json($orders);
+        return response()->json([
+            'success' => true,
+            'data' => $orders,
+            'message' => 'Todos los pedidos recuperados exitosamente.',
+            'total' => $orders->count()
+        ]);
     }
 
     /**
@@ -393,7 +398,7 @@ class OrderController extends Controller
             'data' => [
                 'order_types' => Order::getOrderTypes(),
                 'order_statuses' => Order::getOrderStatuses(),
-                'contacts' => Contact::select('id', 'contact_name', 'contact_type')->get(),
+                'contacts' => Contact::select('id', 'company_name', 'contact_name', 'contact_type')->get(),
                 'date_from' => Order::min('created_at'),
                 'date_to' => Order::max('created_at'),
                 'sort_by' => self::ALLOWED_SORT_FIELDS,
@@ -407,7 +412,7 @@ class OrderController extends Controller
      */
     public function getFilteredOrders(Request $request)
     {
-        $query = Order::with(['contact', 'userCreator', 'orderDetails.product.category']);
+        $query = Order::with(['contact', 'userCreator']);
 
         // Filtros
         if ($request->filled('order_type')) {
@@ -430,8 +435,8 @@ class OrderController extends Controller
             $query->whereDate('created_at', '<=', $request->date_to);
         }
 
+        $search = $request->get('search', '');
         if ($request->filled('search')) {
-            $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('notes', 'like', "%{$search}%");
             });
@@ -446,10 +451,21 @@ class OrderController extends Controller
         }
 
         // Paginación
-        $perPage = $request->get('per_page', 15);
+        $perPage = $request->get('per_page', 9);
         $orders = $query->paginate($perPage);
 
-        return response()->json($orders);
+        return response()->json([
+            'success' => true,
+            'filtered_orders' => $orders,
+            'filters_applied' => [
+                'search' => $search,
+                'sort_by' => $sortBy,
+                'sort_direction' => $sortDirection,
+                'per_page' => $perPage,
+                'page' => $request->integer('page', 1)
+            ],
+            'message' => 'Pedidos filtrados recuperados exitosamente.'
+        ]);
     }
 
     public function getOrderDetails(Order $order)

@@ -20,13 +20,14 @@ class StockMovementController extends Controller
      */
     public function index(): JsonResponse
     {
-        $stockMovements = StockMovement::with(['product.category', 'order', 'userResponsible'])
-            ->orderBy('movement_date', 'desc')
-            ->paginate(15);
+        $stockMovements = StockMovement::with(['product', 'order', 'movementType'])
+            ->orderBy('movement_date', 'desc')->get();
 
         return response()->json([
             'success' => true,
-            'data' => $stockMovements
+            'data' => $stockMovements,
+            'message' => 'Todos los movimientos de stock recuperados exitosamente.',
+            'total' => $stockMovements->count()
         ]);
     }
 
@@ -152,7 +153,7 @@ class StockMovementController extends Controller
      */
     public function show(StockMovement $stockMovement): JsonResponse
     {
-        $stockMovement->load(['product.category', 'order', 'userResponsible']);
+        $stockMovement->load(['product.category', 'order', 'movementType']);
 
         return response()->json([
             'success' => true,
@@ -293,7 +294,7 @@ class StockMovementController extends Controller
      */
     public function getFilteredMovements(Request $request)
     {
-        $query = StockMovement::with(['product', 'movementType', 'order']);
+        $query = StockMovement::with(['product', 'order', 'movementType']);
 
         // Filtros
         if ($request->filled('id_order')) {
@@ -316,8 +317,8 @@ class StockMovementController extends Controller
             $query->whereDate('movement_date', '<=', $request->date_to);
         }
 
+        $search = $request->get('search', '');
         if ($request->filled('search')) {
-            $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('external_reference', 'like', "%{$search}%")
                   ->orWhere('notes', 'like', "%{$search}%");
@@ -333,9 +334,21 @@ class StockMovementController extends Controller
         }
 
         // Paginación
-        $perPage = $request->get('per_page', 15);
-        $orders = $query->paginate($perPage);
+        $perPage = $request->get('per_page', 9);
+        $stockMovements = $query->paginate($perPage);
 
-        return response()->json($orders);
+        // return response()->json($orders);
+        return response()->json([
+            'success' => true,
+            'filtered_stock_movements' => $stockMovements,
+            'filters_applied' => [
+                'search' => $search,
+                'sort_by' => $sortBy,
+                'sort_direction' => $sortDirection,
+                'per_page' => $perPage,
+                'page' => $request->integer('page', 1)
+            ],
+            'message' => 'Movimientos de stock filtrados recuperados exitosamente.'
+        ]);
     }
 }
