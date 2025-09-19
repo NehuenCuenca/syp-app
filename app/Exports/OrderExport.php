@@ -8,12 +8,14 @@ use Maatwebsite\Excel\Concerns\WithMapping;
 use Maatwebsite\Excel\Concerns\WithStyles;
 use Maatwebsite\Excel\Concerns\WithCustomStartCell;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
+use Maatwebsite\Excel\Concerns\WithEvents;
+use Maatwebsite\Excel\Events\AfterSheet;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Style\Border;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
 
-class OrderExport implements FromCollection, WithHeadings, WithMapping, WithStyles, WithCustomStartCell, ShouldAutoSize
+class OrderExport implements FromCollection, WithHeadings, WithMapping, WithStyles, WithCustomStartCell, ShouldAutoSize, WithEvents
 {
     private array $orderData;
     private bool $includeHeader;
@@ -25,7 +27,7 @@ class OrderExport implements FromCollection, WithHeadings, WithMapping, WithStyl
         $this->orderData = $orderData;
         $this->includeHeader = $includeHeader;
         $this->ticketType = $ticketType;
-        $this->headerRowsCount = $includeHeader ? 6 : 2; // 6 filas para el encabezado
+        $this->headerRowsCount = $includeHeader ? 7 : 2; // 7 filas para el encabezado
     }
 
     /**
@@ -96,6 +98,10 @@ class OrderExport implements FromCollection, WithHeadings, WithMapping, WithStyl
             $sheet->setCellValue("B{$currentRow}", $order->created_at->format('d/m/Y H:i'));
             $currentRow++;
 
+            $sheet->setCellValue("A{$currentRow}", 'Codigo pedido:');
+            $sheet->setCellValue("B{$currentRow}", $order->code);
+            $currentRow++;
+
             $sheet->setCellValue("A{$currentRow}", 'Comprador:');
             $comprador = $order->contact ? "{$order->contact->company_name}" : 'N/A';
             $sheet->setCellValue("B{$currentRow}", $comprador);
@@ -145,7 +151,7 @@ class OrderExport implements FromCollection, WithHeadings, WithMapping, WithStyl
         // Estilos del encabezado si está incluido
         if ($this->includeHeader) { 
             // Información del encabezado
-            $styles['A3:A5'] = [
+            $styles['A3:A6'] = [
                 'font' => ['bold' => true],
                 'fill' => [
                     'fillType' => Fill::FILL_SOLID,
@@ -216,5 +222,33 @@ class OrderExport implements FromCollection, WithHeadings, WithMapping, WithStyl
         ];
 
         return $styles;
+    }
+
+    /**
+     * Registra eventos para proteger el archivo
+     */
+    public function registerEvents(): array
+    {
+        return [
+            AfterSheet::class => function(AfterSheet $event) {
+                $sheet = $event->sheet->getDelegate();
+                
+                // OPCIÓN 1: Proteger toda la hoja con contraseña
+                $sheet->getProtection()->setSheet(true);
+                $sheet->getProtection()->setPassword($this->ticketType);
+                
+                // OPCIÓN 2: Proteger elementos específicos
+                $sheet->getProtection()->setSort(true);           // No permitir ordenar
+                $sheet->getProtection()->setInsertRows(true);     // No permitir insertar filas
+                $sheet->getProtection()->setInsertColumns(true);  // No permitir insertar columnas
+                $sheet->getProtection()->setDeleteRows(true);     // No permitir eliminar filas
+                $sheet->getProtection()->setDeleteColumns(true);  // No permitir eliminar columnas
+                $sheet->getProtection()->setFormatCells(true);    // No permitir formatear celdas
+                $sheet->getProtection()->setFormatColumns(true);  // No permitir formatear columnas
+                $sheet->getProtection()->setFormatRows(true);     // No permitir formatear filas
+                $sheet->getProtection()->setSelectLockedCells(true);   // Permitir seleccionar celdas bloqueadas
+                $sheet->getProtection()->setSelectUnlockedCells(true); // Permitir seleccionar celdas desbloqueadas
+            },
+        ];
     }
 }

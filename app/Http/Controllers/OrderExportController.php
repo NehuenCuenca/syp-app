@@ -41,7 +41,7 @@ class OrderExportController extends Controller
             //Get if an order has details of products belonging to a certain category
             $specialCategoryId = Category::where('name', 'Analgésicos')->first()->id;
             $hasSpecialCategory = $this->orderExportService->hasCategory($orderId, $specialCategoryId);
-            $includeHeader = ($hasSpecialCategory) ? false : true;
+            $includeHeader = ($hasSpecialCategory) ? false : $includeHeader;
 
             // Generar archivo Excel usando el servicio
             $filePath = $this->orderExportService->exportOrderToExcel($orderId, $includeHeader, $ticketType);
