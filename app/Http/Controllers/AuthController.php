@@ -5,14 +5,17 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use App\Http\Requests\RegisterUserRequest; 
-use App\Http\Requests\LoginUserRequest;    
+use App\Http\Requests\LoginUserRequest;
+use App\Http\Traits\ApiResponseTrait;
+use Exception;
 use Illuminate\Validation\ValidationException; 
 
 class AuthController extends Controller
 {
+    use ApiResponseTrait;
+
     /**
      * Registro de un nuevo usuario.
      *
@@ -22,33 +25,33 @@ class AuthController extends Controller
     public function register(RegisterUserRequest $request)
     {
         try {
+            // throw new Exception('Error de prueba');
             $user = User::create([
                 'username' => $request->username,
                 'email' => $request->email,
                 'phone' => $request->phone,
                 'password' => Hash::make($request->password),
-                'role' => $request->role ?? 'user',
-            ]);
+                'role' => $request->role ?? 'Usuario',
+            ]);            
 
             $token = $user->createToken('authToken')->plainTextToken;
 
-            return response()->json([
-                'message' => 'Usuario registrado exitosamente.',
-                'user' => [
-                    'id_user' => $user->id_user,
-                    'username' => $user->username,
-                    'email' => $user->email,
-                    'phone' => $user->phone,
-                    'role' => $user->role,
-                ],
+            return $this->createdResponse([
+                'id' => $user->id,
+                'username' => $user->username,
+                'email' => $user->email,
+                'phone' => $user->phone,
+                'role' => $user->role,
                 'token' => $token,
-            ], 201);
+            ], 'Usuario registrado exitosamente');
 
         } catch (\Exception $e) { 
-            return response()->json([
-                'message' => 'Ocurrió un error inesperado al registrar el usuario.',
-                'error' => $e->getMessage(),
-            ], 500);
+            return $this->errorResponse(
+                'Ocurrió un error inesperado al registrar el usuario.', 
+                [$e->getMessage()],
+                [],
+                500
+            );
         }
     }
 
@@ -72,8 +75,7 @@ class AuthController extends Controller
 
             $token = $user->createToken('authToken')->plainTextToken;
 
-            return response()->json([
-                'message' => 'Login exitoso.',
+            return $this->successResponse([
                 'user' => [
                     'id_user' => $user->id_user,
                     'username' => $user->username,
@@ -82,18 +84,23 @@ class AuthController extends Controller
                     'role' => $user->role,
                 ],
                 'token' => $token,
-            ], 200);
+            ], 'Login exitoso.');
 
-        } catch (ValidationException $e) { // Capturamos ValidationException específicamente para credenciales incorrectas
-            return response()->json([
-                'message' => 'Error de autenticación',
-                'errors' => $e->errors(),
-            ], 401);
+        } catch (ValidationException $e) {
+            // Capturamos ValidationException específicamente para credenciales incorrectas
+            return $this->errorResponse(
+                'Error de autenticación',
+                $e->errors(),
+                [],
+                401
+            );
         } catch (\Exception $e) {
-            return response()->json([
-                'message' => 'Ocurrió un error inesperado durante el login.',
-                'error' => $e->getMessage(),
-            ], 500);
+            return $this->errorResponse(
+                'Ocurrió un error inesperado durante el login.',
+                [$e->getMessage()],
+                [],
+                500
+            );
         }
     }
 
@@ -106,16 +113,22 @@ class AuthController extends Controller
     public function logout(Request $request)
     {
         try {
+            throw new Exception('Error de prueba');
+
             $request->user()->currentAccessToken()->delete();
 
-            return response()->json([
-                'message' => 'Sesión cerrada exitosamente.',
-            ], 200);
+            return $this->successResponse(
+                null,
+                'Sesión cerrada exitosamente.'
+            );
+
         } catch (\Exception $e) {
-            return response()->json([
-                'message' => 'No se pudo cerrar la sesión.',
-                'error' => $e->getMessage(),
-            ], 500);
+            return $this->errorResponse(
+                'Ocurrió un error inesperado al cerrar la sesión.',
+                [$e->getMessage()],
+                [],
+                500
+            );
         }
     }
 
@@ -127,14 +140,14 @@ class AuthController extends Controller
      */
     public function user(Request $request)
     {
-        return response()->json([
+        return $this->successResponse([
             'user' => [
-                'id_user' => $request->user()->id_user,
+                'id_user' => $request->user()->id,
                 'username' => $request->user()->username,
                 'email' => $request->user()->email,
                 'phone' => $request->user()->phone,
                 'role' => $request->user()->role,
             ]
-        ], 200);
+        ], 'Información del usuario obtenida exitosamente');
     }
 }
