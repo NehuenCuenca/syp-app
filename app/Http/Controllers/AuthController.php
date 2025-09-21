@@ -25,7 +25,6 @@ class AuthController extends Controller
     public function register(RegisterUserRequest $request)
     {
         try {
-            // throw new Exception('Error de prueba');
             $user = User::create([
                 'username' => $request->username,
                 'email' => $request->email,
@@ -48,7 +47,7 @@ class AuthController extends Controller
         } catch (\Exception $e) { 
             return $this->errorResponse(
                 'Ocurrió un error inesperado al registrar el usuario.', 
-                [$e->getMessage()],
+                ['exception' => $e->getMessage()],
                 [],
                 500
             );
@@ -97,7 +96,7 @@ class AuthController extends Controller
         } catch (\Exception $e) {
             return $this->errorResponse(
                 'Ocurrió un error inesperado durante el login.',
-                [$e->getMessage()],
+                ['exception' => $e->getMessage()],
                 [],
                 500
             );
@@ -123,7 +122,7 @@ class AuthController extends Controller
         } catch (\Exception $e) {
             return $this->errorResponse(
                 'Ocurrió un error inesperado al cerrar la sesión.',
-                [$e->getMessage()],
+                ['exception' => $e->getMessage()],
                 [],
                 500
             );
