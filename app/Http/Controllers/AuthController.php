@@ -113,8 +113,6 @@ class AuthController extends Controller
     public function logout(Request $request)
     {
         try {
-            throw new Exception('Error de prueba');
-
             $request->user()->currentAccessToken()->delete();
 
             return $this->successResponse(
