@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Contact;
 use App\Http\Requests\StoreContactRequest;
 use App\Http\Requests\UpdateContactRequest;
+use App\Http\Traits\ApiResponseTrait;
+use Exception;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
@@ -12,20 +14,30 @@ use Illuminate\Http\Response;
 
 class ContactController extends Controller
 {
+    use ApiResponseTrait;
+
     /**
      * Display a listing of all contacts.
      */
     public function index(): JsonResponse
     {
-        $contacts = Contact::select('id', 'code', 'company_name', 'contact_name', 'phone', 'contact_type')
-                            ->orderBy('created_at', 'desc')->get();
+        try {
+            $contacts = Contact::select('id', 'code', 'company_name', 'contact_name', 'phone', 'contact_type')
+                                ->orderBy('created_at', 'desc')->get();
 
-        return response()->json([
-            'success' => true,
-            'data' => $contacts,
-            'message' => 'Todos los contactos recuperados exitosamente.',
-            'total' => $contacts->count()
-        ]);
+            return $this->successResponse(
+                $contacts,
+                'Todos los contactos recuperados exitosamente.',
+                ['total' => $contacts->count()]
+            );
+        } catch (\Exception $e) {
+            return $this->errorResponse(
+                'Error al recuperar los contactos.',
+                ['exception' => $e->getMessage()],
+                [],
+                Response::HTTP_INTERNAL_SERVER_ERROR
+            );
+        }
     }
 
     public const ALLOWED_SORT_FIELDS  = [
@@ -57,19 +69,29 @@ class ContactController extends Controller
                 ->orderBy('code')
                 ->pluck('code');
                 
-            return response()->json([
-                'success' => true,
-                'data' => [
-                    'contact_types' => $contactTypes,
-                    'contact_codes' => $contactCodes,
-                    'sort_by' => self::ALLOWED_SORT_FIELDS,
-                    'sort_direction' => self::ALLOWED_SORT_DIRECTIONS
-                ]
-            ]);
+            $filterData = [
+                'contact_types' => $contactTypes,
+                'contact_codes' => $contactCodes,
+                'sort_by' => self::ALLOWED_SORT_FIELDS,
+                'sort_direction' => self::ALLOWED_SORT_DIRECTIONS
+            ];
+
+            return $this->successResponse($filterData, 'Filtros obtenidos exitosamente.');
+
         } catch (QueryException $e) {
-            return response()->json([
-                'message' => 'Error al recuperar los tipos de contactos.'
-            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+            return $this->errorResponse(
+                'Error al recuperar los tipos de contactos.',
+                ['database_error' => $e->getMessage()],
+                [],
+                Response::HTTP_INTERNAL_SERVER_ERROR
+            );
+        } catch (\Exception $e) {
+            return $this->errorResponse(
+                'Error inesperado al obtener los filtros.',
+                ['exception' => $e->getMessage()],
+                [],
+                Response::HTTP_INTERNAL_SERVER_ERROR
+            );
         }
     }
 
@@ -78,47 +100,57 @@ class ContactController extends Controller
      */
     public function getFilteredContacts(Request $request): JsonResponse
     {
-        $query = Contact::query();
+        try {
+            $query = Contact::query();
 
-        // Filtrar por tipo de contacto si se proporciona
-        if ($request->has('contact_type')) {
-            $query->where('contact_type', $request->contact_type);
-        }
+            // Filtrar por tipo de contacto si se proporciona
+            if ($request->has('contact_type')) {
+                $query->where('contact_type', $request->contact_type);
+            }
 
-        // Búsqueda por nombre de empresa o contacto
-        $search = $request->get('search', '');
-        if ($request->has('search')) {
-            $query->where(function ($q) use ($search) {
-                $q->where('code', 'like', "%{$search}%")
-                  ->orWhere('company_name', 'like', "%{$search}%")
-                  ->orWhere('contact_name', 'like', "%{$search}%");
-            });
-        }
+            // Búsqueda por nombre de empresa o contacto
+            $search = $request->get('search', '');
+            if ($request->has('search')) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('code', 'like', "%{$search}%")
+                      ->orWhere('company_name', 'like', "%{$search}%")
+                      ->orWhere('contact_name', 'like', "%{$search}%");
+                });
+            }
 
-        // Ordenamiento
-        $sortBy = $request->get('sort_by', 'created_at');
-        $sortDirection = $request->get('sort_direction', 'desc');
-        if (in_array($sortBy, array_keys(self::ALLOWED_SORT_FIELDS))) {
-            $query->orderBy($sortBy, $sortDirection)
-                ->select('id', 'code', 'company_name', 'contact_name', 'phone', 'contact_type');
-        }
+            // Ordenamiento
+            $sortBy = $request->get('sort_by', 'created_at');
+            $sortDirection = $request->get('sort_direction', 'desc');
+            if (in_array($sortBy, array_keys(self::ALLOWED_SORT_FIELDS))) {
+                $query->orderBy($sortBy, $sortDirection)
+                    ->select('id', 'code', 'company_name', 'contact_name', 'phone', 'contact_type');
+            }
 
-        // Paginación
-        $perPage = $request->get('per_page', 15);
-        $contacts = $query->paginate($perPage);
+            // Paginación
+            $perPage = $request->get('per_page', 15);
+            $contacts = $query->paginate($perPage);
 
-        return response()->json([
-            'success' => true,
-            'filtered_contacts' => $contacts,
-            'filters_applied' => [
+            $filtersApplied = [
                 'search' => $search,
                 'sort_by' => $sortBy,
                 'sort_direction' => $sortDirection,
                 'per_page' => $perPage,
                 'page' => $request->integer('page', 1)
-            ],
-            'message' => 'Contactos filtrados recuperados exitosamente.'
-        ]);
+            ];
+
+            return $this->paginatedResponse(
+                $contacts,
+                'Contactos filtrados recuperados exitosamente.',
+                ['filters_applied' => $filtersApplied]
+            );
+        } catch (\Exception $e) {
+            return $this->errorResponse(
+                'Error al procesar la consulta de contactos.',
+                ['exception' => $e->getMessage()],
+                [],
+                Response::HTTP_INTERNAL_SERVER_ERROR
+            );
+        }
     }
 
     /**
@@ -128,17 +160,14 @@ class ContactController extends Controller
     {
         try {
             $contact = Contact::create($request->validated());
-            return response()->json([
-                'success' => true,
-                'data' => $contact,
-                'message' => 'Contacto creado exitosamente.'
-            ], 201);
+            return $this->createdResponse($contact, 'Contacto creado exitosamente.');
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Error al crear el contacto.',
-                'error' => $e->getMessage()
-            ], 500);
+            return $this->errorResponse(
+                'Error al crear el contacto.',
+                ['exception' => $e->getMessage()],
+                [],
+                Response::HTTP_INTERNAL_SERVER_ERROR
+            );
         }
     }
 
@@ -147,13 +176,19 @@ class ContactController extends Controller
      */
     public function show($id): JsonResponse
     {
-        $contact = Contact::withTrashed()->findOrFail($id);
-
-        return response()->json([
-            'success' => true,
-            'data' => $contact,
-            'message' => 'Contacto recuperado exitosamente.'
-        ]);
+        try {
+            $contact = Contact::withTrashed()->findOrFail($id);
+            return $this->successResponse($contact, 'Contacto recuperado exitosamente.');
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return $this->notFoundResponse('Contacto no encontrado.');
+        } catch (\Exception $e) {
+            return $this->errorResponse(
+                'Error al recuperar el contacto.',
+                ['exception' => $e->getMessage()],
+                [],
+                Response::HTTP_INTERNAL_SERVER_ERROR
+            );
+        }
     }
 
     /**
@@ -161,13 +196,17 @@ class ContactController extends Controller
      */
     public function update(UpdateContactRequest $request, Contact $contact): JsonResponse
     {
-        $contact->update($request->validated());
-
-        return response()->json([
-            'success' => true,
-            'data' => $contact->fresh(),
-            'message' => 'Contacto actualizado exitosamente.'
-        ]);
+        try {
+            $contact->update($request->validated());
+            return $this->successResponse($contact->fresh(), 'Contacto actualizado exitosamente.');
+        } catch (\Exception $e) {
+            return $this->errorResponse(
+                'Error al actualizar el contacto.',
+                ['exception' => $e->getMessage()],
+                [],
+                Response::HTTP_INTERNAL_SERVER_ERROR
+            );
+        }
     }
 
     /**
@@ -177,15 +216,21 @@ class ContactController extends Controller
     {
         try {
             $contact->delete();
-            return response()->json(null, Response::HTTP_NO_CONTENT);
+            return $this->deletedResponse($contact->id, 'Contacto eliminado exitosamente.');
         } catch (QueryException $e) {
-            return response()->json([
-                'message' => 'No se puede eliminar este contacto porque se está utilizando en pedidos.'
-            ], Response::HTTP_CONFLICT);
+            return $this->errorResponse(
+                'No se puede eliminar este contacto porque se está utilizando en pedidos.',
+                [],
+                [],
+                Response::HTTP_CONFLICT
+            );
         } catch (\Exception $e) {
-            return response()->json([
-                'message' => 'Error al eliminar el contacto.'
-            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+            return $this->errorResponse(
+                'Error al eliminar el contacto.',
+                ['exception' => $e->getMessage()],
+                [],
+                Response::HTTP_INTERNAL_SERVER_ERROR
+            );
         }
     }
 
@@ -195,26 +240,28 @@ class ContactController extends Controller
     public function restore($id): JsonResponse
     {
         if (!is_numeric($id)) {
-            return response()->json([
-                'success' => false,
-                'message' => 'ID debe ser un número válido.'
-            ], 400);
+            return $this->validationErrorResponse(
+                ['id' => 'ID debe ser un número válido.'],
+                'Error de validación en parámetros.'
+            );
         }
         
         $contact = Contact::onlyTrashed()->find($id);
         if (!$contact) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Contacto eliminado no encontrado.'
-            ], 404);
+            return $this->notFoundResponse('Contacto eliminado no encontrado.');
         }
 
-        $contact->restore();
+        try {
 
-        return response()->json([
-            'success' => true,
-            'data' => $contact,
-            'message' => 'Contacto restaurado exitosamente.'
-        ]);
+            $contact->restore();
+            return $this->restoredResponse($contact, 'Contacto restaurado exitosamente.');
+        } catch (\Exception $e) {
+            return $this->errorResponse(
+                'Error al restaurar el contacto.',
+                ['exception' => $e->getMessage()],
+                [],
+                Response::HTTP_INTERNAL_SERVER_ERROR
+            );
+        }
     }
 }

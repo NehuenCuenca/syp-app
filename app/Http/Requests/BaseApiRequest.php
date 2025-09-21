@@ -45,6 +45,7 @@ class BaseApiRequest extends FormRequest
             'string' => 'El campo :attribute debe ser una cadena de texto.',
             'confirmed' => 'La confirmación de :attribute no coincide.',
             'in' => 'El :attribute es inválido. Debe ser uno de los siguientes valores: :values',
+            'date' => 'El :attribute debe ser una fecha válida.',
         ];
     }
 
@@ -59,6 +60,11 @@ class BaseApiRequest extends FormRequest
             'phone' => 'telefono',
             'password' => 'contraseña',
             'role' => 'rol',
+            'company_name' => 'nombre de empresa',
+            'contact_name' => 'nombre del contacto',
+            'address' => 'dirección',
+            'contact_type' => 'tipo de contacto',
+            'registered_at' => 'fecha de registro',
         ];
     }
 }
