@@ -5,34 +5,67 @@ namespace App\Http\Controllers;
 use App\Http\Requests\FilterProductsRequest;
 use App\Http\Requests\StoreProductRequest;
 use App\Http\Requests\UpdateProductRequest;
+use App\Http\Traits\ApiResponseTrait;
 use App\Models\Category;
 use App\Models\Product;
 use Exception;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Response;
 use Illuminate\Database\QueryException;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class ProductController extends Controller
 {
+    use ApiResponseTrait;
+
     public function index(): JsonResponse
     {
         try {
-            $products = Product::select('id', 'sku', 'name', 'current_stock', 'min_stock_alert')->get();            
-            return response()->json([
-                'success' => true,
-                'data' => $products,
-                'message' => 'Todos los productos recuperados exitosamente.',
+            $products = Product::select('id', 'sku', 'name', 'current_stock', 'min_stock_alert')->get();
+            
+            $meta = [
                 'total' => $products->count()
-            ]);
+            ];
+            
+            return $this->successResponse(
+                $products, 
+                'Todos los productos recuperados exitosamente.',
+                $meta
+            );
+            
         } catch (QueryException $e) {
-            return response()->json([
-                'message' => 'Error al recuperar los productos.'
-            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+            Log::error('Error de base de datos al recuperar productos', [
+                'error' => $e->getMessage(),
+                'code' => $e->getCode()
+            ]);
+            
+            return $this->errorResponse(
+                'Error al recuperar los productos desde la base de datos.',
+                [],
+                [],
+                500
+            );
+            
+        } catch (Exception $e) {
+            Log::error('Error inesperado al recuperar productos', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return $this->errorResponse(
+                'Se produjo un error inesperado al recuperar los productos.',
+                ['exception' => $e->getMessage()],
+                [],
+                500
+            );
         }
     }
 
     public function store(StoreProductRequest $request): JsonResponse
     {
+        DB::beginTransaction();
+        
         try {
             $product = Product::create($request->only([
                 'sku',
@@ -46,100 +79,275 @@ class ProductController extends Controller
                 'id_category',
             ]));
             
-            $product->category;
-            return response()->json($product, Response::HTTP_CREATED);
+            $product->load('category');
+            
+            DB::commit();
+            
+            return $this->createdResponse(
+                $product,
+                'Producto creado exitosamente.'
+            );
+            
         } catch (QueryException $e) {
+            DB::rollBack();
+            
+            Log::error('Error de base de datos al crear producto', [
+                'error' => $e->getMessage(),
+                'code' => $e->getCode(),
+                'data' => $request->all()
+            ]);
+            
             // Manejar errores específicos de BD
             if ($e->getCode() === '23000') { // Constraint violation
-                return response()->json([
-                    'message' => 'El producto con este SKU ya existe.'
-                ], Response::HTTP_CONFLICT);
+                return $this->errorResponse(
+                    'El producto con este SKU ya existe.',
+                    ['sku' => ['El SKU debe ser único.']],
+                    [],
+                    409
+                );
             }
             
-            return response()->json([
-                'message' => 'Error al crear el producto.',
-                'error' => $e->getMessage()
-            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+            return $this->errorResponse(
+                'Error al crear el producto en la base de datos.',
+                [],
+                [],
+                500
+            );
+            
+        } catch (Exception $e) {
+            DB::rollBack();
+            
+            Log::error('Error inesperado al crear producto', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'data' => $request->all()
+            ]);
+            
+            return $this->errorResponse(
+                'Se produjo un error inesperado al crear el producto.',
+                [],
+                [],
+                500
+            );
         }
     }
 
     public function show(Product $product): JsonResponse
     {
-        return response()->json($product->load('category'));
+        try {
+            throw new Exception('Error de prueba');
+            $product->load('category');
+            
+            return $this->successResponse(
+                $product,
+                'Producto recuperado exitosamente.'
+            );
+            
+        } catch (Exception $e) {
+            Log::error('Error inesperado al mostrar producto', [
+                'product_id' => $product->id ?? null,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return $this->errorResponse(
+                'Se produjo un error inesperado al recuperar el producto.',
+                ['exception' => $e->getMessage()],
+                [],
+                500
+            );
+        }
     }
 
     public function update(UpdateProductRequest $request, Product $product): JsonResponse
     {
+        DB::beginTransaction();
+        
         try {
-            //actualizar categoria si es nueva
-            if($request->input('id_category')){
-                $category = Category::firstOrCreate(['name' => $request->input('category', 'Sin categoría')]);
+            // Actualizar categoria si es nueva
+            if ($request->input('id_category')) {
+                $category = Category::firstOrCreate([
+                    'name' => $request->input('category', 'Sin categoría')
+                ]);
                 $request->merge(['id_category' => $category->id]);
             }
             
             $product->update($request->all());
-            $product->category;
+            $product->load('category');
 
-            return response()->json($product);
+            DB::commit();
+            
+            return $this->successResponse(
+                $product,
+                'Producto actualizado exitosamente.'
+            );
+            
         } catch (QueryException $e) {
+            DB::rollBack();
+            
+            Log::error('Error de base de datos al actualizar producto', [
+                'product_id' => $product->id,
+                'error' => $e->getMessage(),
+                'code' => $e->getCode(),
+                'data' => $request->all()
+            ]);
+            
             if ($e->getCode() === '23000') {
-                return response()->json([
-                    'message' => 'El producto con este SKU ya existe.'
-                ], Response::HTTP_CONFLICT);
+                return $this->errorResponse(
+                    'El producto con este SKU ya existe.',
+                    ['sku' => ['El SKU debe ser único.']],
+                    [],
+                    409
+                );
             }
             
-            return response()->json([
-                'message' => 'Error al actualizar el producto.'
-            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+            return $this->errorResponse(
+                'Error al actualizar el producto en la base de datos.',
+                [],
+                [],
+                500
+            );
+            
+        } catch (Exception $e) {
+            DB::rollBack();
+            
+            Log::error('Error inesperado al actualizar producto', [
+                'product_id' => $product->id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'data' => $request->all()
+            ]);
+            
+            return $this->errorResponse(
+                'Se produjo un error inesperado al actualizar el producto.',
+                ['exception' => $e->getMessage()],
+                [],
+                500
+            );
         }
     }
 
     public function destroy(Product $product): JsonResponse
     {
+        DB::beginTransaction();
+        
         try {
+            $productId = $product->id;
             $product->delete();
-            return response()->json(null, Response::HTTP_NO_CONTENT);
+            
+            DB::commit();
+            
+            return $this->deletedResponse(
+                $productId,
+                'Producto eliminado exitosamente.'
+            );
+            
         } catch (QueryException $e) {
-            return response()->json([
-                'message' => 'No se puede eliminar este producto porque se está utilizando en pedidos o movimientos de stock.'
-            ], Response::HTTP_CONFLICT);
-        } catch (\Exception $e) {
-            return response()->json([
-                'message' => 'Error al eliminar el producto.'
-            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+            DB::rollBack();
+            
+            Log::error('Error de base de datos al eliminar producto', [
+                'product_id' => $product->id,
+                'error' => $e->getMessage(),
+                'code' => $e->getCode()
+            ]);
+            
+            return $this->errorResponse(
+                'No se puede eliminar este producto porque se está utilizando en pedidos o movimientos de stock.',
+                [],
+                [],
+                409
+            );
+            
+        } catch (Exception $e) {
+            DB::rollBack();
+            
+            Log::error('Error inesperado al eliminar producto', [
+                'product_id' => $product->id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return $this->errorResponse(
+                'Se produjo un error inesperado al eliminar el producto.',
+                ['exception' => $e->getMessage()],
+                [],
+                500
+            );
         }
     }
 
     public function restore($id): JsonResponse
     {
+        DB::beginTransaction();
+        
         try {
             // Validar que el ID sea numérico
             if (!is_numeric($id)) {
-                return response()->json([
-                    'message' => 'ID de producto no válido.'
-                ], Response::HTTP_BAD_REQUEST);
+                return $this->errorResponse(
+                    'ID de producto no válido.',
+                    ['id' => ['El ID debe ser un número válido.']],
+                    [],
+                    400
+                );
             }
             
             $product = Product::onlyTrashed()->findOrFail($id);
             $product->restore();
-            $product->category;
+            $product->load('category');
 
-            return response()->json([
-                'message' => 'Producto correctamente restaurado.',
-                'product' => $product
+            DB::commit();
+            
+            return $this->restoredResponse(
+                $product,
+                'Producto restaurado exitosamente.'
+            );
+            
+        } catch (ModelNotFoundException $e) {
+            DB::rollBack();
+            
+            Log::warning('Intento de restaurar producto no encontrado', [
+                'product_id' => $id
             ]);
-        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-            return response()->json([
-                'message' => 'Producto eliminado no encontrado.'
-            ], Response::HTTP_NOT_FOUND);
+            
+            return $this->notFoundResponse(
+                'Producto eliminado no encontrado.'
+            );
+            
         } catch (QueryException $e) {
-            return response()->json([
-                'message' => 'Error al restaurar el producto.'
-            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+            DB::rollBack();
+            
+            Log::error('Error de base de datos al restaurar producto', [
+                'product_id' => $id,
+                'error' => $e->getMessage(),
+                'code' => $e->getCode()
+            ]);
+            
+            return $this->errorResponse(
+                'Error al restaurar el producto en la base de datos.',
+                [],
+                [],
+                500
+            );
+            
+        } catch (Exception $e) {
+            DB::rollBack();
+            
+            Log::error('Error inesperado al restaurar producto', [
+                'product_id' => $id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return $this->errorResponse(
+                'Se produjo un error inesperado al restaurar el producto.',
+                ['exception' => $e->getMessage()],
+                [],
+                500
+            );
         }
     }
 
-    public const ALLOWED_SORT_FIELDS  = [
+    public const ALLOWED_SORT_FIELDS = [
         'id_category' => 'Categoria',   
         'sale_price' => 'Precio de venta',   
         'current_stock' => 'Stock actual',   
@@ -155,25 +363,56 @@ class ProductController extends Controller
     /**
      * Get filters to be used in the index view
      */
-    public function getFilters()
+    public function getFilters(): JsonResponse
     {
-        $productCodes = Product::select('sku')
+        try {
+            $productCodes = Product::select('sku')
                 ->distinct()
                 ->whereNotNull('sku')
                 ->where('sku', '!=', '')
                 ->orderBy('sku')
                 ->pluck('sku');
 
-        return response()->json([
-            'success' => true,
-            'data' => [
-                'categories' => Category::all()->select('id', 'name'),
+            $categories = Category::select('id', 'name')->get();
+
+            $data = [
+                'categories' => $categories,
                 'product_codes' => $productCodes,
                 'sort_by' => self::ALLOWED_SORT_FIELDS,
                 'sort_direction' => self::ALLOWED_SORT_DIRECTIONS
-            ],
-            'message' => 'Datos para filtrar productos obtenidos exitosamente'
-        ]);
+            ];
+            
+            return $this->successResponse(
+                $data,
+                'Datos para filtrar productos obtenidos exitosamente.'
+            );
+            
+        } catch (QueryException $e) {
+            Log::error('Error de base de datos al obtener filtros', [
+                'error' => $e->getMessage(),
+                'code' => $e->getCode()
+            ]);
+            
+            return $this->errorResponse(
+                'Error al obtener los datos de filtros desde la base de datos.',
+                [],
+                [],
+                500
+            );
+            
+        } catch (Exception $e) {
+            Log::error('Error inesperado al obtener filtros', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return $this->errorResponse(
+                'Se produjo un error inesperado al obtener los filtros.',
+                ['exception' => $e->getMessage()],
+                [],
+                500
+            );
+        }
     }
 
     /**
@@ -214,52 +453,51 @@ class ProductController extends Controller
             
             // Ordenamiento
             if (in_array($filters['sort_by'], array_keys(self::ALLOWED_SORT_FIELDS))) {
-                $query->orderBy($filters['sort_by'], $filters['sort_direction'])
-                    ->select('id', 'sku', 'name', 'current_stock', 'min_stock_alert');
+                $query->orderBy($filters['sort_by'], $filters['sort_direction']);
             }
+            
+            $query->select('id', 'sku', 'name', 'current_stock', 'min_stock_alert');
 
             // Paginación
             $products = $query->paginate($filters['per_page']);
             
-            return response()->json([
-                'success' => true,
-                'filtered_products' => $products,
-                'filters_applied' => $filters,
-                'message' => 'Productos filtrados recuperados exitosamente.'
-            ]);
-            
-        } catch (QueryException $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Error al recuperar los productos.'
-            ], Response::HTTP_INTERNAL_SERVER_ERROR);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Se produjo un error inesperado.'
-            ], Response::HTTP_INTERNAL_SERVER_ERROR);
-        }
-    }
-    
-    public function getStats(): JsonResponse
-    {
-        try {
-            $stats = [
-                'total_products' => Product::count(),
-                'low_stock_products' => Product::whereRaw('current_stock < min_stock_alert')->count(),
-                'out_of_stock_products' => Product::where('current_stock', 0)->count(),
-                'total_categories' => Category::count(),
-                'average_profit_percentage' => floatval(Product::avg('profit_percentage')),
+            $additionalMeta = [
+                'filters_applied' => $filters
             ];
             
-            return response()->json([
-                'success' => true,
-                'data' => $stats
-            ]);
+            return $this->paginatedResponse(
+                $products,
+                'Productos filtrados recuperados exitosamente.',
+                $additionalMeta
+            );
+            
         } catch (QueryException $e) {
-            return response()->json([
-                'message' => 'Error al recuperar las estadisticas.'
-            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+            Log::error('Error de base de datos al filtrar productos', [
+                'error' => $e->getMessage(),
+                'code' => $e->getCode(),
+                'filters' => $request->all()
+            ]);
+            
+            return $this->errorResponse(
+                'Error al filtrar los productos desde la base de datos.',
+                [],
+                [],
+                500
+            );
+            
+        } catch (Exception $e) {
+            Log::error('Error inesperado al filtrar productos', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'filters' => $request->all()
+            ]);
+            
+            return $this->errorResponse(
+                'Se produjo un error inesperado al filtrar los productos.',
+                ['exception' => $e->getMessage()],
+                [],
+                500
+            );
         }
     }
 }
