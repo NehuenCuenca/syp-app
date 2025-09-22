@@ -46,6 +46,13 @@ class BaseApiRequest extends FormRequest
             'confirmed' => 'La confirmación de :attribute no coincide.',
             'in' => 'El :attribute es inválido. Debe ser uno de los siguientes valores: :values',
             'date' => 'El :attribute debe ser una fecha válida.',
+            'numeric' => 'El :attribute debe ser un número.',
+            'decimal' => 'El :attribute debe ser un número decimal con :decimal lugares después del punto.',
+            'gte' => 'El :attribute debe ser mayor o igual a :value.',
+            'integer' => 'El :attribute debe ser un número entero.',
+            'missing' => 'El campo :attribute no puede ser editado (no debe estar presente).',
+            'exists' => 'El campo :attribute especificado no existe.',
+            'boolean' => 'El campo :attribute debe ser verdadero o falso.',
         ];
     }
 
@@ -65,6 +72,26 @@ class BaseApiRequest extends FormRequest
             'address' => 'dirección',
             'contact_type' => 'tipo de contacto',
             'registered_at' => 'fecha de registro',
+            'sku' => 'SKU',
+            'name' => 'nombre',
+            'description' => 'descripción',
+            'buy_price' => 'precio de compra',
+            'profit_percentage' => 'porcentaje de ganancia',
+            'sale_price' => 'precio de venta',
+            'current_stock' => 'stock actual',
+            'min_stock_alert' => 'alerta de stock minimo',
+            'category' => 'categoria',
+
+            'min_sale_price' => 'precio mínimo de venta',
+            'max_sale_price' => 'precio máximo de venta',
+            'min_stock' => 'stock mínimo',
+            'per_page' => 'elementos por página',
+            'page' => 'página',
+            'sort_by' => 'campo de ordenamiento',
+            'sort_direction' => 'orden',
+            'id_category' => 'categoría',
+            'search' => 'búsqueda',
+            'low_stock' => 'stock bajo'
         ];
     }
 }

@@ -2,11 +2,10 @@
 
 namespace App\Http\Requests;
 
-use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Contracts\Validation\Validator;
 
-class FilterProductsRequest extends FormRequest
+class FilterProductsRequest extends BaseApiRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -42,55 +41,6 @@ class FilterProductsRequest extends FormRequest
     }
 
     /**
-     * Get custom error messages for validation rules.
-     *
-     * @return array<string, string>
-     */
-    public function messages(): array
-    {
-        return [
-            'min_sale_price.numeric' => 'El precio mínimo de venta debe ser un número válido.',
-            'min_sale_price.min' => 'El precio mínimo de venta no puede ser negativo.',
-            'max_sale_price.numeric' => 'El precio máximo de venta debe ser un número válido.',
-            'max_sale_price.min' => 'El precio máximo de venta no puede ser negativo.',
-            'max_sale_price.gte' => 'El precio máximo de venta debe ser mayor o igual al precio mínimo de venta.',
-            'min_stock.integer' => 'El stock mínimo debe ser un número entero.',
-            'min_stock.min' => 'El stock mínimo no puede ser negativo.',
-            'per_page.integer' => 'La cantidad por página debe ser un número entero.',
-            'per_page.min' => 'La cantidad por página debe ser al menos 1.',
-            'per_page.max' => 'La cantidad por página no puede ser mayor a 100.',
-            'page.integer' => 'El número de página debe ser un número entero.',
-            'page.min' => 'El número de página debe ser al menos 1.',
-            'sort_by.in' => 'El campo de ordenamiento no es válido.',
-            'sort_direction.in' => 'El orden debe ser "asc" o "desc".',
-            'id_category.exists' => 'La categoría especificada no existe.',
-            'search.max' => 'El término de búsqueda no puede tener más de 255 caracteres.',
-            'low_stock.boolean' => 'El filtro de stock bajo debe ser verdadero o falso.'
-        ];
-    }
-
-    /**
-     * Get custom attributes for validator errors.
-     *
-     * @return array<string, string>
-     */
-    public function attributes(): array
-    {
-        return [
-            'min_sale_price' => 'precio mínimo de venta',
-            'max_sale_price' => 'precio máximo de venta',
-            'min_stock' => 'stock mínimo',
-            'per_page' => 'elementos por página',
-            'page' => 'página',
-            'sort_by' => 'campo de ordenamiento',
-            'sort_direction' => 'orden',
-            'id_category' => 'categoría',
-            'search' => 'búsqueda',
-            'low_stock' => 'stock bajo'
-        ];
-    }
-
-    /**
      * Handle a failed validation attempt.
      *
      * @param  \Illuminate\Contracts\Validation\Validator  $validator
@@ -101,11 +51,10 @@ class FilterProductsRequest extends FormRequest
     protected function failedValidation(Validator $validator)
     {
         throw new HttpResponseException(
-            response()->json([
-                'success' => false,
-                'message' => 'Los parámetros proporcionados no son válidos.',
-                'errors' => $validator->errors()
-            ], 422)
+            $this->validationErrorResponse(
+                $validator->errors()->toArray(),
+                'Los datos proporcionados no son válidos'
+            )
         );
     }
 
