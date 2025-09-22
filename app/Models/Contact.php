@@ -52,7 +52,7 @@ class Contact extends Model
     }
     
     // Retornar un array con los datos necesarios y el alias creado manualmente
-    return  'Ultimo pedido: ' . strtoupper($lastOrder->order_status) . ' '
+    return  'Ultima ' . strtolower($lastOrder->order_type) . ': ' . substr(strtoupper($lastOrder->order_status),0, 4) . '. '
                        . $lastOrder->created_at->format('Y-m-d');
 }
     
