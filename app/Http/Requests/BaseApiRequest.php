@@ -103,8 +103,15 @@ class BaseApiRequest extends FormRequest
             'order_details' => 'detalles del pedido',
             'order_details.*.id_product' => 'producto',
             'order_details.*.quantity' => 'cantidad',
-            'order_details.*.unit_price_at_order' => 'precio unitario al pedido',
+            'order_details.*.unit_price_at_order' => 'precio unitario',
             'order_details.*.discount_percentage_by_unit' => 'descuento por unidad',
+
+            'id_order' => 'ID del pedido',
+            'order_detail' => 'detalle del pedido',
+            'id_product' => 'producto del detalle',
+            'quantity' => 'cantidad del detalle',
+            'unit_price_at_order' => 'precio unitario del detalle',
+            'discount_percentage_by_unit' => 'descuento por unidad del detalle',
         ];
     }
 }
