@@ -2,9 +2,10 @@
 
 namespace App\Http\Requests;
 
-use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Http\Exceptions\HttpResponseException;
+use Illuminate\Contracts\Validation\Validator;
 
-class UpdateOrderRequest extends FormRequest
+class UpdateOrderRequest extends BaseApiRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -31,51 +32,6 @@ class UpdateOrderRequest extends FormRequest
             
             // Validaciones para los detalles del pedido (opcionales en actualización)
             'order_details' => 'missing|array|min:1',
-        ];
-    }
-
-    /**
-     * Get the error messages for the defined validation rules.
-     *
-     * @return array<string, string>
-     */
-    public function messages(): array
-    {
-        return [
-            'id_contact.required' => 'El contacto es obligatorio.',
-            'id_contact.integer' => 'El contacto debe ser un número entero.',
-            'id_contact.exists' => 'El contacto seleccionado no existe.',
-            
-            'actual_delivery_date.date' => 'La fecha real de entrega debe ser una fecha válida.',
-            
-            'order_type.missing' => 'El tipo de pedido no puede ser editado.',
-            
-            'order_status.required' => 'El estado del pedido es obligatorio.',
-            'order_status.in' => 'El estado del pedido debe ser: Pendiente, Completado, Cancelado o Devuelto.',
-            
-            'notes.string' => 'Las notas deben ser texto.',
-            'notes.max' => 'Las notas no pueden exceder los 1000 caracteres.',
-
-            'total_net.numeric' => 'El precio total debe ser un número.',
-            'total_net.min' => 'El precio total no puede ser negativo.',
-            
-            // Mensajes para detalles del pedido
-            'order_details.missing' => 'Los detalles del pedido no pueden ser editados desde esta ruta.',
-            'order_details.array' => 'Los detalles del pedido deben ser un array.',
-            'order_details.min' => 'Debe incluir al menos un detalle en el pedido.',
-            
-            'order_details.*.id_product.required_with' => 'El producto es obligatorio en cada detalle.',
-            'order_details.*.id_product.integer' => 'El ID del producto debe ser un número entero.',
-            'order_details.*.id_product.exists' => 'El producto seleccionado no existe.',
-            
-            'order_details.*.quantity.required_with' => 'La cantidad es obligatoria en cada detalle.',
-            'order_details.*.quantity.integer' => 'La cantidad debe ser un número entero.',
-            'order_details.*.quantity.min' => 'La cantidad debe ser al menos 1.',
-            
-            'order_details.*.unit_price_at_order.required_with' => 'El precio unitario es obligatorio en cada detalle.',
-            'order_details.*.unit_price_at_order.numeric' => 'El precio unitario debe ser un número.',
-            'order_details.*.unit_price_at_order.min' => 'El precio unitario no puede ser negativo.',
-            'order_details.*.unit_price_at_order.max' => 'El precio unitario no puede exceder 999,999.99.',
         ];
     }
 
@@ -125,13 +81,13 @@ class UpdateOrderRequest extends FormRequest
     /**
      * Handle a failed validation attempt.
      */
-    protected function failedValidation(\Illuminate\Contracts\Validation\Validator $validator)
+    protected function failedValidation(Validator $validator)
     {
-        $response = response()->json([
-            'message' => 'Los datos proporcionados no son válidos.',
-            'errors' => $validator->errors()
-        ], 422);
-
-        throw new \Illuminate\Validation\ValidationException($validator, $response);
+        throw new HttpResponseException(
+            $this->validationErrorResponse(
+                $validator->errors()->toArray(),
+                'Los datos proporcionados no son válidos'
+            )
+        );
     }
 }

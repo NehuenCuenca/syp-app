@@ -39,20 +39,21 @@ class BaseApiRequest extends FormRequest
         return [
             'required' => 'El campo :attribute es obligatorio.',
             'email' => 'El campo :attribute debe ser una dirección de email válida.',
-            'unique' => 'El :attribute ya existe en el sistema.',
+            'unique' => 'El campo :attribute ya existe en el sistema.',
             'min' => 'El campo :attribute debe tener al menos :min caracteres.',
             'max' => 'El campo :attribute no debe tener más de :max caracteres.',
             'string' => 'El campo :attribute debe ser una cadena de texto.',
-            'confirmed' => 'La confirmación de :attribute no coincide.',
-            'in' => 'El :attribute es inválido. Debe ser uno de los siguientes valores: :values',
-            'date' => 'El :attribute debe ser una fecha válida.',
-            'numeric' => 'El :attribute debe ser un número.',
-            'decimal' => 'El :attribute debe ser un número decimal con :decimal lugares después del punto.',
-            'gte' => 'El :attribute debe ser mayor o igual a :value.',
-            'integer' => 'El :attribute debe ser un número entero.',
+            'confirmed' => 'La confirmación del campo :attribute no coincide.',
+            'in' => 'El campo :attribute es inválido. Debe ser uno de los siguientes valores: :values',
+            'date' => 'El campo :attribute debe ser una fecha válida.',
+            'numeric' => 'El campo :attribute debe ser un número.',
+            'decimal' => 'El campo :attribute debe ser un número decimal con :decimal lugares después del punto.',
+            'gte' => 'El campo :attribute debe ser mayor o igual a :value.',
+            'integer' => 'El campo :attribute debe ser un número entero.',
             'missing' => 'El campo :attribute no puede ser editado (no debe estar presente).',
-            'exists' => 'El campo :attribute especificado no existe.',
+            'exists' => 'El :attribute especificado no existe.',
             'boolean' => 'El campo :attribute debe ser verdadero o falso.',
+            'array' => 'El campo :attribute debe ser un array.',
         ];
     }
 
@@ -91,7 +92,19 @@ class BaseApiRequest extends FormRequest
             'sort_direction' => 'orden',
             'id_category' => 'categoría',
             'search' => 'búsqueda',
-            'low_stock' => 'stock bajo'
+            'low_stock' => 'stock bajo',
+
+            'id_contact' => 'contacto',
+            'id_user_creator' => 'creador',
+            'order_type' => 'tipo de pedido',
+            'order_status' => 'estado de pedido',
+            'notes' => 'notas',
+            'total_net' => 'total neto',
+            'order_details' => 'detalles del pedido',
+            'order_details.*.id_product' => 'producto',
+            'order_details.*.quantity' => 'cantidad',
+            'order_details.*.unit_price_at_order' => 'precio unitario al pedido',
+            'order_details.*.discount_percentage_by_unit' => 'descuento por unidad',
         ];
     }
 }
