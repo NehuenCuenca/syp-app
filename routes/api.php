@@ -52,14 +52,14 @@ Route::middleware('auth:sanctum')->group(function () {
         ->name('orders.filtered');
 
     // Exportar pedido a Excel
-    Route::get('/orders/{orderId}/export-excel', [OrderExportController::class, 'exportOrderToExcel'])
+    Route::get('/orders/{order}/export-excel', [OrderExportController::class, 'exportOrderToExcel'])
         ->name('orders.export.excel')
-        ->where('orderId', '[0-9]+');
+        ->where('order.id', '[0-9]+');
     
     // Verificar si un pedido es exportable
-    Route::get('/orders/{orderId}/check-exportable', [OrderExportController::class, 'checkOrderExportability'])
+    Route::get('/orders/{order}/check-exportable', [OrderExportController::class, 'checkOrderExportability'])
         ->name('orders.check.exportable')
-        ->where('orderId', '[0-9]+');
+        ->where('order.id', '[0-9]+');
 
     // Make a route to get the order details
     Route::get('/orders/{order}/details', [OrderController::class, 'getOrderDetails'])
