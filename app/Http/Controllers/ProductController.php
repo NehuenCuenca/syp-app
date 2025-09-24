@@ -135,7 +135,6 @@ class ProductController extends Controller
     public function show(Product $product): JsonResponse
     {
         try {
-            throw new Exception('Error de prueba');
             $product->load('category');
             
             return $this->successResponse(
