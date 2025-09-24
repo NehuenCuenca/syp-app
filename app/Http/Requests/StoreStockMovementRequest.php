@@ -2,11 +2,10 @@
 
 namespace App\Http\Requests;
 
-use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Http\Exceptions\HttpResponseException;
 
-class StoreStockMovementRequest extends FormRequest
+class StoreStockMovementRequest extends BaseApiRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -58,54 +57,6 @@ class StoreStockMovementRequest extends FormRequest
     }
 
     /**
-     * Get custom attributes for validator errors.
-     *
-     * @return array<string, string>
-     */
-    public function attributes(): array
-    {
-        return [
-            'id_product' => 'producto',
-            'id_order' => 'pedido',
-            'quantity_moved' => 'cantidad movida',
-            'movement_type' => 'tipo de movimiento',
-            'external_reference' => 'referencia externa',
-            'notes' => 'notas'
-        ];
-    }
-
-    /**
-     * Get the error messages for the defined validation rules.
-     *
-     * @return array<string, string>
-     */
-    public function messages(): array
-    {
-        return [
-            'id_product.required' => 'El :attribute es obligatorio.',
-            'id_product.integer' => 'El :attribute debe ser un número entero.',
-            'id_product.exists' => 'El :attribute seleccionado no existe.',
-            
-            'id_order.integer' => 'El :attribute debe ser un número entero.',
-            'id_order.exists' => 'El :attribute seleccionado no existe.',
-            
-            'quantity_moved.required' => 'La :attribute es obligatoria.',
-            'quantity_moved.integer' => 'La :attribute debe ser un número entero.',
-            'quantity_moved.min' => 'La :attribute debe ser mayor a 0.',
-            
-            'movement_type.required' => 'El :attribute es obligatorio.',
-            'movement_type.string' => 'El :attribute debe ser una cadena de texto.',
-            'movement_type.in' => 'El :attribute seleccionado no es válido. Los valores permitidos son: Compra, Venta, Ajuste_Positivo, Ajuste_Negativo, Devolucion_Cliente, Devolucion_Proveedor.',
-            
-            'external_reference.string' => 'La :attribute debe ser una cadena de texto.',
-            'external_reference.max' => 'La :attribute no puede exceder los :max caracteres.',
-            
-            'notes.string' => 'Las :attribute deben ser una cadena de texto.',
-            'notes.max' => 'Las :attribute no pueden exceder los :max caracteres.'
-        ];
-    }
-
-    /**
      * Transform the input data before validation.
      */
     protected function prepareForValidation(): void
@@ -127,14 +78,13 @@ class StoreStockMovementRequest extends FormRequest
     /**
      * Handle a failed validation attempt.
      */
-    protected function failedValidation(Validator $validator): void
+    protected function failedValidation(Validator $validator)
     {
         throw new HttpResponseException(
-            response()->json([
-                'success' => false,
-                'message' => 'Los datos enviados no son válidos.',
-                'errors' => $validator->errors()
-            ], 422)
+            $this->validationErrorResponse(
+                $validator->errors()->toArray(),
+                'Los datos proporcionados no son válidos'
+            )
         );
     }
 }

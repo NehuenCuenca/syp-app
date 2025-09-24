@@ -112,6 +112,10 @@ class BaseApiRequest extends FormRequest
             'quantity' => 'cantidad del detalle',
             'unit_price_at_order' => 'precio unitario del detalle',
             'discount_percentage_by_unit' => 'descuento por unidad del detalle',
+
+            'quantity_moved' => 'cantidad movida',
+            'movement_type' => 'tipo de movimiento',
+            'external_reference' => 'referencia externa',
         ];
     }
 }
