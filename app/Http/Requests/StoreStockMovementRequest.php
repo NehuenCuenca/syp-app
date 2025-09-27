@@ -23,15 +23,11 @@ class StoreStockMovementRequest extends BaseApiRequest
     public function rules(): array
     {
         return [
+            'id_order' => ['missing'],
             'id_product' => [
                 'required',
                 'integer',
                 'exists:products,id'
-            ],
-            'id_order' => [
-                'nullable',
-                'integer', 
-                'exists:orders,id'
             ],
             'quantity_moved' => [
                 'required',
@@ -61,11 +57,6 @@ class StoreStockMovementRequest extends BaseApiRequest
      */
     protected function prepareForValidation(): void
     {
-        // Limpiar campos opcionales vacíos
-        if ($this->id_order === '') {
-            $this->merge(['id_order' => null]);
-        }
-
         if ($this->external_reference === '') {
             $this->merge(['external_reference' => null]);
         }

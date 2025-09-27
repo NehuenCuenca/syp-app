@@ -24,6 +24,7 @@ class UpdateStockMovementRequest extends BaseApiRequest
     public function rules(): array
     {
         return [
+            'id_order' => ['missing'],
             'quantity_moved' => [
                 'required',
                 'integer',

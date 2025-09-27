@@ -55,19 +55,12 @@ class StockMovementController extends Controller
     public function create(): JsonResponse
     {
         try {
-            $orders = Order::with('contact:id,company_name,contact_name,contact_type')
-                            ->select('id', 'id_contact', 'order_type', 'total_net', 'created_at')
-                            ->orderBy('created_at', 'desc')
-                            ->limit(15)
-                            ->get();
-
             $products = Product::with('category:id,name')
                 ->select('id', 'name', 'current_stock', 'min_stock_alert', 'id_category')
                 ->orderBy('name')
                 ->get();
 
             $data = [
-                'orders' => $orders,
                 'products' => $products,
                 'increment_movement_types' => MovementType::getIncrementMovementTypes(),
                 'decrement_movement_types' => MovementType::getDecrementMovementTypes(),
@@ -95,12 +88,6 @@ class StockMovementController extends Controller
     public function edit(StockMovement $stockMovement): JsonResponse
     {
         try {
-            $orders = Order::with('contact:id,company_name,contact_name,contact_type')
-                            ->select('id', 'id_contact', 'order_type', 'total_net', 'created_at')
-                            ->orderBy('created_at', 'desc')
-                            ->limit(10)
-                            ->get();
-
             $products = Product::with('category:id,name')
                 ->select('id', 'name', 'current_stock', 'min_stock_alert', 'id_category')
                 ->orderBy('name')
@@ -110,7 +97,6 @@ class StockMovementController extends Controller
                 'stock_movement' => $stockMovement->load(['product.category', 'order.contact']),
                 'increment_movement_types' => MovementType::getIncrementMovementTypes(),
                 'decrement_movement_types' => MovementType::getDecrementMovementTypes(),
-                'orders' => $orders,
                 'products' => $products,
             ];
 
@@ -174,7 +160,7 @@ class StockMovementController extends Controller
             // Crear el movimiento con la cantidad con signo correspondiente
             $stockMovement = StockMovement::create([
                 'id_product' => $validated['id_product'],
-                'id_order' => $validated['id_order'] ?? null,
+                'id_order' => null,
                 'id_user_responsible' => Auth::id(),
                 'id_movement_type' => $movementType->id,
                 'quantity_moved' => $isIncrement ? $quantityMoved : -$quantityMoved,
@@ -334,6 +320,13 @@ class StockMovementController extends Controller
     {
         try {
             DB::beginTransaction();
+
+            if($stockMovement->order) {
+                return $this->errorResponse(
+                    'No se puede eliminar un movimiento de stock que tiene un pedido asociado',
+                    ['stock_movement_id' => $stockMovement->id, 'order_id' => $stockMovement->order->id]
+                );
+            }
 
             $product = Product::findOrFail($stockMovement->id_product);
             $stockMovementId = $stockMovement->id;

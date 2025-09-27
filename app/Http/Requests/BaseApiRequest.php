@@ -50,7 +50,7 @@ class BaseApiRequest extends FormRequest
             'decimal' => 'El campo :attribute debe ser un número decimal con :decimal lugares después del punto.',
             'gte' => 'El campo :attribute debe ser mayor o igual a :value.',
             'integer' => 'El campo :attribute debe ser un número entero.',
-            'missing' => 'El campo :attribute no puede ser editado (no debe estar presente).',
+            'missing' => 'El campo :attribute no puede ser adjuntado o editado (no debe estar presente).',
             'exists' => 'El :attribute especificado no existe.',
             'boolean' => 'El campo :attribute debe ser verdadero o falso.',
             'array' => 'El campo :attribute debe ser un array.',
