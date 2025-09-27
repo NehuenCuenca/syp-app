@@ -28,7 +28,7 @@ class StoreContactRequest extends BaseApiRequest
             'email' => 'nullable|email|unique:contacts,email|max:255',
             'phone' => 'nullable|string|max:255',
             'address' => 'nullable|string',
-            'contact_type' => ['required', Rule::in(['Cliente', 'Proveedor', 'Empleado', 'Otro'])],
+            'contact_type' => ['required', Rule::in(['Cliente', 'Proveedor'])],
             'registered_at' => 'nullable|date',
         ];
     }

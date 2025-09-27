@@ -2,9 +2,11 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Contact;
 use Illuminate\Contracts\Validation\Validator;
 use App\Models\Product;
 use Illuminate\Http\Exceptions\HttpResponseException;
+use Illuminate\Validation\Rule;
 
 class StoreOrderRequest extends BaseApiRequest
 {
@@ -24,7 +26,10 @@ class StoreOrderRequest extends BaseApiRequest
     public function rules(): array
     {
         return [
-            'id_contact' => 'required|integer|exists:contacts,id',
+            'id_contact' => 'required_without:new_contact|integer|exists:contacts,id',
+            'new_contact' => 'required_without:id_contact|array',
+            'new_contact.company_name' => 'required_with:new_contact|string|max:50|min:4',
+
             'id_user_creator' => 'required|integer|exists:users,id',
             'order_type' => 'required|in:Compra,Venta',
             'order_status' => 'nullable|in:Pendiente',
@@ -45,6 +50,19 @@ class StoreOrderRequest extends BaseApiRequest
      */
     protected function prepareForValidation(): void
     {
+        if(!$this->has('id_contact') && $this->has('new_contact')) {
+            $this->merge([
+                'id_contact' => Contact::firstOrCreate([
+                    'company_name' => $this->new_contact['company_name'],
+                    'contact_name' => 'NA',
+                    'email' => 'NA',
+                    'phone' => 'NA',
+                    'address' => 'NA',
+                    'contact_type' => 'Cliente',
+                ])->id
+            ]);
+        }
+
         // Establecer estado por defecto si no se proporciona
         if (!$this->has('order_status')) {
             $this->merge([

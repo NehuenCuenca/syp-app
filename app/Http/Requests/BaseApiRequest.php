@@ -54,6 +54,10 @@ class BaseApiRequest extends FormRequest
             'exists' => 'El :attribute especificado no existe.',
             'boolean' => 'El campo :attribute debe ser verdadero o falso.',
             'array' => 'El campo :attribute debe ser un array.',
+            'required_without' => 'El campo :attribute es obligatorio cuando :other no está presente.',
+            'id_contact.required_without' => 'El campo id_contact es obligatorio cuando no se proporciona new_contact.',
+            'new_contact.required_without' => 'El campo new_contact es obligatorio cuando no se proporciona id_contact.',
+            'new_contact.company_name.required_with' => 'El campo company_name dentro de new_contact es obligatorio.',
         ];
     }
 
@@ -93,6 +97,8 @@ class BaseApiRequest extends FormRequest
             'low_stock' => 'stock bajo',
 
             'id_contact' => 'contacto',
+            'new_contact' => 'nuevo contacto',
+            'new_contact.company_name' => 'nombre de empresa del nuevo contacto',
             'id_user_creator' => 'creador',
             'order_type' => 'tipo de pedido',
             'order_status' => 'estado de pedido',
