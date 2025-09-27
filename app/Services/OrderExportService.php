@@ -110,7 +110,7 @@ class OrderExportService
                 'od.unit_price_at_order',
                 'od.discount_percentage_by_unit',
                 'od.line_subtotal',
-                'p.sku',
+                'p.id',
                 'p.name as product_name'
             ])
             ->get();

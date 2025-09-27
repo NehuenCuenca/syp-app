@@ -62,7 +62,7 @@ class StockMovementController extends Controller
                             ->get();
 
             $products = Product::with('category:id,name')
-                ->select('id', 'sku', 'name', 'current_stock', 'min_stock_alert', 'id_category')
+                ->select('id', 'name', 'current_stock', 'min_stock_alert', 'id_category')
                 ->orderBy('name')
                 ->get();
 
@@ -102,7 +102,7 @@ class StockMovementController extends Controller
                             ->get();
 
             $products = Product::with('category:id,name')
-                ->select('id', 'sku', 'name', 'current_stock', 'min_stock_alert', 'id_category')
+                ->select('id', 'name', 'current_stock', 'min_stock_alert', 'id_category')
                 ->orderBy('name')
                 ->get();
 
@@ -389,7 +389,7 @@ class StockMovementController extends Controller
     {
         try {
             $orders = Order::select('id', 'id_contact', 'order_type', 'total_net', 'created_at')->get();
-            $products = Product::select('name', 'sku', 'id', 'current_stock', 'min_stock_alert')->get();
+            $products = Product::select('name', 'id', 'current_stock', 'min_stock_alert')->get();
             $movementTypes = MovementType::select('name', 'id')->get();
             $dateFrom = StockMovement::min('created_at');
             $dateTo = StockMovement::max('created_at');

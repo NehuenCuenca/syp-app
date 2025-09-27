@@ -61,7 +61,7 @@ class OrderController extends Controller
                 ->get();
 
             $products = Product::with('category:id,name')
-                ->select('id', 'sku', 'name', 'current_stock', 'buy_price', 'sale_price', 'id_category')
+                ->select('id', 'name', 'current_stock', 'buy_price', 'sale_price', 'id_category')
                 ->orderBy('name')
                 ->get();
 
@@ -226,7 +226,7 @@ class OrderController extends Controller
                 ->get();
 
             $products = Product::with('category:id,name')
-                ->select('id', 'sku', 'name', 'current_stock', 'sale_price', 'buy_price', 'id_category')
+                ->select('id', 'name', 'current_stock', 'sale_price', 'buy_price', 'id_category')
                 ->orderBy('name')
                 ->get();
 

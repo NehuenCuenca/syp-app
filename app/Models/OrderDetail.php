@@ -118,14 +118,6 @@ class OrderDetail extends Model
     }
 
     /**
-     * Accessor: Get product SKU
-     */
-    public function getProductSkuAttribute(): string
-    {
-        return $this->product?->sku ?? 'SKU no encontrado';
-    }
-
-    /**
      * Accessor: Check if quantity is valid based on stock
      */
     public function getIsQuantityValidAttribute(): bool

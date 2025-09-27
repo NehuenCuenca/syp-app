@@ -22,7 +22,7 @@ class ProductController extends Controller
     public function index(): JsonResponse
     {
         try {
-            $products = Product::select('id', 'sku', 'name', 'current_stock', 'min_stock_alert')->get();
+            $products = Product::select('id', 'name', 'current_stock', 'min_stock_alert')->get();
             
             $meta = [
                 'total' => $products->count()
@@ -68,9 +68,7 @@ class ProductController extends Controller
         
         try {
             $product = Product::create($request->only([
-                'sku',
                 'name',
-                'description',
                 'buy_price',
                 'profit_percentage',
                 'sale_price',
@@ -100,8 +98,8 @@ class ProductController extends Controller
             // Manejar errores específicos de BD
             if ($e->getCode() === '23000') { // Constraint violation
                 return $this->errorResponse(
-                    'El producto con este SKU ya existe.',
-                    ['sku' => ['El SKU debe ser único.']],
+                    'El producto con este nombre ya existe.',
+                    ['name' => ['El nombre debe ser único.']],
                     [],
                     409
                 );
@@ -193,8 +191,8 @@ class ProductController extends Controller
             
             if ($e->getCode() === '23000') {
                 return $this->errorResponse(
-                    'El producto con este SKU ya existe.',
-                    ['sku' => ['El SKU debe ser único.']],
+                    'El producto con este nombre ya existe.',
+                    ['name' => ['El nombre debe ser único.']],
                     [],
                     409
                 );
@@ -365,18 +363,13 @@ class ProductController extends Controller
     public function getFilters(): JsonResponse
     {
         try {
-            $productCodes = Product::select('sku')
-                ->distinct()
-                ->whereNotNull('sku')
-                ->where('sku', '!=', '')
-                ->orderBy('sku')
-                ->pluck('sku');
+            $productNames = Product::select('id', 'name', 'current_stock', 'min_stock_alert')->get();
 
             $categories = Category::select('id', 'name')->get();
 
             $data = [
                 'categories' => $categories,
-                'product_codes' => $productCodes,
+                'product_names' => $productNames,
                 'sort_by' => self::ALLOWED_SORT_FIELDS,
                 'sort_direction' => self::ALLOWED_SORT_DIRECTIONS
             ];
@@ -437,8 +430,7 @@ class ProductController extends Controller
             
             if (!empty($filters['search'])) {
                 $query->where(function ($q) use ($filters) {
-                    $q->where('sku', 'like', '%' . $filters['search'] . '%')
-                        ->orWhere('name', 'like', '%' . $filters['search'] . '%');
+                    $q->where('name', 'like', '%' . $filters['search'] . '%');
                 });
             }
             
@@ -455,7 +447,7 @@ class ProductController extends Controller
                 $query->orderBy($filters['sort_by'], $filters['sort_direction']);
             }
             
-            $query->select('id', 'sku', 'name', 'current_stock', 'min_stock_alert');
+            $query->select('id', 'name', 'current_stock', 'min_stock_alert');
 
             // Paginación
             $products = $query->paginate($filters['per_page']);

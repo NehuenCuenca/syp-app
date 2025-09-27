@@ -17,9 +17,7 @@ class ProductFactory extends Factory
         $totalCategories = Category::count();
 
         return [
-            'sku' => fake()->unique()->regexify('[A-Z]{2}[0-9]{4}'),
             'name' => fake()->words(3, true),
-            'description' => fake()->paragraph(),
             'buy_price' => $avgPrice,
             'profit_percentage' => $markup,
             'sale_price' => $avgPrice * $markup,

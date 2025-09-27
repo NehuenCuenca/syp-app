@@ -13,9 +13,7 @@ return new class extends Migration
     {
         Schema::create('products', function (Blueprint $table) {
             $table->id();
-            $table->string('sku')->unique();
             $table->string('name');
-            $table->text('description')->nullable();
             $table->decimal('buy_price', 10, 2);
             $table->decimal('profit_percentage', 10, 2);
             $table->decimal('sale_price', 10, 2);

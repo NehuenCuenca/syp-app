@@ -31,7 +31,7 @@ class FilterProductsRequest extends BaseApiRequest
             'sort_by' => [
                 'nullable',
                 'string',
-                'in:name,sku,id_category,current_stock,min_stock_alert,sale_price,buy_price,created_at,updated_at'
+                'in:name,id_category,current_stock,min_stock_alert,sale_price,buy_price,created_at,updated_at'
             ],
             'sort_direction' => 'nullable|string|in:asc,desc',
             'id_category' => 'nullable|integer|exists:categories,id',
