@@ -86,6 +86,40 @@ class OrderDetailController extends Controller
     }
 
     /**
+     * Show the form for creating a new resource.
+     */
+    public function create()
+    {
+        try {
+            $products = Product::with('category:id,name')
+                ->select('id', 'name', 'current_stock', 'buy_price', 'sale_price', 'id_category')
+                ->orderBy('name')
+                ->get();
+
+            $data = [
+                'products' => $products
+            ];
+
+            return $this->successResponse(
+                $data,
+                'Datos para crear detalle de pedido obtenidos exitosamente'
+            );
+
+        } catch (Exception $e) {
+            Log::error('Error al obtener datos para crear detalle de pedido: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return $this->errorResponse(
+                'Error interno del servidor al obtener los datos necesarios para crear un detalle de pedido',
+                ['exception' => $e->getMessage()],
+                [],
+                500
+            );
+        }
+    }
+
+    /**
      * Store a newly created resource in storage.
      */
     public function store(StoreOrderDetailRequest $request)
