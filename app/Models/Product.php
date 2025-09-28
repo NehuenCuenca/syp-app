@@ -39,4 +39,9 @@ class Product extends Model
     {
         return $this->belongsTo(Category::class, 'id_category', 'id');
     }
+
+    public function calculateSellPrice()
+    {
+        return $this->buy_price * $this->profit_percentage;
+    }
 }
