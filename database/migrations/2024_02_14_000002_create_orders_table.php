@@ -18,7 +18,7 @@ return new class extends Migration
             $table->text('code');
             $table->date('actual_delivery_date')->nullable();
             $table->enum('order_type', ['Compra', 'Venta']);
-            $table->enum('order_status', ['Pendiente', 'Completado', 'Cancelado', 'Devuelto'])->default('Pendiente');
+            $table->enum('order_status', ['Pendiente', 'Completado', 'Cancelado'])->default('Pendiente');
             $table->decimal('total_net', 10, 2)->nullable();
             $table->text('notes')->nullable();
             $table->timestamp('created_at')->useCurrent();

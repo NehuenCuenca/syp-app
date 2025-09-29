@@ -27,7 +27,7 @@ class OrderFactory extends Factory
                 fake()->dateTimeBetween($estimatedDeliveryDate, '+35 days')->format('Y-m-d') : 
                 null,
             'order_type' => $orderType,
-            'order_status' => fake()->randomElement(['Pendiente', 'Completado', 'Cancelado', 'Devuelto']),
+            'order_status' => fake()->randomElement(['Pendiente', 'Completado', 'Cancelado']),
             'total_net' => $totalNet,
             'notes' => fake()->optional(0.7)->text(200), // 70% chance of having notes
         ];

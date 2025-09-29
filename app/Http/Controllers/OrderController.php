@@ -230,6 +230,8 @@ class OrderController extends Controller
                 ->orderBy('name')
                 ->get();
 
+            $order->append(['show_valid_transitions']);
+
             $data = [
                 'order' => $order,
                 'contacts' => $contacts,
@@ -561,17 +563,12 @@ class OrderController extends Controller
             $fromPendingToCompleted  = $oldStatus === 'Pendiente' && $newStatus === 'Completado';
             $fromPendingToCanceled   = $oldStatus === 'Pendiente' && $newStatus === 'Cancelado';
             $fromCompletedToPending  = $oldStatus === 'Completado' && $newStatus === 'Pendiente';
-            $fromCompletedToReturned = $oldStatus === 'Completado' && $newStatus === 'Devuelto';
             $fromCanceledToPending   = $oldStatus === 'Cancelado' && $newStatus === 'Pendiente';
-            $fromReturnedToPending   = $oldStatus === 'Devuelto' && $newStatus === 'Pendiente';
-            $fromReturnedToCompleted = $oldStatus === 'Devuelto' && $newStatus === 'Completado';
 
             if ($order->getIsSaleAttribute()) {
                 if ($fromPendingToCanceled) {
                     $this->revertStockMovements($order);
-                } elseif ($fromCompletedToReturned) {
-                    $this->createReturnMovements($order);
-                } elseif ($fromCanceledToPending || $fromReturnedToPending || $fromReturnedToCompleted) {
+                } elseif ($fromCanceledToPending) {
                     foreach ($order->orderDetails as $detail) {
                         $this->createStockMovement($order, $detail);
                     }
@@ -579,14 +576,12 @@ class OrderController extends Controller
             }  
             
             if ($order->getIsPurchaseAttribute()) {
-                if ($fromPendingToCompleted || $fromReturnedToCompleted) {
+                if ($fromPendingToCompleted) {
                     foreach ($order->orderDetails as $detail) {
                         $this->createStockMovement($order, $detail);
                     }
                 } elseif ($fromCompletedToPending) {
                     $this->revertStockMovements($order);
-                } elseif ($fromCompletedToReturned) {
-                    $this->createReturnMovements($order);
                 }
             }
 

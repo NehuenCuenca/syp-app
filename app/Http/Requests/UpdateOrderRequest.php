@@ -26,7 +26,7 @@ class UpdateOrderRequest extends BaseApiRequest
             'id_contact' => 'sometimes|required|integer|exists:contacts,id',
             'actual_delivery_date' => 'nullable|date',
             'order_type' => 'missing|in:Compra,Venta',
-            'order_status' => 'sometimes|required|in:Pendiente,Completado,Cancelado,Devuelto',
+            'order_status' => 'sometimes|required|in:Pendiente,Completado,Cancelado',
             'notes' => 'nullable|string|max:1000',
             'total_net' => 'sometimes|numeric|min:0',
             

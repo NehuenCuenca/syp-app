@@ -37,7 +37,7 @@ class Contact extends Model
 
     public function getFullNameAttribute()
     {
-        return $this->contact_name . ' (' . $this->contact_type . ')';
+        return $this->company_name . ' (' . $this->contact_type . ')';
     }
 
     public function getLastOrderAttribute()

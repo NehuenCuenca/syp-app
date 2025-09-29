@@ -64,7 +64,6 @@ class Order extends Model
     const STATUS_PENDING = 'Pendiente';
     const STATUS_COMPLETED = 'Completado';
     const STATUS_CANCELLED = 'Cancelado';
-    const STATUS_RETURNED = 'Devuelto';
 
     public function getOrderAliasAttribute()
     {
@@ -94,7 +93,6 @@ class Order extends Model
             self::STATUS_PENDING,
             self::STATUS_COMPLETED,
             self::STATUS_CANCELLED,
-            self::STATUS_RETURNED,
         ];
     }
 
@@ -217,7 +215,6 @@ class Order extends Model
             self::STATUS_PENDING => 'Pendiente',
             self::STATUS_COMPLETED => 'Completado',
             self::STATUS_CANCELLED => 'Cancelado',
-            self::STATUS_RETURNED => 'Devuelto',
             default => $this->order_status,
         };
     }
@@ -244,14 +241,6 @@ class Order extends Model
     public function getIsCancelledAttribute(): bool
     {
         return $this->order_status === self::STATUS_CANCELLED;
-    }
-
-    /**
-     * Accessor: Check if order is returned
-     */
-    public function getIsReturnedAttribute(): bool
-    {
-        return $this->order_status === self::STATUS_RETURNED;
     }
 
     /**
@@ -321,9 +310,8 @@ class Order extends Model
     {
         $validTransitions = [
             'Pendiente' => ['Completado', 'Cancelado'],
-            'Completado' => ['Pendiente', 'Devuelto'],
+            'Completado' => ['Pendiente'],
             'Cancelado' => ['Pendiente'],
-            'Devuelto' => ['Pendiente', 'Completado'],
         ];
 
         return $validTransitions[$this->order_status] ?? [];
