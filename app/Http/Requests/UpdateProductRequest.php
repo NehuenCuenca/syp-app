@@ -16,10 +16,10 @@ class UpdateProductRequest extends BaseApiRequest
         return [
             'name' => ['string', 'max:255'],
             'buy_price' => ['numeric', 'min:0'],
-            'profit_percentage' => ['decimal:1', 'min:1.1', 'max:1.9'],
+            'profit_percentage' => ['decimal:1,2', 'min:1.1', 'max:1.9'],
             'sale_price' => ['numeric', 'min:0', 'gte:buy_price'],
-            'current_stock' => ['missing'], //['integer', 'min:0'],
-            'min_stock_alert' => ['integer', 'min:0'],
+            'current_stock' => ['integer', 'min:0'], //['missing'],
+            'min_stock_alert' => ['integer', 'min:1'],
             'category' => ['string', 'max:100'],
         ];
     }
@@ -30,7 +30,7 @@ class UpdateProductRequest extends BaseApiRequest
     protected function prepareForValidation(): void
     {
         // crear categoria si no existe
-        $category = Category::firstOrCreate(['name' => $this->input('category', 'Sin categoría')]);
+        $category = Category::firstOrCreate(['name' => $this->input('category', 'Varios')]);
         $this->merge([
             'id_category' => $category->id
         ]);

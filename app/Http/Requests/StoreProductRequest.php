@@ -16,7 +16,7 @@ class StoreProductRequest extends BaseApiRequest
         return [
             'name' => ['required', 'string', 'max:255'],
             'buy_price' => ['required', 'numeric', 'min:0'],
-            'profit_percentage' => ['required', 'decimal:1', 'min:1.1', 'max:1.9'],
+            'profit_percentage' => ['required', 'decimal:1,2', 'min:1.1', 'max:1.9'],
             'sale_price' => ['required', 'numeric', 'min:0', 'gte:buy_price'],
             'current_stock' => ['required', 'integer', 'min:0'],
             'min_stock_alert' => ['required', 'integer', 'min:0'],
@@ -30,7 +30,7 @@ class StoreProductRequest extends BaseApiRequest
     protected function prepareForValidation(): void
     {
         // crear categoria si no existe
-        $category = Category::firstOrCreate(['name' => $this->input('category', 'Sin categoría')]);
+        $category = Category::firstOrCreate(['name' => $this->input('category', 'Varios')]);
         $this->merge([
             'id_category' => $category->id
         ]);

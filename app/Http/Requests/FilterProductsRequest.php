@@ -40,6 +40,19 @@ class FilterProductsRequest extends BaseApiRequest
         ];
     }
 
+    protected function prepareForValidation()
+{
+    if ($this->has('low_stock')) {
+        $value = strtolower($this->input('low_stock'));
+
+        if ($value === 'false') {
+            $this->merge(['low_stock' => false]);
+        } elseif ($value === 'true') {
+            $this->merge(['low_stock' => true]);
+        }
+    }
+}
+
     /**
      * Handle a failed validation attempt.
      *
