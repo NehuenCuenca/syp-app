@@ -7,7 +7,9 @@ use App\Http\Requests\StoreProductRequest;
 use App\Http\Requests\UpdateProductRequest;
 use App\Http\Traits\ApiResponseTrait;
 use App\Models\Category;
+use App\Models\MovementType;
 use App\Models\Product;
+use App\Models\StockMovement;
 use Exception;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
@@ -65,8 +67,8 @@ class ProductController extends Controller
     public function store(StoreProductRequest $request): JsonResponse
     {
         DB::beginTransaction();
-        
         try {
+
             $product = Product::create($request->only([
                 'name',
                 'buy_price',
@@ -78,6 +80,16 @@ class ProductController extends Controller
             ]));
             
             $product->load('category');
+
+            StockMovement::create([
+                'id_product' => $product->id,
+                'id_order' => null,
+                'id_movement_type' => MovementType::where('name', 'Ajuste Positivo')->first()->id,
+                'quantity_moved' => $product->current_stock,
+                'notes' => "Stock inicial del producto {$product->name}",
+                'movement_date' => now(),
+                'id_user_responsible' => auth()->id(),
+            ]);
             
             DB::commit();
             
@@ -164,11 +176,28 @@ class ProductController extends Controller
             // Actualizar categoria si es nueva
             if ($request->input('id_category')) {
                 $category = Category::firstOrCreate([
-                    'name' => $request->input('category', 'Sin categoría')
+                    'name' => $request->input('category', 'Varios')
                 ]);
                 $request->merge(['id_category' => $category->id]);
             }
-            
+
+            $oldStock = $product->current_stock;
+            $newStock = $request->input('current_stock');
+            if($oldStock !== $newStock) {
+                $stockDifference = max($newStock, $oldStock) - min($newStock, $oldStock);
+                $movementType = $stockDifference > 0 ? 'Ajuste Positivo' : 'Ajuste Negativo';
+
+                StockMovement::create([
+                    'id_product' => $product->id,
+                    'id_order' => null,
+                    'id_movement_type' => MovementType::where('name', $movementType)->first()->id,
+                    'quantity_moved' => ($newStock > $oldStock) ? $stockDifference : -$stockDifference,
+                    'notes' => "Actualización de stock del producto {$product->name}",
+                    'movement_date' => now(),
+                    'id_user_responsible' => auth()->id(),
+                ]);
+            }
+
             $product->update($request->all());
             $product->load('category');
 
@@ -363,7 +392,7 @@ class ProductController extends Controller
     public function getFilters(): JsonResponse
     {
         try {
-            $productNames = Product::select('id', 'name', 'current_stock', 'min_stock_alert')->get();
+            $productNames = Product::select('id', 'name')->get();
 
             $categories = Category::select('id', 'name')->get();
 
@@ -419,6 +448,7 @@ class ProductController extends Controller
             $filters = $request->getFilters();
             $query = Product::query();
             
+
             // Aplicar filtros
             if (!empty($filters['id_category'])) {
                 $query->where('id_category', $filters['id_category']);
@@ -447,7 +477,7 @@ class ProductController extends Controller
                 $query->orderBy($filters['sort_by'], $filters['sort_direction']);
             }
             
-            $query->select('id', 'name', 'current_stock', 'min_stock_alert');
+            $query->select('id', 'name', 'current_stock', 'min_stock_alert', 'sale_price', 'buy_price');
 
             // Paginación
             $products = $query->paginate($filters['per_page']);
