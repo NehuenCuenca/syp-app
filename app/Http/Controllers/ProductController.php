@@ -374,6 +374,7 @@ class ProductController extends Controller
     }
 
     public const ALLOWED_SORT_FIELDS = [
+        'code' => 'COD',   
         'id_category' => 'Categoria',   
         'sale_price' => 'Precio de venta',   
         'current_stock' => 'Stock actual',   
@@ -392,13 +393,13 @@ class ProductController extends Controller
     public function getFilters(): JsonResponse
     {
         try {
-            $productNames = Product::select('id', 'name')->get();
+            $products = Product::select('id', 'code', 'name')->get();
 
-            $categories = Category::select('id', 'name')->get();
+            $categories = Category::select('id', 'name', DB::raw('CONCAT(id, "| ", name) as alias'))->get();
 
             $data = [
                 'categories' => $categories,
-                'product_names' => $productNames,
+                'products' => $products,
                 'sort_by' => self::ALLOWED_SORT_FIELDS,
                 'sort_direction' => self::ALLOWED_SORT_DIRECTIONS
             ];
@@ -460,7 +461,8 @@ class ProductController extends Controller
             
             if (!empty($filters['search'])) {
                 $query->where(function ($q) use ($filters) {
-                    $q->where('name', 'like', '%' . $filters['search'] . '%');
+                    $q->where('code', 'like', "{$filters['search']}%")
+                      ->orWhere('name', 'like', "%{$filters['search']}%");
                 });
             }
             
@@ -477,7 +479,7 @@ class ProductController extends Controller
                 $query->orderBy($filters['sort_by'], $filters['sort_direction']);
             }
             
-            $query->select('id', 'name', 'current_stock', 'min_stock_alert', 'sale_price', 'buy_price');
+            $query->select('id', 'code', 'name', 'current_stock', 'min_stock_alert', 'sale_price', 'buy_price');
 
             // Paginación
             $products = $query->paginate($filters['per_page']);
