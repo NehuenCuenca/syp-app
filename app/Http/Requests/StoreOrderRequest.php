@@ -54,10 +54,6 @@ class StoreOrderRequest extends BaseApiRequest
             $this->merge([
                 'id_contact' => Contact::firstOrCreate([
                     'company_name' => $this->new_contact['company_name'],
-                    'contact_name' => 'NA',
-                    'email' => 'NA',
-                    'phone' => 'NA',
-                    'address' => 'NA',
                     'contact_type' => 'Cliente',
                 ])->id
             ]);

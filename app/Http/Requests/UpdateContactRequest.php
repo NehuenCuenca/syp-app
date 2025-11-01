@@ -27,12 +27,13 @@ class UpdateContactRequest extends BaseApiRequest
             'company_name' => 'string|max:255',
             'contact_name' => 'string|max:255',
             'email' => [
+                'nullable',
                 'email',
                 'max:255',
                 Rule::unique('contacts', 'email')->ignore($contactId)
             ],
-            'phone' => 'string|max:255',
-            'address' => 'string',
+            'phone' => 'nullable|string|max:255',
+            'address' => 'nullable|string',
             'contact_type' => [Rule::in(['Cliente', 'Proveedor', 'Empleado', 'Otro'])],
             'registered_at' => 'date',
         ];
