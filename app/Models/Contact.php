@@ -42,7 +42,8 @@ class Contact extends Model
     public function getLastOrderAttribute()
 {
     $lastOrder = $this->orders()
-        ->select('id', 'order_type', 'order_status', 'created_at')
+        ->with(['movementType'])
+        ->select('id', 'id_movement_type', 'total_net', 'created_at') //aca falta el movementType
         ->orderBy('created_at', 'desc')
         ->first();
     
@@ -51,7 +52,7 @@ class Contact extends Model
     }
     
     // Retornar un array con los datos necesarios y el alias creado manualmente
-    return  'Ultima ' . strtolower($lastOrder->order_type) . ': ' . substr(strtoupper($lastOrder->order_status),0, 4) . '. '
+    return  'Ultima ' . strtolower($lastOrder->movementType->name) . ': '
                        . $lastOrder->created_at->format('Y-m-d');
 }
     
