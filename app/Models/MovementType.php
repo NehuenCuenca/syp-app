@@ -15,6 +15,11 @@ class MovementType extends Model
         'increase_stock',
     ];
 
+    public function orders()
+    {
+        return $this->hasMany(Order::class, 'id_movement_type');
+    }
+
     //define the inverse relationship with the stock movement model
     public function stockMovements(): HasMany
     {
@@ -26,7 +31,7 @@ class MovementType extends Model
      */
     public static function getIncrementMovementTypes(): array
     {
-        return MovementType::where('increase_stock', true)->pluck('name')->toArray();
+        return MovementType::where('increase_stock', true)->pluck('id')->toArray();
     }
 
     /**
@@ -34,6 +39,6 @@ class MovementType extends Model
      */
     public static function getDecrementMovementTypes(): array
     {
-        return MovementType::where('increase_stock', false)->pluck('name')->toArray();
+        return MovementType::where('increase_stock', false)->pluck('id')->toArray();
     }
 }

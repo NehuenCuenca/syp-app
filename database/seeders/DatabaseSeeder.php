@@ -16,9 +16,9 @@ class DatabaseSeeder extends Seeder
             CategorySeeder::class,
             ContactSeeder::class,
             ProductSeeder::class,
+            MovementTypeSeeder::class,
             OrderSeeder::class,
             OrderDetailSeeder::class,
-            MovementTypeSeeder::class,
             StockMovementSeeder::class,
         ]);
     }
