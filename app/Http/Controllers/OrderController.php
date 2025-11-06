@@ -6,7 +6,6 @@ use App\Http\Requests\StoreOrderRequest;
 use App\Http\Requests\UpdateOrderRequest;
 use App\Http\Traits\ApiResponseTrait;
 use App\Models\Contact;
-use App\Models\MovementType;
 use App\Models\Order;
 use App\Models\OrderDetail;
 use App\Models\StockMovement;
@@ -26,9 +25,10 @@ class OrderController extends Controller
     public function index()
     {
         try {
-            $orders = Order::with(['contact', 'userCreator'])
+            $orders = Order::with(['contact', 'movementType'])
                 ->orderBy('created_at', 'desc')
                 ->get();
+
             
             return $this->successResponse(
                 $orders, 
@@ -61,13 +61,12 @@ class OrderController extends Controller
                 ->get();
 
             $products = Product::with('category:id,name')
-                ->select('id', 'name', 'current_stock', 'buy_price', 'sale_price', 'id_category')
+                ->select('id', 'name', 'current_stock', 'min_stock_alert', 'buy_price', 'sale_price', 'id_category')
                 ->orderBy('name')
                 ->get();
 
             $data = [
                 'order_types' => Order::getOrderTypes(),
-                'order_statuses' => Order::getOrderStatuses(),
                 'contacts' => $contacts,
                 'products' => $products
             ];
@@ -102,11 +101,10 @@ class OrderController extends Controller
             // Crear el pedido
             $order = Order::create([
                 'id_contact' => $request->id_contact,
-                'id_user_creator' => $request->id_user_creator,
-                'order_type' => $request->order_type,
-                'order_status' => $request->order_status ?? 'Pendiente',
+                'id_movement_type' => $request->id_movement_type,
                 'notes' => $request->notes,
                 'total_net' => $request->total_net ?? 0,
+                'code' => now()->timestamp
             ]);
 
             if (!$order) {
@@ -146,13 +144,11 @@ class OrderController extends Controller
                         throw new Exception('Error al crear detalle del pedido');
                     }
 
-                    if ($order->getIsPurchaseAttribute()) {
-                        $product->update(['buy_price' => $detail['unit_price_at_order']]);
-                    }
+                    // if ($order->getIsPurchaseAttribute()) {
+                    //     $product->update(['buy_price' => $detail['unit_price_at_order']]);
+                    // }
 
-                    if ($order->getIsSaleAttribute()) {
-                        $this->createStockMovement($order, $detailRecord);
-                    }
+                    $this->createStockMovement($order, $detailRecord);
                 }
             }
 
@@ -161,8 +157,7 @@ class OrderController extends Controller
 
             DB::commit();
 
-            $order->append(['show_valid_transitions']);
-            $orderData = $order->load(['contact', 'userCreator', 'orderDetails.product.category']);
+            $orderData = $order->load(['contact', 'orderDetails.product.category']);
             
             return $this->createdResponse(
                 $orderData,
@@ -191,7 +186,7 @@ class OrderController extends Controller
     public function show(Order $order)
     {
         try {
-            $orderData = $order->load(['contact', 'userCreator', 'orderDetails.product.category', 'stockMovements']);
+            $orderData = $order->load(['contact', 'orderDetails.product.category', 'stockMovements', 'movementType']);
             
             return $this->successResponse(
                 $orderData,
@@ -219,25 +214,22 @@ class OrderController extends Controller
     public function edit(Order $order)
     {
         try {
-            $order->load(['contact', 'userCreator', 'orderDetails.product.category']);
+            $order->load(['contact', 'orderDetails.product.category']);
 
             $contacts = Contact::select('id', 'company_name', 'contact_name', 'contact_type')
                 ->orderBy('company_name')
                 ->get();
 
             $products = Product::with('category:id,name')
-                ->select('id', 'name', 'current_stock', 'sale_price', 'buy_price', 'id_category')
+                ->select('id', 'name', 'current_stock', 'min_stock_alert', 'sale_price', 'buy_price', 'id_category')
                 ->orderBy('name')
                 ->get();
-
-            $order->append(['show_valid_transitions']);
 
             $data = [
                 'order' => $order,
                 'contacts' => $contacts,
                 'products' => $products,
                 'order_types' => Order::getOrderTypes(),
-                'order_statuses' => Order::getOrderStatuses(),
             ];
 
             return $this->successResponse(
@@ -268,13 +260,9 @@ class OrderController extends Controller
         DB::beginTransaction();
         
         try {
-            $oldStatus = $order->order_status;
-            $newStatus = $request->order_status;
-
             // Actualizar el pedido
             $updateResult = $order->update([
                 'id_contact' => $request->id_contact,
-                'actual_delivery_date' => $request->actual_delivery_date,
                 'notes' => $request->notes,
                 'total_net' => $request->total_net ?? $order->total_net
             ]);
@@ -283,16 +271,9 @@ class OrderController extends Controller
                 throw new Exception('No se pudo actualizar el pedido');
             }
 
-            // Manejar cambios de estado y movimientos de stock
-            if ($newStatus !== $oldStatus) {
-                $order->update(['order_status' => $newStatus]);
-                $this->handleStatusChange($order, $oldStatus, $newStatus);
-            }
-
             DB::commit();
 
-            $order->append(['show_valid_transitions']);
-            $orderData = $order->load(['contact', 'userCreator', 'orderDetails.product']);
+            $orderData = $order->load(['contact', 'orderDetails.product', 'movementType']);
             
             return $this->successResponse(
                 $orderData,
@@ -350,7 +331,8 @@ class OrderController extends Controller
             
             return $this->deletedResponse(
                 $order->id,
-                'Pedido eliminado exitosamente'
+                'Pedido eliminado exitosamente',
+                false
             );
 
         } catch (Exception $e) {
@@ -377,7 +359,6 @@ class OrderController extends Controller
         try {
             $data = [
                 'order_types' => Order::getOrderTypes(),
-                'order_statuses' => Order::getOrderStatuses(),
                 'contacts' => Contact::select('id', 'company_name', 'contact_name', 'contact_type')->get(),
                 'date_from' => Order::min('created_at'),
                 'date_to' => Order::max('created_at'),
@@ -410,15 +391,11 @@ class OrderController extends Controller
     public function getFilteredOrders(Request $request)
     {
         try {
-            $query = Order::with(['contact', 'userCreator']);
+            $query = Order::with(['contact']);
             
             // Filtros
-            if ($request->filled('order_type')) {
-                $query->where('order_type', $request->order_type);
-            }
-
-            if ($request->filled('order_status')) {
-                $query->where('order_status', $request->order_status);
+            if ($request->filled('id_movement_type')) {
+                $query->where('id_movement_type', $request->id_movement_type);
             }
 
             if ($request->filled('id_contact')) {
@@ -543,9 +520,7 @@ class OrderController extends Controller
     public const ALLOWED_SORT_FIELDS = [
         'id' => 'ID', 
         'created_at' => 'Fecha de creacion', 
-        'actual_delivery_date' => 'Fecha de entrega',
-        'order_type' => 'Tipo de pedido',
-        'order_status' => 'Estado de pedido',
+        'id_movement_type' => 'Tipo de pedido',
         'total_net' => 'Total neto'
     ];
 
@@ -555,69 +530,19 @@ class OrderController extends Controller
     ];
 
     /**
-     * Manejar cambios de estado y movimientos de stock
-     */
-    private function handleStatusChange(Order $order, string $oldStatus, string $newStatus)
-    {
-        try {
-            $fromPendingToCompleted  = $oldStatus === 'Pendiente' && $newStatus === 'Completado';
-            $fromPendingToCanceled   = $oldStatus === 'Pendiente' && $newStatus === 'Cancelado';
-            $fromCompletedToPending  = $oldStatus === 'Completado' && $newStatus === 'Pendiente';
-            $fromCanceledToPending   = $oldStatus === 'Cancelado' && $newStatus === 'Pendiente';
-
-            if ($order->getIsSaleAttribute()) {
-                if ($fromPendingToCanceled) {
-                    $this->revertStockMovements($order);
-                } elseif ($fromCanceledToPending) {
-                    foreach ($order->orderDetails as $detail) {
-                        $this->createStockMovement($order, $detail);
-                    }
-                }
-            }  
-            
-            if ($order->getIsPurchaseAttribute()) {
-                if ($fromPendingToCompleted) {
-                    foreach ($order->orderDetails as $detail) {
-                        $this->createStockMovement($order, $detail);
-                    }
-                } elseif ($fromCompletedToPending) {
-                    $this->revertStockMovements($order);
-                }
-            }
-
-        } catch (Exception $e) {
-            Log::error('Error al manejar cambio de estado: ' . $e->getMessage(), [
-                'order_id' => $order->id,
-                'old_status' => $oldStatus,
-                'new_status' => $newStatus,
-                'trace' => $e->getTraceAsString()
-            ]);
-            
-            throw new Exception('Error al procesar el cambio de estado del pedido: ' . $e->getMessage());
-        }
-    }
-
-    /**
      * Crear movimiento de stock para un detalle del pedido
      */
     private function createStockMovement(Order $order, OrderDetail $detail)
     {
         try {
-            $movementType = $order->getIsPurchaseAttribute() ? 'Compra' : 'Venta';
-            $quantity = ($order->getIsPurchaseAttribute()) ? $detail->quantity : -$detail->quantity;
-
-            $movementTypeRecord = MovementType::where('name', $movementType)->first();
-            if (!$movementTypeRecord) {
-                throw new Exception("Tipo de movimiento '{$movementType}' no encontrado");
-            }
+            $quantity = ($order->getIsSaleAttribute()) ? -$detail->quantity : $detail->quantity;
 
             $stockMovement = StockMovement::create([
                 'id_product' => $detail->id_product,
                 'id_order' => $order->id,
-                'id_user_responsible' => $order->id_user_creator,
-                'id_movement_type' => $movementTypeRecord->id,
+                'id_order_detail' => $detail->id,
+                'id_movement_type' => $order->id_movement_type,
                 'quantity_moved' => $quantity,
-                'movement_date' => now(),
                 'notes' => "Movimiento automático por pedido #{$order->id}",
             ]);
 
@@ -642,106 +567,6 @@ class OrderController extends Controller
             ]);
             
             throw new Exception('Error al crear movimiento de stock: ' . $e->getMessage());
-        }
-    }
-
-    /**
-     * Revertir movimientos de stock de un pedido
-     */
-    private function revertStockMovements(Order $order)
-    {
-        try {
-            $orderDetails = OrderDetail::where('id_order', $order->id)->get();
-            
-            foreach ($orderDetails as $detail) {
-                $movementType = $order->getIsPurchaseAttribute() ? 'Ajuste Negativo' : 'Ajuste Positivo';
-                $quantity = $order->order_type === 'Compra' ? -$detail['quantity'] : $detail['quantity'];
-
-                $movementTypeRecord = MovementType::where('name', $movementType)->first();
-                if (!$movementTypeRecord) {
-                    throw new Exception("Tipo de movimiento '{$movementType}' no encontrado");
-                }
-
-                // Crear movimiento inverso
-                $stockMovement = StockMovement::create([
-                    'id_product' => $detail->id_product,
-                    'id_order' => $order->id,
-                    'id_user_responsible' => auth()->id() ?? $order->id_user_creator,
-                    'id_movement_type' => $movementTypeRecord->id,
-                    'quantity_moved' => $quantity,
-                    'movement_date' => now(),
-                    'notes' => "Reversión de movimiento por cambio de estado del pedido #{$order->id}",
-                ]);
-
-                if (!$stockMovement) {
-                    throw new Exception('No se pudo crear el movimiento de reversión');
-                }
-
-                // Actualizar stock
-                $product = Product::find($detail->id_product);
-                if (!$product) {
-                    throw new Exception("Producto con ID {$detail->id_product} no encontrado");
-                }
-                
-                $product->decrement('current_stock', $quantity);
-            }
-
-        } catch (Exception $e) {
-            Log::error('Error al revertir movimientos de stock: ' . $e->getMessage(), [
-                'order_id' => $order->id,
-                'trace' => $e->getTraceAsString()
-            ]);
-            
-            throw new Exception('Error al revertir movimientos de stock: ' . $e->getMessage());
-        }
-    }
-
-    /**
-     * Crear movimientos de devolución
-     */
-    private function createReturnMovements(Order $order)
-    {
-        try {
-            $returnType = $order->order_type === 'Compra' ? 'Devolucion Proveedor' : 'Devolucion Cliente';
-            
-            $movementTypeRecord = MovementType::where('name', $returnType)->first();
-            if (!$movementTypeRecord) {
-                throw new Exception("Tipo de movimiento '{$returnType}' no encontrado");
-            }
-            
-            foreach ($order->orderDetails as $detail) {
-                $quantity = $order->order_type === 'Compra' ? -$detail->quantity : $detail->quantity;
-                
-                $stockMovement = StockMovement::create([
-                    'id_product' => $detail->id_product,
-                    'id_order' => $order->id,
-                    'id_user_responsible' => auth()->id() ?? $order->id_user_creator,
-                    'id_movement_type' => $movementTypeRecord->id,
-                    'quantity_moved' => $quantity,
-                    'movement_date' => now(),
-                    'notes' => "Devolución del pedido #{$order->id}",
-                ]);
-
-                if (!$stockMovement) {
-                    throw new Exception('No se pudo crear el movimiento de devolución');
-                }
-
-                // Actualizar stock
-                $product = Product::find($detail->id_product);
-                if (!$product) {
-                    throw new Exception("Producto con ID {$detail->id_product} no encontrado");
-                }
-                
-                $product->increment('current_stock', $quantity);
-            }
-
-        } catch (Exception $e) {
-            Log::error('Error al crear movimientos de devolución: ' . $e->getMessage(), [
-                'order_id' => $order->id,
-                'trace' => $e->getTraceAsString()
-            ]);
-            
-            throw new Exception('Error al crear movimientos de devolución: ' . $e->getMessage());
         }
     }
 }

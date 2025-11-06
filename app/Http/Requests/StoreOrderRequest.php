@@ -3,6 +3,8 @@
 namespace App\Http\Requests;
 
 use App\Models\Contact;
+use App\Models\MovementType;
+use App\Models\Order;
 use Illuminate\Contracts\Validation\Validator;
 use App\Models\Product;
 use Illuminate\Http\Exceptions\HttpResponseException;
@@ -30,9 +32,7 @@ class StoreOrderRequest extends BaseApiRequest
             'new_contact' => 'required_without:id_contact|array',
             'new_contact.company_name' => 'required_with:new_contact|string|max:50|min:4',
 
-            'id_user_creator' => 'required|integer|exists:users,id',
-            'order_type' => 'required|in:Compra,Venta',
-            'order_status' => 'nullable|in:Pendiente',
+            'id_movement_type' => 'required|exists:movement_types,id|in:1,2',
             'notes' => 'nullable|string|max:1000',
             'total_net' => 'sometimes|numeric|min:0',
             
@@ -58,13 +58,6 @@ class StoreOrderRequest extends BaseApiRequest
                 ])->id
             ]);
         }
-
-        // Establecer estado por defecto si no se proporciona
-        if (!$this->has('order_status')) {
-            $this->merge([
-                'order_status' => 'Pendiente'
-            ]);
-        }
     }
 
     /**
@@ -85,7 +78,7 @@ class StoreOrderRequest extends BaseApiRequest
             }
 
             // Validación personalizada: verificar stock disponible para pedidos de venta
-            if ($this->order_type === 'Venta' && $this->order_details) {
+            if ($this->id_movement_type == MovementType::firstWhere('name', Order::ORDER_TYPE_SALE)->id && $this->order_details) {
                 foreach ($this->order_details as $index => $detail) {
                     $product = Product::find($detail['id_product']);
                     if ($product && $product->current_stock < $detail['quantity']) {
