@@ -14,24 +14,16 @@ return new class extends Migration
         Schema::create('orders', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('id_contact');
-            $table->unsignedBigInteger('id_user_creator');
+            $table->unsignedBigInteger('id_movement_type');
             $table->text('code');
-            $table->date('actual_delivery_date')->nullable();
-            $table->enum('order_type', ['Compra', 'Venta']);
-            $table->enum('order_status', ['Pendiente', 'Completado', 'Cancelado'])->default('Pendiente');
             $table->decimal('total_net', 10, 2)->nullable();
             $table->text('notes')->nullable();
             $table->timestamp('created_at')->useCurrent();
             $table->timestamp('updated_at')->useCurrent()->useCurrentOnUpdate();
             
-            // Índices
-            $table->index(['order_type', 'order_status']);
-            $table->index('created_at');
-            $table->index('actual_delivery_date');
-            
             // Claves foráneas
             $table->foreign('id_contact')->references('id')->on('contacts')->onDelete('restrict');
-            $table->foreign('id_user_creator')->references('id')->on('users')->onDelete('restrict');
+            $table->foreign('id_movement_type')->references('id')->on('movement_types')->onDelete('restrict');
         });
     }
 

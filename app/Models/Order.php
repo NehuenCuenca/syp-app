@@ -26,11 +26,8 @@ class Order extends Model
      */
     protected $fillable = [
         'id_contact',
-        'id_user_creator',
         'code',
-        'actual_delivery_date',
-        'order_type',
-        'order_status',
+        'id_movement_type',
         'total_net',
         'notes',
     ];
@@ -39,7 +36,6 @@ class Order extends Model
      * The attributes that should be cast.
      */
     protected $casts = [
-        'actual_delivery_date' => 'date',
         'total_net' => 'decimal:2',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
@@ -58,16 +54,25 @@ class Order extends Model
     const ORDER_TYPE_PURCHASE = 'Compra';
     const ORDER_TYPE_SALE = 'Venta';
 
-    /**
-     * Constants for order statuses
+        /**
+     * Relationship: Order belongs to a Contact
      */
-    const STATUS_PENDING = 'Pendiente';
-    const STATUS_COMPLETED = 'Completado';
-    const STATUS_CANCELLED = 'Cancelado';
+    public function contact(): BelongsTo
+    {
+        return $this->belongsTo(Contact::class, 'id_contact');
+    }
+
+    /**
+     * Relationship: Order belongs to a Movement
+     */
+    public function movementType(): BelongsTo
+    {
+        return $this->belongsTo(MovementType::class, 'id_movement_type');
+    }
 
     public function getOrderAliasAttribute()
     {
-        return strtoupper($this->order_type) . ' ' 
+        return strtoupper($this->movementType->name) . ' ' 
              . $this->contact->company_name 
              . ' ($' . $this->total_net . ') '
              . $this->created_at->format('Y-m-d');
@@ -79,39 +84,11 @@ class Order extends Model
     public static function getOrderTypes(): array
     {
         return [
-            self::ORDER_TYPE_PURCHASE,
-            self::ORDER_TYPE_SALE,
+            MovementType::firstWhere('name', self::ORDER_TYPE_PURCHASE),
+            MovementType::firstWhere('name', self::ORDER_TYPE_SALE)
         ];
     }
 
-    /**
-     * Get all order statuses
-     */
-    public static function getOrderStatuses(): array
-    {
-        return [
-            self::STATUS_PENDING,
-            self::STATUS_COMPLETED,
-            self::STATUS_CANCELLED,
-        ];
-    }
-
-    /**
-     * Relationship: Order belongs to a Contact
-     */
-    public function contact(): BelongsTo
-    {
-        return $this->belongsTo(Contact::class, 'id_contact');
-    }
-
-    /**
-     * Relationship: Order belongs to a User (creator)
-     */
-    public function userCreator(): BelongsTo
-    {
-        // return $this->belongsTo(User::class, 'id_user_creator');
-        return $this->belongsTo(User::class, 'id_user_creator', 'id');
-    }
 
     /**
      * Relationship: Order has many OrderDetails
@@ -129,126 +106,27 @@ class Order extends Model
         return $this->hasMany(StockMovement::class, 'id_order');
     }
 
-    /**
-     * Scope para filtrar pedidos exportables
-     */
-    public function scopeExportable($query)
-    {
-        return $query->where('order_type', 'Venta')
-                    ->where('order_status', 'Completado');
-    }
-
-    /**
-     * Scope: Filter by order type
-     */
-    public function scopeOfType($query, string $orderType)
-    {
-        return $query->where('order_type', $orderType);
-    }
-
-    /**
-     * Scope: Filter by order status
-     */
-    public function scopeWithStatus($query, string $status)
-    {
-        return $query->where('order_status', $status);
-    }
-
-    /**
-     * Scope: Filter by contact
-     */
-    public function scopeForContact($query, int $contactId)
-    {
-        return $query->where('id_contact', $contactId);
-    }
-
-    /**
-     * Scope: Filter by date range
-     */
-    // public function scopeInDateRange($query, string $from = null, string $to = null)
-    public function scopeInDateRange($query, string $from, string $to)
-    {
-        if ($from) {
-            $query->whereDate('created_at', '>=', $from);
-        }
-        
-        if ($to) {
-            $query->whereDate('created_at', '<=', $to);
-        }
-        
-        return $query;
-    }
-
-    /**
-     * Scope: Search in order fields
-     */
-    public function scopeSearch($query, string $search)
-    {
-        return $query->where(function ($q) use ($search) {
-            $q->where('id', 'like', "%{$search}%")
-              ->orWhere('notes', 'like', "%{$search}%")
-              ->orWhereHas('contact', function ($contactQuery) use ($search) {
-                  $contactQuery->where('company_name', 'like', "%{$search}%")
-                             ->orWhere('contact_name', 'like', "%{$search}%");
-              });
-        });
-    }
 
     /**
      * Accessor: Get formatted order type
      */
     public function getFormattedOrderTypeAttribute(): string
     {
-        return match ($this->order_type) {
+        return match ($this->movementType->name) {
             self::ORDER_TYPE_PURCHASE => 'Compra Entrante',
             self::ORDER_TYPE_SALE => 'Venta Saliente',
-            default => $this->order_type,
+            default => $this->movementType->name,
         };
     }
 
-    /**
-     * Accessor: Get formatted order status
-     */
-    public function getFormattedOrderStatusAttribute(): string
-    {
-        return match ($this->order_status) {
-            self::STATUS_PENDING => 'Pendiente',
-            self::STATUS_COMPLETED => 'Completado',
-            self::STATUS_CANCELLED => 'Cancelado',
-            default => $this->order_status,
-        };
-    }
 
-    /**
-     * Accessor: Check if order is completed
-     */
-    public function getIsCompletedAttribute(): bool
-    {
-        return $this->order_status === self::STATUS_COMPLETED;
-    }
-
-    /**
-     * Accessor: Check if order is pending
-     */
-    public function getIsPendingAttribute(): bool
-    {
-        return $this->order_status === self::STATUS_PENDING;
-    }
-
-    /**
-     * Accessor: Check if order is cancelled
-     */
-    public function getIsCancelledAttribute(): bool
-    {
-        return $this->order_status === self::STATUS_CANCELLED;
-    }
 
     /**
      * Accessor: Check if order is a purchase
      */
     public function getIsPurchaseAttribute(): bool
     {
-        return $this->order_type === self::ORDER_TYPE_PURCHASE;
+        return $this->id_movement_type === MovementType::firstWhere('name', self::ORDER_TYPE_PURCHASE)->id;
     }
 
     /**
@@ -256,15 +134,7 @@ class Order extends Model
      */
     public function getIsSaleAttribute(): bool
     {
-        return $this->order_type === self::ORDER_TYPE_SALE;
-    }
-
-    /**
-     * Accessor: Get total quantity of products in order
-     */
-    public function getTotalQuantityAttribute(): int
-    {
-        return $this->orderDetails->sum('quantity');
+        return $this->id_movement_type === MovementType::firstWhere('name', self::ORDER_TYPE_SALE)->id;
     }
 
     /**
@@ -301,19 +171,5 @@ class Order extends Model
         // Permitir eliminación si no tiene movimientos de stock asociados
         // o si el usuario tiene permisos especiales
         return !$this->stockMovements()->exists() || auth()->user()?->role === 'Admin';
-    }
-
-    /**
-     * Método para validar si puede cambiar a un estado específico
-     */
-    public function getShowValidTransitionsAttribute()
-    {
-        $validTransitions = [
-            'Pendiente' => ['Completado', 'Cancelado'],
-            'Completado' => ['Pendiente'],
-            'Cancelado' => ['Pendiente'],
-        ];
-
-        return $validTransitions[$this->order_status] ?? [];
     }
 }

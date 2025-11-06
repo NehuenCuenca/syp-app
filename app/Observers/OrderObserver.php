@@ -48,24 +48,12 @@ class OrderObserver
 
     public function creating(Order $order)
     {
-        $order->code = $this->generateCode($order);
+        //
     }
 
     public function updating(Order $order)
     {
-        // if order_status is 'Completedo' and order_type is 'Compra', update product buy_price
-        if ($order->isDirty('order_status') && $order->order_status === Order::STATUS_COMPLETED && $order->isPurchase) {
-            $order->orderDetails->each(function ($orderDetail) {
-                $product = $orderDetail->product;
-                $product->buy_price = $orderDetail->unit_price_at_order;
-            });
-        }
-    }
-
-    private function generateCode(Order $order)
-    {
-        $todayTimestamp = now()->timestamp;
-        return strtoupper(substr($order->order_type, 0, 3)) . '-' . $todayTimestamp;
+        //
     }
 }
 
