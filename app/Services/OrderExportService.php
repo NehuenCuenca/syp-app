@@ -61,8 +61,7 @@ class OrderExportService
             return false;
         }
 
-        return $order->order_type === 'Venta' && 
-               ($order->order_status === 'Completado' || $order->order_status === 'Pendiente');
+        return $order->getIsSaleAttribute();
     }
     
     /**
@@ -92,7 +91,7 @@ class OrderExportService
     private function getOrderData(int $orderId): array
     {
         // Obtener datos del pedido con relaciones
-        $order = Order::with(['contact', 'userCreator'])
+        $order = Order::with(['contact'])
             ->where('id', $orderId)
             ->first();
 
@@ -130,9 +129,8 @@ class OrderExportService
     private function generateFileName(Order $order): string
     {
         $date = $order->created_at->format('Y-m-d');
-        $orderId = str_pad($order->id, 6, '0', STR_PAD_LEFT);
         $contact = str_replace(' ', '_', $order->contact->company_name);
-        return "boleta_pedido_{$contact}_{$orderId}_{$date}_" . time() . ".xlsx";
+        return "boleta_{$contact}_{$date}_{$order->code}" . ".xlsx";
     }
 
     public function getTicketTypes(): array

@@ -2,6 +2,7 @@
 
 namespace App\Exports;
 
+use App\Models\User;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
@@ -108,7 +109,9 @@ class OrderExport implements FromCollection, WithHeadings, WithMapping, WithStyl
             $currentRow++;
 
             $sheet->setCellValue("A{$currentRow}", 'Vendedor:');
-            $vendedor = $order->userCreator ? "{$order->userCreator->username} (TEL:{$order->userCreator->phone})" : 'N/A';
+            // $vendedor = $order->userCreator ? "{$order->userCreator->username} (TEL:{$order->userCreator->phone})" : 'N/A';
+            $admin = User::firstWhere('email', 'sergioross73@hotmail.com');
+            $vendedor = $admin ? "{$admin->username} (TEL:{$admin->phone})" : "Sofia Distribuciones";
             $sheet->setCellValue("B{$currentRow}", $vendedor);    
 
             $currentRow += 2; // Saltar filas antes de la tabla
@@ -235,7 +238,7 @@ class OrderExport implements FromCollection, WithHeadings, WithMapping, WithStyl
                 
                 // OPCIÓN 1: Proteger toda la hoja con contraseña
                 $sheet->getProtection()->setSheet(true);
-                $sheet->getProtection()->setPassword($this->ticketType);
+                $sheet->getProtection()->setPassword($this->orderData['order']->code);
                 
                 // OPCIÓN 2: Proteger elementos específicos
                 $sheet->getProtection()->setSort(true);           // No permitir ordenar
