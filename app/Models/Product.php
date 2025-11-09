@@ -22,9 +22,9 @@ class Product extends Model
     ];
 
     protected $casts = [
-        'buy_price' => 'decimal:2',
-        'profit_percentage' => 'decimal:2',
-        'sale_price' => 'decimal:2',
+        'buy_price' => 'integer',
+        'profit_percentage' => 'integer',
+        'sale_price' => 'integer',
         'current_stock' => 'integer',
         'min_stock_alert' => 'integer'
     ];
@@ -43,6 +43,6 @@ class Product extends Model
 
     public function calculateSellPrice()
     {
-        return $this->buy_price * $this->profit_percentage;
+        return $this->buy_price * (1 + $this->profit_percentage / 100);
     }
 }

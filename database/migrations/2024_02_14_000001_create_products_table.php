@@ -15,9 +15,9 @@ return new class extends Migration
             $table->id();
             $table->string('code')->unique()->nullable(); //$id_category + $id
             $table->string('name');
-            $table->decimal('buy_price', 10, 2);
-            $table->decimal('profit_percentage', 10, 2);
-            $table->decimal('sale_price', 10, 2);
+            $table->integer('buy_price');
+            $table->integer('profit_percentage');
+            $table->integer('sale_price')->default(0);
             $table->integer('current_stock')->default(0);
             $table->integer('min_stock_alert')->default(5);
             $table->unsignedBigInteger('id_category');

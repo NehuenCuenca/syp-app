@@ -10,9 +10,8 @@ class ProductObserver
      * Handle the Product "created" event.
      */
     public function created(Product $product): void
-    {
-        $code = "{$product->id_category}{$product->id}";         
-        $product->code = $code;
+    {    
+        $product->code = "{$product->id_category}{$product->id}";
         $product->save();
     } 
 
@@ -21,8 +20,7 @@ class ProductObserver
      */
     public function updated(Product $product): void
     {
-        $code = "{$product->id_category}{$product->id}";         
-        $product->code = $code;
+        //
     }
 
     /**
@@ -60,11 +58,9 @@ class ProductObserver
             $product->sale_price = $product->calculateSellPrice();
         }
 
-        // if order_status is 'Completedo' and order_type is 'Compra', update product buy_price
         if ($product->isDirty('id_category')) {
             $product->code = "{$product->id_category}{$product->id}";
         }
     }
-
 }
 

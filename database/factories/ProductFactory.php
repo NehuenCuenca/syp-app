@@ -12,15 +12,15 @@ class ProductFactory extends Factory
 
     public function definition(): array
     {
-        $avgPrice = fake()->randomFloat(2, 10, 1000);
-        $markup = fake()->randomFloat(2, 1.2, 2.0); // 20% to 100% markup
+        $avgPrice = fake()->numberBetween(10, 1000);
+        $markup = fake()->numberBetween(15, 120);
         $totalCategories = Category::count();
 
         return [
             'name' => fake()->words(3, true),
             'buy_price' => $avgPrice,
             'profit_percentage' => $markup,
-            'sale_price' => $avgPrice * $markup,
+            'sale_price' => (int)($avgPrice * $markup),
             'current_stock' => fake()->numberBetween(0, 100),
             'min_stock_alert' => fake()->numberBetween(5, 20),
             'id_category' => fake()->numberBetween(1, $totalCategories),
