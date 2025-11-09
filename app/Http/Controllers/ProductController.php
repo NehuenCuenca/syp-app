@@ -84,11 +84,10 @@ class ProductController extends Controller
             StockMovement::create([
                 'id_product' => $product->id,
                 'id_order' => null,
+                'id_order_detail' => null,
                 'id_movement_type' => MovementType::where('name', 'Ajuste Positivo')->first()->id,
                 'quantity_moved' => $product->current_stock,
                 'notes' => "Stock inicial del producto {$product->name}",
-                'movement_date' => now(),
-                'id_user_responsible' => auth()->id(),
             ]);
             
             DB::commit();
@@ -184,17 +183,16 @@ class ProductController extends Controller
             $oldStock = $product->current_stock;
             $newStock = $request->input('current_stock');
             if($oldStock !== $newStock) {
-                $stockDifference = max($newStock, $oldStock) - min($newStock, $oldStock);
+                $stockDifference = $newStock - $oldStock;
                 $movementType = $stockDifference > 0 ? 'Ajuste Positivo' : 'Ajuste Negativo';
 
                 StockMovement::create([
                     'id_product' => $product->id,
                     'id_order' => null,
+                    'id_order_detail' => null,
                     'id_movement_type' => MovementType::where('name', $movementType)->first()->id,
-                    'quantity_moved' => ($newStock > $oldStock) ? $stockDifference : -$stockDifference,
+                    'quantity_moved' => $stockDifference,
                     'notes' => "Actualización de stock del producto {$product->name}",
-                    'movement_date' => now(),
-                    'id_user_responsible' => auth()->id(),
                 ]);
             }
 

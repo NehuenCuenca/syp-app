@@ -16,8 +16,8 @@ class StoreProductRequest extends BaseApiRequest
         return [
             'name' => ['required', 'string', 'max:255'],
             'buy_price' => ['required', 'numeric', 'min:0'],
-            'profit_percentage' => ['required', 'decimal:1,2', 'min:1.1', 'max:1.9'],
-            'sale_price' => ['required', 'numeric', 'min:0', 'gte:buy_price'],
+            'profit_percentage' => ['required', 'numeric', 'min:1'],
+            'sale_price' => ['numeric', 'min:0', 'gte:buy_price'],
             'current_stock' => ['required', 'integer', 'min:0'],
             'min_stock_alert' => ['required', 'integer', 'min:0'],
             'category' => ['required', 'string', 'max:100'],
