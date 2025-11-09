@@ -63,9 +63,9 @@ class OrderExport implements FromCollection, WithHeadings, WithMapping, WithStyl
             $row->id,
             $row->product_name,
             number_format($row->quantity, 0),
-            '$' . number_format($row->unit_price_at_order, 2, ',', '.'),
-            number_format(($row->discount_percentage_by_unit*100), 0) . '%',
-            '$' . number_format($row->line_subtotal, 2, ',', '.')
+            '$' . number_format($row->unit_price_at_order, 0),
+            number_format(($row->discount_percentage_by_unit), 0) . '%',
+            '$' . number_format($row->line_subtotal, 0)
         ];
     }
 
@@ -126,12 +126,26 @@ class OrderExport implements FromCollection, WithHeadings, WithMapping, WithStyl
         $tableDataStartRow = $tableStartRow + 1;
         $tableDataEndRow = $tableDataStartRow + count($orderDetails) - 1;
         
-        // Fila del total
-        $totalRow = $tableDataEndRow + 2;
         
+        $subTotalRow = $tableDataEndRow + 3;
+        $adjustmentRow = $tableDataEndRow + 4;
+        $totalRow = $tableDataEndRow + 5; // Fila del total
+        
+        // Agregar fila de subtotal
+        $sheet->setCellValue("E{$subTotalRow}", 'SUBTOTAL:');
+        $sheet->setCellValue("F{$subTotalRow}", '$' . number_format($order->subtotal, 0));
+        
+        $currentRow++;
+
+        // Agregar fila de ajuste
+        $sheet->setCellValue("E{$adjustmentRow}", 'AJUSTE(+/-):');
+        $sheet->setCellValue("F{$adjustmentRow}", '$' . number_format($order->adjustment_amount, 0));
+        
+        $currentRow++;
+
         // Agregar fila de total
         $sheet->setCellValue("E{$totalRow}", 'TOTAL NETO:');
-        $sheet->setCellValue("F{$totalRow}", '$' . number_format($order->total_net, 2, ',', '.'));
+        $sheet->setCellValue("F{$totalRow}", '$' . number_format($order->total_net, 0));
 
         // APLICAR ESTILOS
         $styles = [];
@@ -204,11 +218,51 @@ class OrderExport implements FromCollection, WithHeadings, WithMapping, WithStyl
             ];
         }
 
+        // Fila del subtotal
+        $styles["E{$subTotalRow}:F{$subTotalRow}"] = [
+            'font' => [
+                // 'bold' => true,
+                'size' => 12
+            ],
+            'fill' => [
+                'fillType' => Fill::FILL_SOLID,
+                'startColor' => ['argb' => 'FFFFEB9C']
+            ],
+            'borders' => [
+                'allBorders' => [
+                    'borderStyle' => Border::BORDER_THIN,
+                ]
+            ],
+            'alignment' => [
+                'horizontal' => Alignment::HORIZONTAL_RIGHT,
+            ]
+        ];
+
+        // Fila del ajuste
+        $styles["E{$adjustmentRow}:F{$adjustmentRow}"] = [
+            'font' => [
+                // 'bold' => true,
+                'size' => 12
+            ],
+            'fill' => [
+                'fillType' => Fill::FILL_SOLID,
+                'startColor' => ['argb' => 'FFFFEB9C']
+            ],
+            'borders' => [
+                'allBorders' => [
+                    'borderStyle' => Border::BORDER_THIN,
+                ]
+            ],
+            'alignment' => [
+                'horizontal' => Alignment::HORIZONTAL_RIGHT,
+            ]
+        ];
+
         // Fila del total
         $styles["E{$totalRow}:F{$totalRow}"] = [
             'font' => [
                 'bold' => true,
-                'size' => 12
+                'size' => 14
             ],
             'fill' => [
                 'fillType' => Fill::FILL_SOLID,

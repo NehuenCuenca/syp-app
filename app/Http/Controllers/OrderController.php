@@ -6,6 +6,7 @@ use App\Http\Requests\StoreOrderRequest;
 use App\Http\Requests\UpdateOrderRequest;
 use App\Http\Traits\ApiResponseTrait;
 use App\Models\Contact;
+use App\Models\MovementType;
 use App\Models\Order;
 use App\Models\OrderDetail;
 use App\Models\StockMovement;
@@ -103,13 +104,16 @@ class OrderController extends Controller
                 'id_contact' => $request->id_contact,
                 'id_movement_type' => $request->id_movement_type,
                 'notes' => $request->notes,
-                'total_net' => $request->total_net ?? 0,
-                'code' => now()->timestamp
+                'adjustment_amount' => $request->adjustment_amount ?? 0,
+                // 'total_net' => $request->total_net ?? 0,
             ]);
 
             if (!$order) {
                 throw new Exception('No se pudo crear el pedido');
             }
+
+            $orderCode = substr(MovementType::find($request->id_movement_type)->name, 0, 1) . $order->id;
+            $order->update(['code' => $orderCode]);
 
             $totalDiscount = 0;
             $totalGross = 0;
@@ -125,7 +129,7 @@ class OrderController extends Controller
                     }
 
                     $lineGrossSubtotal = $detail['quantity'] * $detail['unit_price_at_order'];
-                    $totalDiscount += $detail['quantity'] * $detail['unit_price_at_order'] * ($detail['discount_percentage_by_unit'] ?? 0);
+                    $totalDiscount += (int)($detail['quantity'] * $detail['unit_price_at_order'] * ($detail['discount_percentage_by_unit'] / 100));
                     $totalGross += $lineGrossSubtotal;
                     
                     $stockToDiscount = ($detail['quantity'] >= $product->current_stock && $order->getIsSaleAttribute()) 
@@ -144,15 +148,18 @@ class OrderController extends Controller
                         throw new Exception('Error al crear detalle del pedido');
                     }
 
-                    // if ($order->getIsPurchaseAttribute()) {
-                    //     $product->update(['buy_price' => $detail['unit_price_at_order']]);
-                    // }
+                    if ($order->getIsPurchaseAttribute()) {
+                        $product->update(['buy_price' => $detail['unit_price_at_order']]);
+                    }
 
                     $this->createStockMovement($order, $detailRecord);
                 }
             }
 
-            $totalNet = (float)($request->filled('total_net') ? $request->integer('total_net') : ($totalGross - $totalDiscount));
+            $subtotal = ($totalGross - $totalDiscount);
+            $order->update(['subtotal' => $subtotal]);
+
+            $totalNet = ($subtotal + $request->adjustment_amount);
             $order->update(['total_net' => $totalNet]);
 
             DB::commit();
@@ -264,7 +271,7 @@ class OrderController extends Controller
             $updateResult = $order->update([
                 'id_contact' => $request->id_contact,
                 'notes' => $request->notes,
-                'total_net' => $request->total_net ?? $order->total_net
+                // 'total_net' => $request->total_net ?? $order->total_net
             ]);
 
             if (!$updateResult) {
@@ -521,7 +528,7 @@ class OrderController extends Controller
         'id' => 'ID', 
         'created_at' => 'Fecha de creacion', 
         'id_movement_type' => 'Tipo de pedido',
-        'total_net' => 'Total neto'
+        // 'total_net' => 'Total neto'
     ];
 
     public const ALLOWED_SORT_DIRECTIONS = [
