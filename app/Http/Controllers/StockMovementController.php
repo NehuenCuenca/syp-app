@@ -12,7 +12,6 @@ use App\Models\Order;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Exception;
 
@@ -26,8 +25,8 @@ class StockMovementController extends Controller
     public function index(): JsonResponse
     {
         try {
-            $stockMovements = StockMovement::with(['product', 'order', 'movementType'])
-                ->orderBy('movement_date', 'desc')
+            $stockMovements = StockMovement::with(['product', 'order', 'movementType', 'orderDetail'])
+                ->orderBy('created_at', 'desc')
                 ->get();
 
             $meta = ['total' => $stockMovements->count()];
@@ -62,8 +61,8 @@ class StockMovementController extends Controller
 
             $data = [
                 'products' => $products,
-                'increment_movement_types' => MovementType::getIncrementMovementTypes(),
-                'decrement_movement_types' => MovementType::getDecrementMovementTypes(),
+                'increment_movement_types' => MovementType::where('increase_stock', true)->get(),
+                'decrement_movement_types' => MovementType::where('increase_stock', false)->get(),
             ];
 
             return $this->successResponse(
@@ -95,8 +94,8 @@ class StockMovementController extends Controller
 
             $data = [
                 'stock_movement' => $stockMovement->load(['product.category', 'order.contact']),
-                'increment_movement_types' => MovementType::getIncrementMovementTypes(),
-                'decrement_movement_types' => MovementType::getDecrementMovementTypes(),
+                'increment_movement_types' => MovementType::where('increase_stock', true)->get(),
+                'decrement_movement_types' => MovementType::where('increase_stock', false)->get(),
                 'products' => $products,
             ];
 
@@ -123,7 +122,7 @@ class StockMovementController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(StoreStockMovementRequest $request): JsonResponse
+    /* public function store(StoreStockMovementRequest $request): JsonResponse
     {
         try {
             DB::beginTransaction();
@@ -133,8 +132,18 @@ class StockMovementController extends Controller
             // Obtener el producto
             $product = Product::findOrFail($validated['id_product']);
 
+            // Obtener el tipo de movimiento
+            $movementType = MovementType::find($validated['id_movement_type']);
+            if (!$movementType) {
+                DB::rollBack();
+                return $this->errorResponse(
+                    'Tipo de movimiento no válido',
+                    ['id_movement_type' => $validated['id_movement_type']]
+                );
+            }
+
             // Determinar si es incremento o decremento según el tipo de movimiento
-            $isIncrement = in_array($validated['movement_type'], MovementType::getIncrementMovementTypes());
+            $isIncrement = in_array($validated['id_movement_type'], MovementType::getIncrementMovementTypes());
             $quantityMoved = $validated['quantity_moved'];
 
             // Verificar stock suficiente para decrementos
@@ -147,26 +156,14 @@ class StockMovementController extends Controller
                 );
             }
 
-            // Obtener el tipo de movimiento
-            $movementType = MovementType::where('name', $validated['movement_type'])->first();
-            if (!$movementType) {
-                DB::rollBack();
-                return $this->errorResponse(
-                    'Tipo de movimiento no válido',
-                    ['movement_type' => $validated['movement_type']]
-                );
-            }
-
             // Crear el movimiento con la cantidad con signo correspondiente
             $stockMovement = StockMovement::create([
                 'id_product' => $validated['id_product'],
-                'id_order' => null,
-                'id_user_responsible' => Auth::id(),
+                'id_order' => $validated['id_order'] ?? null,
+                'id_order_detail' => $validated['id_order_detail'] ?? null,
                 'id_movement_type' => $movementType->id,
                 'quantity_moved' => $isIncrement ? $quantityMoved : -$quantityMoved,
-                'external_reference' => $validated['external_reference'] ?? null,
                 'notes' => $validated['notes'] ?? null,
-                'movement_date' => now()
             ]);
 
             // Actualizar el stock del producto
@@ -179,7 +176,7 @@ class StockMovementController extends Controller
             DB::commit();
 
             // Cargar las relaciones para la respuesta
-            $stockMovement->load(['product.category', 'order', 'userResponsible']);
+            $stockMovement->load(['product.category', 'order']);
 
             return $this->createdResponse(
                 $stockMovement,
@@ -201,7 +198,7 @@ class StockMovementController extends Controller
                 500
             );
         }
-    }
+    } */
 
     /**
      * Display the specified resource.
@@ -209,7 +206,7 @@ class StockMovementController extends Controller
     public function show(StockMovement $stockMovement): JsonResponse
     {
         try {
-            $stockMovement->load(['product.category', 'order', 'movementType']);
+            $stockMovement->load(['product.category', 'order', 'movementType', 'orderDetail', 'previousMovement']);
 
             return $this->successResponse(
                 $stockMovement,
@@ -234,7 +231,7 @@ class StockMovementController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdateStockMovementRequest $request, StockMovement $stockMovement): JsonResponse
+    /* public function update(UpdateStockMovementRequest $request, StockMovement $stockMovement): JsonResponse
     {
         try {
             DB::beginTransaction();
@@ -246,7 +243,7 @@ class StockMovementController extends Controller
             $product->current_stock -= $stockMovement->quantity_moved;
 
             // Determinar si es incremento o decremento según el nuevo tipo de movimiento
-            $isIncrement = in_array($validated['movement_type'], MovementType::getIncrementMovementTypes());
+            $isIncrement = in_array($validated['id_movement_type'], MovementType::getIncrementMovementTypes());
             $quantityMoved = $validated['quantity_moved'];
 
             // Verificar stock suficiente para decrementos
@@ -260,12 +257,12 @@ class StockMovementController extends Controller
             }
 
             // Obtener el tipo de movimiento
-            $movementType = MovementType::where('name', $validated['movement_type'])->first();
+            $movementType = MovementType::find($validated['id_movement_type']);
             if (!$movementType) {
                 DB::rollBack();
                 return $this->errorResponse(
                     'Tipo de movimiento no válido',
-                    ['movement_type' => $validated['movement_type']]
+                    ['id_movement_type' => $validated['id_movement_type']]
                 );
             }
 
@@ -273,7 +270,6 @@ class StockMovementController extends Controller
             $stockMovement->update([
                 'id_movement_type' => $movementType->id,
                 'quantity_moved' => $isIncrement ? $quantityMoved : -$quantityMoved,
-                'external_reference' => $validated['external_reference'] ?? $stockMovement->external_reference,
                 'notes' => $validated['notes'] ?? $stockMovement->notes
             ]);
 
@@ -288,7 +284,7 @@ class StockMovementController extends Controller
 
             DB::commit();
 
-            $stockMovement->load(['product.category', 'order', 'userResponsible']);
+            $stockMovement->load(['product.category', 'order']);
 
             return $this->successResponse(
                 $stockMovement,
@@ -311,7 +307,7 @@ class StockMovementController extends Controller
                 500
             );
         }
-    }
+    } */
 
     /**
      * Remove the specified resource from storage.
@@ -343,7 +339,7 @@ class StockMovementController extends Controller
             return $this->deletedResponse(
                 $stockMovementId,
                 'Movimiento de stock eliminado exitosamente',
-                false // hard delete
+                true // hard delete
             );
 
         } catch (Exception $e) {
@@ -367,7 +363,7 @@ class StockMovementController extends Controller
         'id_order' => 'Pedido',
         'id_product' => 'Producto',
         'id_movement_type' => 'Tipo de movimiento',
-        'movement_date' => 'Fecha del movimiento',
+        'created_at' => 'Fecha de creacion',
     ];
 
     public const ALLOWED_SORT_DIRECTIONS = [
@@ -381,7 +377,7 @@ class StockMovementController extends Controller
     public function getFilters(): JsonResponse
     {
         try {
-            $orders = Order::select('id', 'id_contact', 'order_type', 'total_net', 'created_at')->get();
+            $orders = Order::select('id', 'id_contact', 'id_movement_type', 'total_net', 'created_at')->get();
             $products = Product::select('name', 'id', 'current_stock', 'min_stock_alert')->get();
             $movementTypes = MovementType::select('name', 'id')->get();
             $dateFrom = StockMovement::min('created_at');
@@ -409,7 +405,7 @@ class StockMovementController extends Controller
 
             return $this->errorResponse(
                 'Error al obtener los filtros',
-                ['exception' => $e->getMessage()],
+                ['exception' => $e->getMessage(), 'line' => $e->getLine()],
                 [],
                 500
             );
@@ -422,7 +418,7 @@ class StockMovementController extends Controller
     public function getFilteredMovements(Request $request): JsonResponse
     {
         try {
-            $query = StockMovement::with(['product', 'order', 'movementType']);
+            $query = StockMovement::with(['product', 'order', 'movementType', 'orderDetail']);
 
             // Filtros
             if ($request->filled('id_order')) {
@@ -445,13 +441,13 @@ class StockMovementController extends Controller
                 $query->whereDate('movement_date', '<=', $request->date_to);
             }
 
-            $search = $request->get('search', '');
+            /* $search = $request->get('search', '');
             if ($request->filled('search')) {
                 $query->where(function ($q) use ($search) {
                     $q->where('external_reference', 'like', "%{$search}%")
                       ->orWhere('notes', 'like', "%{$search}%");
                 });
-            }
+            } */
 
             // Ordenamiento
             $sortBy = $request->get('sort_by', 'created_at');
@@ -469,7 +465,7 @@ class StockMovementController extends Controller
             $stockMovements = $query->paginate($perPage);
 
             $filtersApplied = [
-                'search' => $search,
+                // 'search' => $search,
                 'sort_by' => $sortBy,
                 'sort_direction' => $sortDirection,
                 'per_page' => $perPage,
