@@ -15,10 +15,10 @@ class OrderDetailFactory extends Factory
     {
         $product = Product::inRandomOrder()->first();
         $quantity = fake()->numberBetween(1, 10);
-        $unit_price = $product ? $product->sale_price : fake()->randomFloat(2, 10, 1000);
-        $discount_percentage_by_unit = (fake()->numberBetween(0, 50) / 100);
-        $line_subtotal = ($quantity * $unit_price) - ($quantity * $unit_price * $discount_percentage_by_unit);
-
+        $unit_price = $product ? $product->sale_price : fake()->numberBetween(10, 120);
+        $discount_percentage_by_unit = fake()->numberBetween(15, 120);
+        $line_subtotal = (int)($quantity * $unit_price) * ($discount_percentage_by_unit / 100);
+        
         return [
             'id_order' => Order::factory(),
             'id_product' => $product ? $product->id : Product::factory(),
@@ -41,9 +41,8 @@ class OrderDetailFactory extends Factory
         return $this->state(function (array $attributes) use ($product, $quantity) {
             $qty = $quantity ?? fake()->numberBetween(1, 10);
             $unit_price = $product->sale_price;
-            // $line_subtotal = $qty * $unit_price;
-            $discount_percentage_by_unit = (fake()->numberBetween(0, 50) / 100);
-            $line_subtotal = ($quantity * $unit_price) - ($quantity * $unit_price * $discount_percentage_by_unit);
+            $discount_percentage_by_unit = fake()->numberBetween(10, 120);
+            $line_subtotal = 0;
 
             return [
                 'id_product' => $product->id,

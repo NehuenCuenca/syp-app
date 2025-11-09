@@ -17,9 +17,9 @@ return new class extends Migration
                   ->constrained('products', 'id')
                   ->onDelete('restrict');
             $table->integer('quantity');
-            $table->decimal('unit_price_at_order', 10, 2);
-            $table->decimal('discount_percentage_by_unit', 10, 2);
-            $table->decimal('line_subtotal', 10, 2);
+            $table->integer('unit_price_at_order');
+            $table->integer('discount_percentage_by_unit');
+            $table->integer('line_subtotal');
             $table->timestamps();
         });
     }

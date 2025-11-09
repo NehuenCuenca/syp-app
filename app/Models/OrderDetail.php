@@ -42,9 +42,9 @@ class OrderDetail extends Model
      */
     protected $casts = [
         'quantity' => 'integer',
-        'unit_price_at_order' => 'decimal:2',
-        'discount_percentage_by_unit' => 'decimal:2',
-        'line_subtotal' => 'decimal:2',
+        'unit_price_at_order' => 'integer',
+        'discount_percentage_by_unit' => 'integer',
+        'line_subtotal' => 'integer',
     ];
 
     /**
@@ -71,10 +71,11 @@ class OrderDetail extends Model
     /**
      * Get the stock movements related to this order detail.
      */
-    public function stockMovements()
+    public function stockMovement()
     {
-        return $this->hasMany(StockMovement::class, 'id_order', 'id_order')
-            ->where('id_product', $this->id_product);
+        /* return $this->hasMany(StockMovement::class, 'id_order', 'id_order')
+            ->where('id_product', $this->id_product); */
+        return $this->hasOne(StockMovement::class, 'id_order_detail');
     }
 
     /**
@@ -127,7 +128,7 @@ class OrderDetail extends Model
         }
 
         // Para compras entrantes, siempre es válido
-        if ($this->order->order_type === Order::ORDER_TYPE_PURCHASE) {
+        if ($this->order->getIsPurchaseAttribute()) {
             return true;
         }
 
@@ -152,7 +153,7 @@ class OrderDetail extends Model
             return 0;
         }
 
-        return $this->order->order_type === Order::ORDER_TYPE_PURCHASE 
+        return $this->order->getIsPurchaseAttribute()
             ? $this->quantity 
             : -$this->quantity;
     }
@@ -160,17 +161,17 @@ class OrderDetail extends Model
 /**
      * Method: Calculate discount subtotal
      */
-    public function calculateDiscountSubtotal(): float
+    public function calculateDiscountSubtotal(): int
     {
-        return $this->discount_percentage_by_unit * $this->quantity * $this->unit_price_at_order;
+        return (int)(($this->discount_percentage_by_unit/100) * $this->quantity * $this->unit_price_at_order);
     }
 
     /**
      * Method: Calculate line subtotal with discount
      */
-    public function calculateLineSubtotal(): float
+    public function calculateLineSubtotal(): int
     {
-        return ($this->quantity * $this->unit_price_at_order) - $this->calculateDiscountSubtotal();
+        return (int)($this->quantity * $this->unit_price_at_order) - $this->calculateDiscountSubtotal();
     }
 
     /**
