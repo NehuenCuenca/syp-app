@@ -6,6 +6,7 @@ use App\Models\Category;
 use App\Models\Contact;
 use App\Models\Order;
 use App\Models\Product;
+use App\Observers\ContactObserver;
 use App\Observers\OrderObserver;
 use App\Observers\ProductObserver;
 use Illuminate\Auth\Events\Registered;
@@ -33,6 +34,7 @@ class EventServiceProvider extends ServiceProvider
     {
         Order::observe(OrderObserver::class);
         Product::observe(ProductObserver::class);
+        Contact::observe(ContactObserver::class);
     }
 
     /**
