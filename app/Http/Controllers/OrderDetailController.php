@@ -9,12 +9,10 @@ use App\Models\StockMovement;
 use App\Http\Requests\StoreOrderDetailRequest;
 use App\Http\Requests\UpdateOrderDetailRequest;
 use App\Http\Traits\ApiResponseTrait;
-use App\Models\MovementType;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Exception;
 
@@ -92,7 +90,7 @@ class OrderDetailController extends Controller
     {
         try {
             $products = Product::with('category:id,name')
-                ->select('id', 'name', 'current_stock', 'buy_price', 'sale_price', 'id_category')
+                ->select('id', 'name', 'current_stock', 'min_stock_alert', 'buy_price', 'sale_price', 'profit_percentage', 'id_category')
                 ->orderBy('name')
                 ->get();
 
@@ -131,20 +129,11 @@ class OrderDetailController extends Controller
             $orderData = $validatedData['order_detail'];
             $orderId = $validatedData['id_order'];
             
-            // Verificar que el pedido existe y está en estado 'Pendiente'
+            // Verificar que el pedido existe 
             $order = Order::find($orderId);
             if (!$order) {
                 DB::rollBack();
                 return $this->notFoundResponse('El pedido especificado no existe');
-            }
-            
-            if ($order->order_status !== 'Pendiente') {
-                DB::rollBack();
-                return $this->errorResponse(
-                    'Solo se pueden añadir detalles a pedidos en estado Pendiente',
-                    ['order_status' => 'Estado de pedido inválido'],
-                    ['current_status' => $order->order_status]
-                );
             }
             
             // Verificar que el producto existe
@@ -155,7 +144,7 @@ class OrderDetailController extends Controller
             }
             
             // Verificar disponibilidad de stock para ventas salientes
-            if ($order->order_type === 'Venta') {
+            if ($order->getIsSaleAttribute()) {
                 if ($product->current_stock < $orderData['quantity']) {
                     DB::rollBack();
                     return $this->errorResponse(
@@ -182,44 +171,40 @@ class OrderDetailController extends Controller
                 'discount_percentage_by_unit' => $orderData['discount_percentage_by_unit'] ?? 0,
             ]);
             
-            // Manejar stock y movimientos para ventas salientes
-            if ($order->order_type === 'Venta') {
-                try {
-                    // Descontar stock
+            // Manejar stock y movimientos 
+            try {
+                if($order->getIsSaleAttribute()){
                     $product->decrement('current_stock', $orderData['quantity']);
-                    
-                    // Obtener el tipo de movimiento
-                    $movementType = MovementType::where('name', 'Venta')->first();
-                    if (!$movementType) {
-                        throw new Exception('Tipo de movimiento "Venta" no encontrado');
-                    }
-                    
-                    // Registrar movimiento de stock
-                    StockMovement::create([
-                        'id_product' => $orderData['id_product'],
-                        'id_order' => $orderId,
-                        'id_user_responsible' => Auth::id(),
-                        'id_movement_type' => $movementType->id,
-                        'quantity_moved' => -$orderData['quantity'], // Negativo para salida
-                        'movement_date' => now(),
-                        'notes' => 'Descuento de stock por detalle de pedido #' . $order->id
-                    ]);
-                    
-                } catch (Exception $e) {
-                    DB::rollBack();
-                    Log::error('Error al manejar stock en OrderDetailController@store', [
-                        'error' => $e->getMessage(),
-                        'product_id' => $orderData['id_product'],
-                        'order_id' => $orderId
-                    ]);
-                    
-                    return $this->errorResponse(
-                        'Error al procesar el movimiento de stock',
-                        ['exception' => $e->getMessage()],
-                        [],
-                        Response::HTTP_INTERNAL_SERVER_ERROR
-                    );
+                } else {
+                    $product->increment('current_stock', $orderData['quantity']);
+                    $product->update(['buy_price' => $orderData['unit_price_at_order']]);
                 }
+                
+                $quantityMoved = $order->getIsSaleAttribute() ? -$orderData['quantity'] : $orderData['quantity'];
+                // Registrar movimiento de stock
+                StockMovement::create([
+                    'id_product' => $orderData['id_product'],
+                    'id_order' => $orderId,
+                    'id_order_detail' => $orderDetail->id,
+                    'id_movement_type' => $order->id_movement_type,
+                    'quantity_moved' => $quantityMoved,
+                    'notes' => "Detalle de pedido #{$order->id} agregado"
+                ]);
+                
+            } catch (Exception $e) {
+                DB::rollBack();
+                Log::error('Error al manejar stock en OrderDetailController@store', [
+                    'error' => $e->getMessage(),
+                    'product_id' => $orderData['id_product'],
+                    'order_id' => $orderId
+                ]);
+                
+                return $this->errorResponse(
+                    'Error al procesar el movimiento de stock',
+                    ['exception' => $e->getMessage()],
+                    [],
+                    Response::HTTP_INTERNAL_SERVER_ERROR
+                );
             }
             
             // Actualizar totales del pedido
@@ -301,25 +286,15 @@ class OrderDetailController extends Controller
         try {
             $validatedData = [
                 'id_product' => $request->validated('id_product', $orderDetail->id_product),
-                'quantity' => $request->validated('quantity', $orderDetail->quantity),
+                'quantity' => abs($request->validated('quantity', $orderDetail->quantity)),
                 'unit_price_at_order' => $request->validated('unit_price_at_order', $orderDetail->unit_price_at_order),
                 'discount_percentage_by_unit' => $request->validated('discount_percentage_by_unit', $orderDetail->discount_percentage_by_unit),
             ];
-            
-            // Verificar que el pedido está en estado 'Pendiente'
+        
             $order = $orderDetail->order;
             if (!$order) {
                 DB::rollBack();
                 return $this->notFoundResponse('Pedido asociado no encontrado');
-            }
-            
-            if ($order->order_status !== 'Pendiente') {
-                DB::rollBack();
-                return $this->errorResponse(
-                    'Solo se pueden editar detalles de pedidos en estado Pendiente',
-                    ['order_status' => 'Estado de pedido inválido'],
-                    ['current_status' => $order->order_status]
-                );
             }
             
             // Verificar que el nuevo producto existe (si cambió)
@@ -331,13 +306,12 @@ class OrderDetailController extends Controller
                 }
             }
             
-            // Verificar si hay cambios en producto, cantidad o precio
-            $productChanged = $orderDetail->id_product != $validatedData['id_product'];
+            // Verificar si hay cambios en cantidad o precio
             $quantityChanged = $orderDetail->quantity != $validatedData['quantity'];
             $unitPriceChanged = $orderDetail->unit_price_at_order != $validatedData['unit_price_at_order'];
             $discountChanged = ($orderDetail->discount_percentage_by_unit ?? 0) != ($validatedData['discount_percentage_by_unit'] ?? 0);
 
-            if (!$productChanged && !$quantityChanged && !$unitPriceChanged && !$discountChanged) {
+            if (!$quantityChanged && !$unitPriceChanged && !$discountChanged) {
                 DB::rollBack();
                 return $this->errorResponse(
                     'No se detectaron cambios en el detalle del pedido',
@@ -345,135 +319,78 @@ class OrderDetailController extends Controller
                 );
             }
             
-            // Manejar cambios para ventas salientes
-            if ($order->order_type === 'Venta') {
-                try {
-                    $movementType = MovementType::where('name', 'Venta')->first();
-                    if (!$movementType) {
-                        throw new Exception('Tipo de movimiento "Venta" no encontrado');
+            try {
+                if ($quantityChanged) {
+                    // Solo cambió la cantidad
+                    $product = Product::find($orderDetail->id_product);
+                    if (!$product) {
+                        DB::rollBack();
+                        return $this->notFoundResponse('Producto asociado no encontrado');
                     }
                     
-                    if ($productChanged) {
-                        // Revertir stock del producto anterior
-                        $oldProduct = Product::find($orderDetail->id_product);
-                        if ($oldProduct) {
-                            $oldProduct->increment('current_stock', $orderDetail->quantity);
-                        }
-                        
-                        // Eliminar movimiento de stock anterior
-                        StockMovement::where('id_order', $order->id)
-                            ->where('id_product', $orderDetail->id_product)
-                            ->where('id_movement_type', $movementType->id)
-                            ->where('quantity_moved', -$orderDetail->quantity)
-                            ->delete();
-                        
-                        // Verificar stock del nuevo producto
-                        $newProduct = Product::find($validatedData['id_product']);
-                        if (!$newProduct) {
-                            DB::rollBack();
-                            return $this->notFoundResponse('El nuevo producto no existe');
-                        }
-                        
-                        if ($newProduct->current_stock < $validatedData['quantity']) {
-                            DB::rollBack();
-                            return $this->errorResponse(
-                                'Stock insuficiente para el nuevo producto',
-                                ['stock_error' => 'Cantidad solicitada excede el stock disponible'],
-                                [
-                                    'requested_quantity' => $validatedData['quantity'],
-                                    'available_stock' => $newProduct->current_stock
-                                ]
-                            );
-                        }
-                        
-                        // Descontar stock del nuevo producto
-                        $newProduct->decrement('current_stock', $validatedData['quantity']);
-                        
-                        // Registrar nuevo movimiento de stock
-                        StockMovement::create([
-                            'id_product' => $validatedData['id_product'],
-                            'id_order' => $order->id,
-                            'id_user_responsible' => Auth::id(),
-                            'id_movement_type' => $movementType->id,
-                            'quantity_moved' => -$validatedData['quantity'],
-                            'movement_date' => now(),
-                            'notes' => 'Descuento de stock por actualización de detalle de pedido #' . $order->id
+                    $quantityDifference = $validatedData['quantity'] - $orderDetail->quantity;
+                    
+                    // Verificar si hay stock suficiente para el aumento
+                    if ($quantityDifference > $product->current_stock) {
+                        DB::rollBack();
+                        return $this->errorResponse(
+                            'Stock insuficiente para el aumento de cantidad',
+                            ['stock_error' => 'No hay suficiente stock disponible'],
+                            [
+                                'quantity_difference' => $quantityDifference,
+                                'available_stock' => $product->current_stock
+                            ]
+                        );
+                    }
+
+                    // Actualizar stock
+                    if($order->getIsSaleAttribute()){
+                        $product->decrement('current_stock', $quantityDifference); 
+                    } else {
+                        $product->increment('current_stock', $quantityDifference);
+                    }
+
+                    
+                    // Actualizar movimiento de stock existente
+                    if ($orderDetail->stockMovement) {
+                        $orderDetail->stockMovement->update([
+                            'quantity_moved' => ($order->getIsSaleAttribute()) ? -$validatedData['quantity'] : $validatedData['quantity'],
+                            'notes' => 'Actualización de cantidad en detalle de pedido #' . $order->id
                         ]);
-                        
-                    } elseif ($quantityChanged) {
-                        // Solo cambió la cantidad
-                        $product = Product::find($orderDetail->id_product);
-                        if (!$product) {
-                            DB::rollBack();
-                            return $this->notFoundResponse('Producto asociado no encontrado');
-                        }
-                        
-                        $quantityDifference = $validatedData['quantity'] - $orderDetail->quantity;
-                        
-                        // Verificar si hay stock suficiente para el aumento
-                        if ($quantityDifference > 0 && $product->current_stock < $quantityDifference) {
-                            DB::rollBack();
-                            return $this->errorResponse(
-                                'Stock insuficiente para el aumento de cantidad',
-                                ['stock_error' => 'No hay suficiente stock disponible'],
-                                [
-                                    'quantity_increase' => $quantityDifference,
-                                    'available_stock' => $product->current_stock
-                                ]
-                            );
-                        }
-                        
-                        // Actualizar stock
-                        $product->decrement('current_stock', $quantityDifference);
-                        
-                        // Actualizar movimiento de stock existente
-                        $stockMovement = StockMovement::where('id_order', $order->id)
-                            ->where('id_product', $orderDetail->id_product)
-                            ->where('id_movement_type', $movementType->id)
-                            ->first();
-                        
-                        if ($stockMovement) {
-                            $stockMovement->update([
-                                'quantity_moved' => -$validatedData['quantity'],
-                                'notes' => 'Actualización de cantidad en detalle de pedido #' . $order->id
-                            ]);
-                        } else {
-                            // Crear nuevo movimiento si no existe
-                            StockMovement::create([
-                                'id_product' => $orderDetail->id_product,
-                                'id_order' => $order->id,
-                                'id_user_responsible' => Auth::id(),
-                                'id_movement_type' => $movementType->id,
-                                'quantity_moved' => -$validatedData['quantity'],
-                                'movement_date' => now(),
-                                'notes' => 'Actualización de cantidad en detalle de pedido #' . $order->id
-                            ]);
-                        }
+                    } else {
+                        //Crear nuevo movimiento si no existe
+                        StockMovement::create([
+                            'id_product' => $orderDetail->id_product,
+                            'id_order' => $order->id,
+                            'id_order_detail' => $orderDetail->id,
+                            'id_movement_type' => $order->id_movement_type,
+                            'quantity_moved' => ($order->getIsSaleAttribute()) ? -$validatedData['quantity'] : $validatedData['quantity'],
+                            'notes' => 'Actualización de cantidad en detalle de pedido #' . $order->id
+                        ]);
                     }
                     
-                } catch (Exception $e) {
-                    DB::rollBack();
-                    Log::error('Error al manejar stock en OrderDetailController@update', [
-                        'error' => $e->getMessage(),
-                        'order_detail_id' => $orderDetail->id,
-                        'order_id' => $order->id
-                    ]);
-                    
-                    return $this->errorResponse(
-                        'Error al procesar el movimiento de stock',
-                        ['stock_movement_error' => $e->getMessage()],
-                        [],
-                        Response::HTTP_INTERNAL_SERVER_ERROR
-                    );
-                }
+                    $orderDetail->update([ 'quantity' => ($validatedData['quantity'] ?? $orderDetail->quantity) ]);
+                }  
+            } catch (Exception $e) {
+                DB::rollBack();
+                Log::error('Error al manejar stock en OrderDetailController@update', [
+                    'error' => $e->getMessage(),
+                    'order_detail_id' => $orderDetail->id,
+                    'order_id' => $order->id
+                ]);
+                
+                return $this->errorResponse(
+                    'Error al procesar el movimiento de stock',
+                    ['stock_movement_error' => $e->getMessage()],
+                    [],
+                    Response::HTTP_INTERNAL_SERVER_ERROR
+                );
             }
             
             // Actualizar el detalle del pedido
             $lineSubtotal = $validatedData['quantity'] * $validatedData['unit_price_at_order'];
             
             $orderDetail->update([
-                'id_product' => $validatedData['id_product'],
-                'quantity' => $validatedData['quantity'],
                 'unit_price_at_order' => $validatedData['unit_price_at_order'],
                 'line_subtotal' => $lineSubtotal,
                 'discount_percentage_by_unit' => $validatedData['discount_percentage_by_unit'] ?? 0,
@@ -481,6 +398,11 @@ class OrderDetailController extends Controller
             
             // Actualizar totales del pedido
             $this->updateOrderTotals($order->id);
+
+            //Actualizar precio de producto
+            if($order->getIsPurchaseAttribute() && $request->filled('unit_price_at_order')){
+                $orderDetail->product->update(['buy_price' => $validatedData['unit_price_at_order']]);
+            }
             
             DB::commit();
             
@@ -530,58 +452,40 @@ class OrderDetailController extends Controller
         DB::beginTransaction();
         
         try {
-            // Verificar que el pedido está en estado 'Pendiente'
             $order = $orderDetail->order;
             if (!$order) {
                 DB::rollBack();
                 return $this->notFoundResponse('Pedido asociado no encontrado');
             }
             
-            if ($order->order_status !== 'Pendiente') {
-                DB::rollBack();
-                return $this->errorResponse(
-                    'Solo se pueden eliminar detalles de pedidos en estado Pendiente',
-                    ['order_status' => 'Estado de pedido inválido'],
-                    ['current_status' => $order->order_status]
-                );
-            }
-            
-            // Manejar reversión de stock para ventas salientes
-            if ($order->order_type === 'Venta') {
-                try {
-                    
-                    // Revertir stock
-                    $product = Product::find($orderDetail->id_product);
-                    if ($product) {
-                        $product->increment('current_stock', $orderDetail->quantity);
-                    }
-                    
-                    // Obtener tipo de movimiento
-                    $movementType = MovementType::where('name', 'Venta')->first();
-                    if ($movementType) {
-                        // Eliminar movimiento de stock
-                        StockMovement::where('id_order', $order->id)
-                            ->where('id_product', $orderDetail->id_product)
-                            ->where('id_movement_type', $movementType->id)
-                            ->where('quantity_moved', -$orderDetail->quantity)
-                            ->delete();
-                    }
-                    
-                } catch (Exception $e) {
-                    DB::rollBack();
-                    Log::error('Error al revertir stock en OrderDetailController@destroy', [
-                        'error' => $e->getMessage(),
-                        'order_detail_id' => $orderDetail->id,
-                        'product_id' => $orderDetail->id_product
-                    ]);
-                    
-                    return $this->errorResponse(
-                        'Error al revertir el stock del producto',
-                        ['stock_reversion_error' => $e->getMessage()],
-                        [],
-                        Response::HTTP_INTERNAL_SERVER_ERROR
-                    );
+            // Manejar reversión de stock 
+            try {
+                
+                // Revertir stock
+                $product = Product::find($orderDetail->id_product);
+                if ($order->getIsSaleAttribute()) {
+                    $product->increment('current_stock', $orderDetail->quantity);
+                } else {
+                    $product->decrement('current_stock', $orderDetail->quantity);
                 }
+
+                // Eliminar movimientos de stock
+                $orderDetail->stockMovement()->delete();
+                
+            } catch (Exception $e) {
+                DB::rollBack();
+                Log::error('Error al revertir stock en OrderDetailController@destroy', [
+                    'error' => $e->getMessage(),
+                    'order_detail_id' => $orderDetail->id,
+                    'product_id' => $orderDetail->id_product
+                ]);
+                
+                return $this->errorResponse(
+                    'Error al revertir el stock del producto',
+                    ['stock_reversion_error' => $e->getMessage()],
+                    [],
+                    Response::HTTP_INTERNAL_SERVER_ERROR
+                );
             }
             
             $orderDetailId = $orderDetail->id;
@@ -597,7 +501,7 @@ class OrderDetailController extends Controller
             return $this->deletedResponse(
                 $orderDetailId,
                 'Detalle de pedido eliminado exitosamente',
-                false // Hard delete
+                true // Hard delete
             );
             
         } catch (QueryException $e) {
