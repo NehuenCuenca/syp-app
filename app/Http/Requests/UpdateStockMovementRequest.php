@@ -25,20 +25,15 @@ class UpdateStockMovementRequest extends BaseApiRequest
     {
         return [
             'id_order' => ['missing'],
+            'id_order_detail' => ['missing'],
             'quantity_moved' => [
                 'required',
                 'integer',
                 'min:1'
             ],
-            'movement_type' => [
+            'id_movement_type' => [
                 'required',
-                'string',
-                'in:Compra,Venta,Ajuste Positivo,Ajuste Negativo,Devolucion Cliente,Devolucion Proveedor'
-            ],
-            'external_reference' => [
-                'nullable',
-                'string',
-                'max:100'
+                'exists:movement_types,id'
             ],
             'notes' => [
                 'nullable',

@@ -23,7 +23,8 @@ class StoreStockMovementRequest extends BaseApiRequest
     public function rules(): array
     {
         return [
-            'id_order' => ['missing'],
+            'id_order' => ['exists:orders,id'],
+            'id_order_detail' => ['exists:order_details,id'],
             'id_product' => [
                 'required',
                 'integer',
@@ -34,15 +35,9 @@ class StoreStockMovementRequest extends BaseApiRequest
                 'integer',
                 'min:1'
             ],
-            'movement_type' => [
+            'id_movement_type' => [
                 'required',
-                'string',
-                'in:Compra,Venta,Ajuste Positivo,Ajuste Negativo,Devolucion Cliente,Devolucion Proveedor'
-            ],
-            'external_reference' => [
-                'nullable',
-                'string',
-                'max:100'
+                'exists:movement_types,id'
             ],
             'notes' => [
                 'nullable',
@@ -57,10 +52,6 @@ class StoreStockMovementRequest extends BaseApiRequest
      */
     protected function prepareForValidation(): void
     {
-        if ($this->external_reference === '') {
-            $this->merge(['external_reference' => null]);
-        }
-
         if ($this->notes === '') {
             $this->merge(['notes' => null]);
         }
