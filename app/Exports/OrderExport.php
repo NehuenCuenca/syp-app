@@ -138,7 +138,7 @@ class OrderExport implements FromCollection, WithHeadings, WithMapping, WithStyl
         $currentRow++;
 
         // Agregar fila de ajuste
-        $sheet->setCellValue("E{$adjustmentRow}", 'AJUSTE(+/-):');
+        $sheet->setCellValue("E{$adjustmentRow}", 'AJUSTE:');
         $sheet->setCellValue("F{$adjustmentRow}", '$' . number_format($order->adjustment_amount, 0));
         
         $currentRow++;
@@ -173,6 +173,11 @@ class OrderExport implements FromCollection, WithHeadings, WithMapping, WithStyl
                 'fill' => [
                     'fillType' => Fill::FILL_SOLID,
                     'startColor' => ['argb' => 'FFF0F8FF']
+                ],
+                'borders' => [
+                    'allBorders' => [
+                        'borderStyle' => Border::BORDER_THIN,
+                    ]
                 ]
             ];
         }
