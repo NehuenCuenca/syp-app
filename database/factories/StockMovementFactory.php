@@ -4,6 +4,7 @@ namespace Database\Factories;
 
 use App\Models\MovementType;
 use App\Models\Order;
+use App\Models\OrderDetail;
 use App\Models\Product;
 use App\Models\StockMovement;
 use App\Models\User;
@@ -28,13 +29,9 @@ class StockMovementFactory extends Factory
             'id_order' => $movementType === 'Compra' || $movementType === 'Venta' 
                 ? Order::factory() 
                 : 1,
-            'id_user_responsible' => User::factory(),
+            'id_order_detail' => OrderDetail::factory() || 1,
             'id_movement_type' => MovementType::where('name', $movementType)->first()->id,
             'quantity_moved' => $quantity,
-            'movement_date' => fake()->dateTimeBetween('-1 month', 'now'),
-            'external_reference' => fake()->boolean(70) 
-                ? fake()->bothify('??###-####') 
-                : null,
             'notes' => fake()->boolean(70) 
                 ? fake()->sentence() 
                 : null,

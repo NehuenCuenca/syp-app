@@ -17,17 +17,14 @@ return new class extends Migration
                   ->nullable()
                   ->constrained('orders', 'id')
                   ->onDelete('restrict');
-            $table->foreignId('id_user_responsible')
-                  ->constrained('users', 'id')
+            $table->foreignId('id_order_detail')
+                  ->nullable()
+                  ->constrained('order_details', 'id')
                   ->onDelete('restrict');
             $table->foreignId('id_movement_type')
                   ->constrained('movement_types', 'id')
                   ->onDelete('restrict');
             $table->integer('quantity_moved');
-            $table->timestamp('movement_date')
-                  ->useCurrent();
-            $table->string('external_reference')
-                  ->nullable();
             $table->text('notes')
                   ->nullable();
             $table->timestamps();

@@ -26,7 +26,7 @@ class StockMovement extends Model
     protected $fillable = [
         'id_product',
         'id_order',
-        'id_user_responsible',
+        'id_order_detail',
         'id_movement_type',
         'quantity_moved',
         'movement_date',
@@ -40,9 +40,10 @@ class StockMovement extends Model
     protected $casts = [
         'id_product' => 'integer',
         'id_order' => 'integer',
-        'id_user_responsible' => 'integer',
+        'id_order_detail' => 'integer',
+        'id_movement_type' => 'integer',
         'quantity_moved' => 'integer',
-        'movement_date' => 'datetime',
+        'notes' => 'string',
         'created_at' => 'datetime',
         'updated_at' => 'datetime'
     ];
@@ -53,26 +54,19 @@ class StockMovement extends Model
     protected $hidden = [];
 
     /**
-     * Boot the model.
-     */
-    protected static function boot()
-    {
-        parent::boot();
-        
-        // Establecer la fecha de movimiento automáticamente si no se proporciona
-        static::creating(function ($stockMovement) {
-            if (!$stockMovement->movement_date) {
-                $stockMovement->movement_date = now();
-            }
-        });
-    }
-
-    /**
      * Get the product that this stock movement belongs to.
      */
     public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class, 'id_product');
+    }
+
+    /**
+     * Get the product that this stock movement belongs to.
+     */
+    public function orderDetail(): BelongsTo
+    {
+        return $this->belongsTo(OrderDetail::class, 'id_order_detail');
     }
 
     /**
@@ -89,14 +83,6 @@ class StockMovement extends Model
     public function order(): BelongsTo
     {
         return $this->belongsTo(Order::class, 'id_order');
-    }
-
-    /**
-     * Get the user responsible for this stock movement.
-     */
-    public function userResponsible(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'id_user_responsible');
     }
 
     /**
