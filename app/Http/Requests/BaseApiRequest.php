@@ -99,9 +99,6 @@ class BaseApiRequest extends FormRequest
             'id_contact' => 'contacto',
             'new_contact' => 'nuevo contacto',
             'new_contact.company_name' => 'nombre de empresa del nuevo contacto',
-            'id_user_creator' => 'creador',
-            'order_type' => 'tipo de pedido',
-            'order_status' => 'estado de pedido',
             'notes' => 'notas',
             'total_net' => 'total neto',
             'order_details' => 'detalles del pedido',
@@ -120,6 +117,8 @@ class BaseApiRequest extends FormRequest
             'quantity_moved' => 'cantidad movida',
             'movement_type' => 'tipo de movimiento',
             'external_reference' => 'referencia externa',
+            'id_order_detail' => 'detalle del pedido',
+            'id_movement_type' => 'tipo de movimiento',
         ];
     }
 }

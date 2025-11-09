@@ -93,12 +93,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::resource('stock-movements', StockMovementController::class, [
         'names' => [
             'index' => 'stock-movements.index',
-            'create' => 'stock-movements.create',
-            'store' => 'stock-movements.store',
             'show' => 'stock-movements.show',
-            'edit' => 'stock-movements.edit',
-            'update' => 'stock-movements.update',
-            'destroy' => 'stock-movements.destroy',
         ]
     ]);
 });
