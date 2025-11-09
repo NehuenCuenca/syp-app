@@ -28,6 +28,8 @@ class Order extends Model
         'id_contact',
         'code',
         'id_movement_type',
+        'adjustment_amount',
+        'subtotal',
         'total_net',
         'notes',
     ];
@@ -36,7 +38,9 @@ class Order extends Model
      * The attributes that should be cast.
      */
     protected $casts = [
-        'total_net' => 'decimal:2',
+        'adjustment_amount' => 'integer',
+        'subtotal' => 'integer',
+        'total_net' => 'integer',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];

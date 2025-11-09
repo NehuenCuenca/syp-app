@@ -15,8 +15,10 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('id_contact');
             $table->unsignedBigInteger('id_movement_type');
-            $table->text('code');
-            $table->decimal('total_net', 10, 2)->nullable();
+            $table->string('code')->unique()->nullable();
+            $table->integer('adjustment_amount')->nullable();
+            $table->integer('subtotal')->nullable();
+            $table->integer('total_net')->nullable();
             $table->text('notes')->nullable();
             $table->timestamp('created_at')->useCurrent();
             $table->timestamp('updated_at')->useCurrent()->useCurrentOnUpdate();

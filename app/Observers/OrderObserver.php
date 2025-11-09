@@ -2,6 +2,7 @@
 
 namespace App\Observers;
 
+use App\Models\MovementType;
 use App\Models\Order;
 
 class OrderObserver
@@ -11,7 +12,9 @@ class OrderObserver
      */
     public function created(Order $order): void
     {
-        //
+        $movementType = MovementType::find($order->id_movement_type)->name;
+        $order->code = substr($movementType, 0, 1) . $order->id;
+        $order->save();
     }
 
     /**
