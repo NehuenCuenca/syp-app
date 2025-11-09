@@ -67,14 +67,7 @@ class StoreOrderDetailRequest extends BaseApiRequest
     public function withValidator($validator)
     {
         $validator->after(function ($validator) {
-            // Validación personalizada: verificar que el pedido esté en estado 'Pendiente'
-            if ($this->filled('id_order')) {
-                $order = Order::find($this->id_order);
-                if ($order && $order->order_status !== 'Pendiente') {
-                    $validator->errors()->add('id_order', 'Solo se pueden añadir detalles a pedidos en estado Pendiente.');
-                }
-            }
-            
+           
             // Validación personalizada: verificar que no exista ya un detalle con el mismo producto
             if ($this->filled('id_order') && $this->filled('order_detail.id_product')) {
                 $existingDetail = OrderDetail::where('id_order', $this->id_order)

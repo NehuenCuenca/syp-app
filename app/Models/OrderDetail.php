@@ -73,8 +73,6 @@ class OrderDetail extends Model
      */
     public function stockMovement()
     {
-        /* return $this->hasMany(StockMovement::class, 'id_order', 'id_order')
-            ->where('id_product', $this->id_product); */
         return $this->hasOne(StockMovement::class, 'id_order_detail');
     }
 
