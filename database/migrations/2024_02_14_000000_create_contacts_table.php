@@ -20,7 +20,6 @@ return new class extends Migration
             $table->string('phone')->nullable();
             $table->text('address')->nullable();
             $table->enum('contact_type', ['Cliente', 'Proveedor']);
-            $table->timestamp('registered_at')->nullable();
             $table->timestamps();
             $table->softDeletesTz();
         });

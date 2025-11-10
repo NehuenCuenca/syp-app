@@ -18,11 +18,6 @@ class Contact extends Model
         'phone',
         'address',
         'contact_type',
-        'registered_at'
-    ];
-
-    protected $casts = [
-        'registered_at' => 'datetime'
     ];
 
     protected $appends = [

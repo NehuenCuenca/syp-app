@@ -21,7 +21,6 @@ class ContactFactory extends Factory
             'phone' => fake()->phoneNumber(),
             'address' => fake()->address(),
             'contact_type' => $type,
-            'registered_at' => fake()->dateTimeBetween('-1 year', 'now'),
         ];
     }
 }

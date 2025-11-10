@@ -17,7 +17,6 @@ class ContactSeeder extends Seeder
             'phone' => '(555) 123-4567',
             'address' => '123 Business Ave, Suite 100, Enterprise City, 12345',
             'contact_type' => 'Cliente',
-            'registered_at' => now(),
         ]);
 
         // Create 15 random contacts
