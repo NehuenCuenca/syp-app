@@ -34,8 +34,7 @@ class UpdateContactRequest extends BaseApiRequest
             ],
             'phone' => 'nullable|string|max:255',
             'address' => 'nullable|string',
-            'contact_type' => [Rule::in(['Cliente', 'Proveedor', 'Empleado', 'Otro'])],
-            'registered_at' => 'date',
+            'contact_type' => [Rule::in(['Cliente', 'Proveedor'])],
         ];
     }
 }

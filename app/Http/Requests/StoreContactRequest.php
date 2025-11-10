@@ -24,12 +24,11 @@ class StoreContactRequest extends BaseApiRequest
     {
         return [
             'company_name' => 'required|string|max:255',
-            'contact_name' => 'required|string|max:255',
+            'contact_name' => 'string|max:255',
             'email' => 'nullable|email|unique:contacts,email|max:255',
             'phone' => 'nullable|string|max:255',
             'address' => 'nullable|string',
             'contact_type' => ['required', Rule::in(['Cliente', 'Proveedor'])],
-            'registered_at' => 'nullable|date',
         ];
     }
 }

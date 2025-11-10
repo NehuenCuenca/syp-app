@@ -22,7 +22,7 @@ class ContactController extends Controller
     public function index(): JsonResponse
     {
         try {
-            $contacts = Contact::select('id', 'company_name', 'contact_name', 'phone', 'contact_type')
+            $contacts = Contact::select('id', 'code', 'company_name', 'contact_name', 'phone', 'contact_type')
                                 ->orderBy('created_at', 'desc')->get();
 
             return $this->successResponse(
@@ -41,7 +41,7 @@ class ContactController extends Controller
     }
 
     public const ALLOWED_SORT_FIELDS  = [
-            'id' => 'ID', 
+            'code' => 'Codigo', 
             'company_name' => 'Nombre de negocio', 
             'contact_name' => 'Nombre de contacto',
             'contact_type' => 'Tipo de contacto',
@@ -63,19 +63,18 @@ class ContactController extends Controller
                 ->orderBy('contact_type')
                 ->pluck('contact_type');
 
-            $contactIds = Contact::select('id')
+            $contactCodes = Contact::select('code')
                 ->distinct()
-                ->pluck('id');
+                ->pluck('code');
                 
             $filterData = [
                 'contact_types' => $contactTypes,
-                'contact_ids' => $contactIds,
+                'contact_codes' => $contactCodes,
                 'sort_by' => self::ALLOWED_SORT_FIELDS,
                 'sort_direction' => self::ALLOWED_SORT_DIRECTIONS
             ];
 
             return $this->successResponse($filterData, 'Filtros obtenidos exitosamente.');
-
         } catch (QueryException $e) {
             return $this->errorResponse(
                 'Error al recuperar los tipos de contactos.',
@@ -109,11 +108,9 @@ class ContactController extends Controller
             // Búsqueda por nombre de empresa o contacto
             $search = $request->get('search', '');
             if ($request->has('search')) {
-                // $query->where('company_name', 'like', "%{$search}%");
                 $query->where(function ($q) use ($search) {
-                    $q->where('id', 'like', "%{$search}%")
+                    $q->where('code', 'like', "%{$search}%")
                       ->orWhere('company_name', 'like', "%{$search}%");
-                    //   ->orWhere('contact_name', 'like', "%{$search}%");
                 });
             }
 
@@ -122,7 +119,7 @@ class ContactController extends Controller
             $sortDirection = $request->input('sort_direction', 'desc');
             if (in_array($sortBy, array_keys(self::ALLOWED_SORT_FIELDS))) {
                 $query->orderBy($sortBy, $sortDirection)
-                    ->select('id', 'company_name', 'contact_name', 'phone', 'contact_type');
+                    ->select('id', 'code', 'company_name', 'contact_name', 'phone', 'contact_type');
             }
 
             // Paginación
@@ -251,7 +248,6 @@ class ContactController extends Controller
         }
 
         try {
-
             $contact->restore();
             return $this->restoredResponse($contact, 'Contacto restaurado exitosamente.');
         } catch (\Exception $e) {
