@@ -24,7 +24,7 @@ class ProductController extends Controller
     public function index(): JsonResponse
     {
         try {
-            $products = Product::select('id', 'name', 'current_stock', 'min_stock_alert')->get();
+            $products = Product::select('id', 'code', 'name', 'current_stock', 'min_stock_alert')->get();
             
             $meta = [
                 'total' => $products->count()
