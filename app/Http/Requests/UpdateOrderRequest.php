@@ -24,12 +24,11 @@ class UpdateOrderRequest extends BaseApiRequest
     {
         return [
             'id_contact' => 'sometimes|required|integer|exists:contacts,id',
-            'id_movement_type' => 'missing',
             'notes' => 'nullable|string|max:1000',
-            'total_net' => 'sometimes|numeric|min:0',
+            'adjustment_amount' => 'nullable|numeric',
             
-            // Validaciones para los detalles del pedido (opcionales en actualización)
-            'order_details' => 'missing|array|min:1',
+            'id_movement_type' => 'missing',
+            'order_details' => 'missing',
         ];
     }
 

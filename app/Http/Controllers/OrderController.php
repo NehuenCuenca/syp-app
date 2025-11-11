@@ -57,12 +57,12 @@ class OrderController extends Controller
     public function create()
     {
         try {
-            $contacts = Contact::select('id', 'company_name', 'contact_name', 'contact_type')
+            $contacts = Contact::select('id', 'code', 'company_name', 'contact_name', 'contact_type')
                 ->orderBy('company_name')
                 ->get();
 
             $products = Product::with('category:id,name')
-                ->select('id', 'name', 'current_stock', 'min_stock_alert', 'buy_price', 'sale_price', 'id_category')
+                ->select('id', 'code', 'name', 'current_stock', 'min_stock_alert', 'buy_price', 'sale_price', 'id_category')
                 ->orderBy('name')
                 ->get();
 
@@ -105,7 +105,6 @@ class OrderController extends Controller
                 'id_movement_type' => $request->id_movement_type,
                 'notes' => $request->notes,
                 'adjustment_amount' => $request->adjustment_amount ?? 0,
-                // 'total_net' => $request->total_net ?? 0,
             ]);
 
             if (!$order) {
@@ -193,7 +192,7 @@ class OrderController extends Controller
     public function show(Order $order)
     {
         try {
-            $orderData = $order->load(['contact', 'orderDetails.product.category', 'stockMovements', 'movementType']);
+            $orderData = $order->load(['contact', 'orderDetails.product.category', 'movementType']);
             
             return $this->successResponse(
                 $orderData,
@@ -223,12 +222,12 @@ class OrderController extends Controller
         try {
             $order->load(['contact', 'orderDetails.product.category']);
 
-            $contacts = Contact::select('id', 'company_name', 'contact_name', 'contact_type')
+            $contacts = Contact::select('id', 'code', 'company_name', 'contact_name', 'contact_type')
                 ->orderBy('company_name')
                 ->get();
 
             $products = Product::with('category:id,name')
-                ->select('id', 'name', 'current_stock', 'min_stock_alert', 'sale_price', 'buy_price', 'id_category')
+                ->select('id', 'code', 'name', 'current_stock', 'min_stock_alert', 'sale_price', 'buy_price', 'id_category')
                 ->orderBy('name')
                 ->get();
 
@@ -271,8 +270,14 @@ class OrderController extends Controller
             $updateResult = $order->update([
                 'id_contact' => $request->id_contact,
                 'notes' => $request->notes,
-                // 'total_net' => $request->total_net ?? $order->total_net
+                'adjustment_amount' => $request->adjustment_amount,
             ]);
+
+            if($request->has('adjustment_amount')){
+                $subTotal = $order->orderDetails->sum('line_subtotal');
+                $totalNet = ($subTotal + $request->adjustment_amount);
+                $order->update(['total_net' => $totalNet]);
+            }
 
             if (!$updateResult) {
                 throw new Exception('No se pudo actualizar el pedido');
@@ -550,7 +555,7 @@ class OrderController extends Controller
                 'id_order_detail' => $detail->id,
                 'id_movement_type' => $order->id_movement_type,
                 'quantity_moved' => $quantity,
-                'notes' => "Movimiento automático por pedido #{$order->id}",
+                'notes' => "Movimiento automático por pedido '{$order->code}'",
             ]);
 
             if (!$stockMovement) {
