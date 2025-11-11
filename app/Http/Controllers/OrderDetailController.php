@@ -188,7 +188,7 @@ class OrderDetailController extends Controller
                     'id_order_detail' => $orderDetail->id,
                     'id_movement_type' => $order->id_movement_type,
                     'quantity_moved' => $quantityMoved,
-                    'notes' => "Detalle de pedido #{$order->id} agregado"
+                    'notes' => "Detalle de pedido '{$order->code}' agregado"
                 ]);
                 
             } catch (Exception $e) {
@@ -355,7 +355,7 @@ class OrderDetailController extends Controller
                     if ($orderDetail->stockMovement) {
                         $orderDetail->stockMovement->update([
                             'quantity_moved' => ($order->getIsSaleAttribute()) ? -$validatedData['quantity'] : $validatedData['quantity'],
-                            'notes' => 'Actualización de cantidad en detalle de pedido #' . $order->id
+                            'notes' => "Actualización de cantidad en detalle de pedido '{$order->code}'"
                         ]);
                     } else {
                         //Crear nuevo movimiento si no existe
@@ -365,7 +365,7 @@ class OrderDetailController extends Controller
                             'id_order_detail' => $orderDetail->id,
                             'id_movement_type' => $order->id_movement_type,
                             'quantity_moved' => ($order->getIsSaleAttribute()) ? -$validatedData['quantity'] : $validatedData['quantity'],
-                            'notes' => 'Actualización de cantidad en detalle de pedido #' . $order->id
+                            'notes' => "Actualización de cantidad en detalle de pedido '{$order->code}'"
                         ]);
                     }
                     
