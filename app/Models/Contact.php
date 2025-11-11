@@ -21,18 +21,24 @@ class Contact extends Model
     ];
 
     protected $appends = [
-        'full_name',
-        'last_order'
+        // 'full_name',
+        'search_alias',
+        // 'last_order'
     ];
 
     public function orders()
     {
-        return $this->hasMany(Order::class, 'id_contact');
+        return $this->hasMany(Order::class, 'id_contact') ;
     }
 
     public function getFullNameAttribute()
     {
         return $this->company_name . ' (' . $this->contact_type . ')';
+    }
+
+    public function getSearchAliasAttribute()
+    {
+        return "{$this->code}| $this->company_name";
     }
 
     public function getLastOrderAttribute()

@@ -11,6 +11,7 @@ use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\DB;
 
 class ContactController extends Controller
 {
@@ -63,13 +64,12 @@ class ContactController extends Controller
                 ->orderBy('contact_type')
                 ->pluck('contact_type');
 
-            $contactCodes = Contact::select('code')
-                ->distinct()
-                ->pluck('code');
+            $contacts = Contact::select('id', 'code', 'company_name')
+                ->distinct()->get();
                 
             $filterData = [
                 'contact_types' => $contactTypes,
-                'contact_codes' => $contactCodes,
+                'contacts_alias' => $contacts,
                 'sort_by' => self::ALLOWED_SORT_FIELDS,
                 'sort_direction' => self::ALLOWED_SORT_DIRECTIONS
             ];
@@ -109,7 +109,7 @@ class ContactController extends Controller
             $search = $request->get('search', '');
             if ($request->has('search')) {
                 $query->where(function ($q) use ($search) {
-                    $q->where('code', 'like', "%{$search}%")
+                    $q->where('code', 'like', "{$search}%")
                       ->orWhere('company_name', 'like', "%{$search}%");
                 });
             }
@@ -119,7 +119,10 @@ class ContactController extends Controller
             $sortDirection = $request->input('sort_direction', 'desc');
             if (in_array($sortBy, array_keys(self::ALLOWED_SORT_FIELDS))) {
                 $query->orderBy($sortBy, $sortDirection)
-                    ->select('id', 'code', 'company_name', 'contact_name', 'phone', 'contact_type');
+                    ->select(
+                        'id', 'code', 'company_name', 
+                        'contact_name', 'phone', 'contact_type'
+                    );
             }
 
             // Paginación
