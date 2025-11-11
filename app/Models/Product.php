@@ -29,11 +29,18 @@ class Product extends Model
         'min_stock_alert' => 'integer'
     ];
 
-    protected $appends = ['is_low_stock'];
+    protected $appends = [
+        'search_alias'
+    ];
 
     public function getIsLowStockAttribute()
     {
         return $this->current_stock <= $this->min_stock_alert;
+    }
+
+    public function getSearchAliasAttribute()
+    {
+        return "{$this->code}| $this->name";
     }
 
     public function category()

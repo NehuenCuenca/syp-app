@@ -447,7 +447,6 @@ class ProductController extends Controller
             $filters = $request->getFilters();
             $query = Product::query();
             
-
             // Aplicar filtros
             if (!empty($filters['id_category'])) {
                 $query->where('id_category', $filters['id_category']);
@@ -477,7 +476,7 @@ class ProductController extends Controller
                 $query->orderBy($filters['sort_by'], $filters['sort_direction']);
             }
             
-            $query->select('id', 'code', 'name', 'current_stock', 'min_stock_alert', 'sale_price', 'buy_price');
+            $query->select('id', 'code', 'name', 'current_stock', 'min_stock_alert', 'sale_price', 'buy_price', DB::raw('(current_stock < min_stock_alert) as is_low_stock'));
 
             // Paginación
             $products = $query->paginate($filters['per_page']);
