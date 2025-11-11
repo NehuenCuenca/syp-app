@@ -123,8 +123,6 @@ class Order extends Model
         };
     }
 
-
-
     /**
      * Accessor: Check if order is a purchase
      */
@@ -147,33 +145,5 @@ class Order extends Model
     public function getTotalProductsAttribute(): int
     {
         return $this->orderDetails->count();
-    }
-
-    /**
-     * Method: Calculate and update order totals
-     */
-    public function calculateTotals(): void
-    {
-        $totalNet = $this->orderDetails->sum('line_subtotal');
-        $this->update(['total_net' => $totalNet]);
-    }
-
-    /**
-     * Method: Check if order can be edited
-     */
-    public function canBeEdited(): bool
-    {
-        // Permitir edición en todos los estados para flexibilidad
-        return true;
-    }
-
-    /**
-     * Method: Check if order can be deleted
-     */
-    public function canBeDeleted(): bool
-    {
-        // Permitir eliminación si no tiene movimientos de stock asociados
-        // o si el usuario tiene permisos especiales
-        return !$this->stockMovements()->exists() || auth()->user()?->role === 'Admin';
     }
 }
