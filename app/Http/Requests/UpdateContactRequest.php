@@ -25,7 +25,7 @@ class UpdateContactRequest extends BaseApiRequest
 
         return [
             'company_name' => 'string|max:255',
-            'contact_name' => 'string|max:255',
+            'contact_name' => 'nullable|string|max:255',
             'email' => [
                 'nullable',
                 'email',
