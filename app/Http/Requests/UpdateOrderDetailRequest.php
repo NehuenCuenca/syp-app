@@ -31,12 +31,11 @@ class UpdateOrderDetailRequest extends BaseApiRequest
             'unit_price_at_order' => [
                 'numeric',
                 'min:0',
-                'max:999999.99'
+                'max:999999'
             ],
             'discount_percentage_by_unit' => [
                 'numeric',
                 'min:0',
-                'max:1'
             ]
         ];
     }

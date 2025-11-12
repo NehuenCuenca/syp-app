@@ -47,13 +47,12 @@ class StoreOrderDetailRequest extends BaseApiRequest
                 'required',
                 'numeric',
                 'min:0',
-                'max:999999.99'
+                'max:999999'
             ],
             'order_detail.discount_percentage_by_unit' => [
                 'required',
                 'numeric',
                 'min:0',
-                'max:1'
             ]
         ];
     }
