@@ -38,7 +38,7 @@ class Contact extends Model
 
     public function getSearchAliasAttribute()
     {
-        return "{$this->code}| $this->company_name";
+        return "{$this->code}| {$this->company_name}";
     }
 
     public function getLastOrderAttribute()

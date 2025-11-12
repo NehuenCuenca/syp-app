@@ -40,7 +40,7 @@ class Product extends Model
 
     public function getSearchAliasAttribute()
     {
-        return "{$this->code}| $this->name";
+        return "{$this->code}| {$this->name}";
     }
 
     public function category()
