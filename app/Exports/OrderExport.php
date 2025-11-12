@@ -45,10 +45,10 @@ class OrderExport implements FromCollection, WithHeadings, WithMapping, WithStyl
     public function headings(): array
     {
         return [
-            'ID',
+            'COD',
             'Producto', 
             'Cantidad',
-            'Precio Unitario',
+            'Precio unidad',
             'Descuento (%)',
             'Subtotal'
         ];
@@ -60,7 +60,7 @@ class OrderExport implements FromCollection, WithHeadings, WithMapping, WithStyl
     public function map($row): array
     {
         return [
-            $row->id,
+            $row->code,
             $row->product_name,
             number_format($row->quantity, 0),
             '$' . number_format($row->unit_price_at_order, 0),
