@@ -50,7 +50,7 @@ class Order extends Model
      */
     protected $hidden = [];
 
-    protected $appends = ['order_alias'];
+    protected $appends = ['search_alias'];
 
     /**
      * Constants for order types
@@ -74,12 +74,9 @@ class Order extends Model
         return $this->belongsTo(MovementType::class, 'id_movement_type');
     }
 
-    public function getOrderAliasAttribute()
+    public function getSearchAliasAttribute()
     {
-        return strtoupper($this->movementType->name) . ' ' 
-             . $this->contact->company_name 
-             . ' ($' . $this->total_net . ') '
-             . $this->created_at->format('Y-m-d');
+        return "$this->code| {$this->contact->company_name}";
     }
     
     /**
