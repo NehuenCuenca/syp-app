@@ -37,10 +37,10 @@ class OrderDetailController extends Controller
                 }
                 
                 $query = OrderDetail::where('id_order', $request->id_order)
-                    ->with(['product', 'order'])
+                    ->with(['product.category'])
                     ->get();
             } else {
-                $query = OrderDetail::with(['product', 'order'])->get();
+                $query = OrderDetail::with(['product.category'])->get();
             }
 
             $responseData = [
@@ -90,7 +90,7 @@ class OrderDetailController extends Controller
     {
         try {
             $products = Product::with('category:id,name')
-                ->select('id', 'name', 'current_stock', 'min_stock_alert', 'buy_price', 'sale_price', 'profit_percentage', 'id_category')
+                ->select('id', 'code', 'name', 'current_stock', 'min_stock_alert', 'buy_price', 'sale_price', 'profit_percentage', 'id_category')
                 ->orderBy('name')
                 ->get();
 
@@ -254,7 +254,7 @@ class OrderDetailController extends Controller
     public function show(OrderDetail $orderDetail)
     {
         try {
-            $orderDetail->load(['order', 'product']);
+            $orderDetail->load(['order', 'product.category']);
             
             return $this->successResponse(
                 $orderDetail,
@@ -501,7 +501,7 @@ class OrderDetailController extends Controller
             return $this->deletedResponse(
                 $orderDetailId,
                 'Detalle de pedido eliminado exitosamente',
-                true // Hard delete
+                false // Hard delete
             );
             
         } catch (QueryException $e) {
@@ -546,10 +546,10 @@ class OrderDetailController extends Controller
                 throw new Exception("Pedido con ID {$orderId} no encontrado");
             }
             
-            $totalGross = $order->orderDetails()->sum('line_subtotal');
-            $totalNet = $totalGross;
+            $subTotal = $order->orderDetails()->sum('line_subtotal');
+            $totalNet = $subTotal + $order->adjustment_amount;
             
-            $order->update(['total_net' => $totalNet]);
+            $order->update(['subtotal' => $subTotal, 'total_net' => $totalNet]);
             
         } catch (Exception $e) {
             Log::error('Error al actualizar totales del pedido', [
