@@ -51,7 +51,7 @@ class StockMovementController extends Controller
         }
     }
 
-    public function create(): JsonResponse
+    /* public function create(): JsonResponse
     {
         try {
             $products = Product::with('category:id,name')
@@ -82,9 +82,9 @@ class StockMovementController extends Controller
                 500
             );
         }
-    }
+    } */
 
-    public function edit(StockMovement $stockMovement): JsonResponse
+    /* public function edit(StockMovement $stockMovement): JsonResponse
     {
         try {
             $products = Product::with('category:id,name')
@@ -117,7 +117,7 @@ class StockMovementController extends Controller
                 500
             );
         }
-    }
+    } */
 
     /**
      * Store a newly created resource in storage.
@@ -312,7 +312,7 @@ class StockMovementController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(StockMovement $stockMovement): JsonResponse
+    /* public function destroy(StockMovement $stockMovement): JsonResponse
     {
         try {
             DB::beginTransaction();
@@ -357,7 +357,7 @@ class StockMovementController extends Controller
                 500
             );
         }
-    }
+    } */
 
     public const ALLOWED_SORT_FIELDS = [
         'id_order' => 'Pedido',
@@ -377,8 +377,8 @@ class StockMovementController extends Controller
     public function getFilters(): JsonResponse
     {
         try {
-            $orders = Order::select('id', 'id_contact', 'id_movement_type', 'total_net', 'created_at')->get();
-            $products = Product::select('name', 'id', 'current_stock', 'min_stock_alert')->get();
+            $orders = Order::select('id', 'code', 'id_contact', 'id_movement_type', 'total_net', 'created_at')->get();
+            $products = Product::select('name', 'id', 'code', 'current_stock', 'min_stock_alert')->get();
             $movementTypes = MovementType::select('name', 'id')->get();
             $dateFrom = StockMovement::min('created_at');
             $dateTo = StockMovement::max('created_at');
