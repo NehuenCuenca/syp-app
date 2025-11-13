@@ -393,7 +393,7 @@ class ProductController extends Controller
         try {
             $products = Product::select('id', 'code', 'name')->get();
 
-            $categories = Category::select('id', 'name', DB::raw('CONCAT(id, "| ", name) as alias'))->get();
+            $categories = Category::select('id', 'name')->orderBy('id', 'asc')->get();
 
             $data = [
                 'categories' => $categories,
@@ -445,7 +445,7 @@ class ProductController extends Controller
     {
         try {
             $filters = $request->getFilters();
-            $query = Product::query();
+            $query = Product::query()->with(['category']);
             
             // Aplicar filtros
             if (!empty($filters['id_category'])) {
@@ -476,7 +476,7 @@ class ProductController extends Controller
                 $query->orderBy($filters['sort_by'], $filters['sort_direction']);
             }
             
-            $query->select('id', 'code', 'name', 'current_stock', 'min_stock_alert', 'sale_price', 'buy_price', DB::raw('(current_stock < min_stock_alert) as is_low_stock'));
+            $query->select('id', 'code', 'name', 'current_stock', 'min_stock_alert', 'id_category', DB::raw('(current_stock < min_stock_alert) as is_low_stock'));
 
             // Paginación
             $products = $query->paginate($filters['per_page']);

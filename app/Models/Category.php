@@ -13,9 +13,18 @@ class Category extends Model
         'name',
     ];
 
+    protected $appends = [
+        'search_alias'
+    ];
+
     // Relación: una categoría tiene muchos productos
     public function products()
     {
         return $this->hasMany(Product::class, 'id_category');
+    }
+
+    public function getSearchAliasAttribute()
+    {
+        return "{$this->id}| {$this->name}";
     }
 }

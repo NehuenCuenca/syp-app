@@ -12,10 +12,12 @@ class CategorySeeder extends Seeder
         // Categorías base
         $categories = [
             ['name' => 'Aceites Aerosol'],
+            ['name' => 'Algodones'],
             ['name' => 'Alcohol y Gel'],
             ['name' => 'Alicates'],
             ['name' => 'Botiquin'],
             ['name' => 'Perfumeria'],
+            ['name' => 'Tampones'],
             ['name' => 'Azufres'],
             ['name' => 'Bolsitas'],
             ['name' => 'Bolsas Camiseta'],
@@ -45,6 +47,7 @@ class CategorySeeder extends Seeder
             ['name' => 'Mamaderas y Tetinas'],
             ['name' => 'Pomadas'],
             ['name' => 'Peines'],
+            ['name' => 'Pañales'],
             ['name' => 'Pilas'],
             ['name' => 'Preservativos'],
             ['name' => 'Shampoos'],
