@@ -15,8 +15,8 @@ return new class extends Migration
             $table->id();
             $table->string('code')->unique()->nullable(); //$id_category + $id
             $table->string('name');
-            $table->integer('buy_price');
-            $table->integer('profit_percentage');
+            $table->integer('buy_price')->default(0);
+            $table->integer('profit_percentage')->default(0);
             $table->integer('sale_price')->default(0);
             $table->integer('current_stock')->default(0);
             $table->integer('min_stock_alert')->default(5);
