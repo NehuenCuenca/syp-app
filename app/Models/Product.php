@@ -26,11 +26,14 @@ class Product extends Model
         'profit_percentage' => 'integer',
         'sale_price' => 'integer',
         'current_stock' => 'integer',
-        'min_stock_alert' => 'integer'
+        'min_stock_alert' => 'integer',
+        'created_at' => 'datetime:Y-m-d H:i:s',
+        'updated_at' => 'datetime:Y-m-d H:i:s'
     ];
 
     protected $appends = [
-        'search_alias'
+        'search_alias',
+        'stock_availability'
     ];
 
     public function getIsLowStockAttribute()
@@ -41,6 +44,11 @@ class Product extends Model
     public function getSearchAliasAttribute()
     {
         return "{$this->code}| {$this->name}";
+    }
+
+    public function getStockAvailabilityAttribute()
+    {
+        return ($this->current_stock > 0) ? "{$this->current_stock} disponibles" : 'Agotado';
     }
 
     public function category()
