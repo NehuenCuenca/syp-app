@@ -45,6 +45,8 @@ class OrderDetail extends Model
         'unit_price_at_order' => 'integer',
         'discount_percentage_by_unit' => 'integer',
         'line_subtotal' => 'integer',
+        'created_at' => 'datetime:Y-m-d H:i:s',
+        'updated_at' => 'datetime:Y-m-d H:i:s'
     ];
 
     /**
