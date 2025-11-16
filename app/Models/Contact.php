@@ -20,10 +20,21 @@ class Contact extends Model
         'contact_type',
     ];
 
+    /**
+     * The attributes that should be cast.
+     *
+     * @var array<string, string>
+     */
+    protected $casts = [
+        'created_at' => 'datetime:Y-m-d H:i:s',
+        'updated_at' => 'datetime:Y-m-d H:i:s'
+    ];
+
     protected $appends = [
         // 'full_name',
         'search_alias',
-        // 'last_order'
+        'phone_number_info',
+        'last_order'
     ];
 
     public function orders()
@@ -41,22 +52,27 @@ class Contact extends Model
         return "{$this->code}| {$this->company_name}";
     }
 
-    public function getLastOrderAttribute()
-{
-    $lastOrder = $this->orders()
-        ->with(['movementType'])
-        ->select('id', 'id_movement_type', 'total_net', 'created_at') //aca falta el movementType
-        ->orderBy('created_at', 'desc')
-        ->first();
-    
-    if (!$lastOrder) {
-        return 'Ultimo pedido: ---';
+    public function getPhoneNumberInfoAttribute()
+    {
+        return (!$this->phone) ? "Telefono sin registrar" : $this->phone;
     }
-    
-    // Retornar un array con los datos necesarios y el alias creado manualmente
-    return  'Ultima ' . strtolower($lastOrder->movementType->name) . ': '
-                       . $lastOrder->created_at->format('Y-m-d');
-}
+
+    public function getLastOrderAttribute()
+    {
+        $lastOrder = $this->orders()
+            ->with(['movementType'])
+            ->select('id', 'id_movement_type', 'total_net', 'created_at') //aca falta el movementType
+            ->orderBy('created_at', 'desc')
+            ->first();
+        
+        if (!$lastOrder) {
+            return 'No tiene ultimo pedido';
+        }
+        
+        // Retornar un array con los datos necesarios y el alias creado manualmente
+        return  'Ultima ' . strtolower($lastOrder->movementType->name) . ': '
+                        . $lastOrder->created_at->format('Y-m-d');
+    }
     
     // Scopes para filtrar por tipo de contacto
     public function scopeClients($query)
