@@ -44,14 +44,19 @@ class StockMovement extends Model
         'id_movement_type' => 'integer',
         'quantity_moved' => 'integer',
         'notes' => 'string',
-        'created_at' => 'datetime',
-        'updated_at' => 'datetime'
+        'created_at' => 'datetime:Y-m-d H:i:s',
+        'updated_at' => 'datetime:Y-m-d H:i:s'
     ];
 
     /**
      * The attributes that should be hidden for serialization.
      */
     protected $hidden = [];
+
+    protected $appends = [
+        'sign_with_quantity_and_product',
+        'notes_info'
+    ];
 
     /**
      * Get the product that this stock movement belongs to.
@@ -107,6 +112,20 @@ class StockMovement extends Model
     public function getAbsoluteQuantityAttribute(): int
     {
         return abs($this->quantity_moved);
+    }
+
+    public function getSignWithQuantityAndProductAttribute(): string
+    {
+        $productName = (!$this->product) ? 'Producto Desconocido' : $this->product->name;
+        $text = "{$this->quantity_moved} {$productName}";
+        return ($this->quantity_moved > 0) 
+                ? "+{$text}" 
+                : "{$text}";
+    }
+
+    public function getNotesInfoAttribute(): string
+    {
+        return !empty($this->notes) ? $this->notes : 'Sin notas';
     }
 
     public static function getMovementTypes(): array
