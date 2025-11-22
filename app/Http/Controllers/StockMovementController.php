@@ -206,7 +206,7 @@ class StockMovementController extends Controller
     public function show(StockMovement $stockMovement): JsonResponse
     {
         try {
-            $stockMovement->load(['product.category', 'order', 'movementType', 'orderDetail', 'previousMovement']);
+            $stockMovement->load(['product.category', 'order', 'movementType', 'orderDetail']);
 
             return $this->successResponse(
                 $stockMovement,
@@ -441,13 +441,14 @@ class StockMovementController extends Controller
                 $query->whereDate('movement_date', '<=', $request->date_to);
             }
 
-            /* $search = $request->get('search', '');
+            $search = $request->get('search', '');
             if ($request->filled('search')) {
                 $query->where(function ($q) use ($search) {
-                    $q->where('external_reference', 'like', "%{$search}%")
-                      ->orWhere('notes', 'like', "%{$search}%");
+                        $q->whereRelation('product', 'code', 'like', "{$search}%")
+                            ->orWhereRelation('product', 'name', 'like', "%{$search}%");
                 });
-            } */
+            }
+
 
             // Ordenamiento
             $sortBy = $request->get('sort_by', 'created_at');
