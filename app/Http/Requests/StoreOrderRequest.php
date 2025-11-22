@@ -42,8 +42,9 @@ class StoreOrderRequest extends BaseApiRequest
             'order_details' => 'required|array|min:1',
             'order_details.*.id_product' => 'required|integer|exists:products,id',
             'order_details.*.quantity' => 'required|integer|min:1',
-            'order_details.*.unit_price_at_order' => 'required|numeric|min:0|max:999999.99',
-            'order_details.*.discount_percentage_by_unit' => 'required|numeric|min:0',
+            'order_details.*.unit_price_at_order' => 'required|numeric|min:0|max:9999999',
+            'order_details.*.discount_percentage_by_unit' => 'prohibited_if:id_movement_type,1|required_if:id_movement_type,2|numeric|min:0', 
+            'order_details.*.profit_percentage' => 'prohibited_if:id_movement_type,2|required_if:id_movement_type,1|numeric|min:1',
         ];
     }
 
