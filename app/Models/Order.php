@@ -50,7 +50,7 @@ class Order extends Model
      */
     protected $hidden = [];
 
-    protected $appends = ['search_alias'];
+    protected $appends = ['search_alias', 'order_type_with_total_net', 'is_exportable'];
 
     /**
      * Constants for order types
@@ -118,6 +118,22 @@ class Order extends Model
             self::ORDER_TYPE_SALE => 'Venta Saliente',
             default => $this->movementType->name,
         };
+    }
+
+    /**
+     * Accessor: Get formatted order type 
+     */
+    public function getOrderTypeWithTotalNetAttribute(): string
+    {
+        return "{$this->movementType->name} de \${$this->total_net}";
+    }
+
+    /**
+     * Accessor: Get formatted order type 
+     */
+    public function getIsExportableAttribute(): bool
+    {
+        return $this->getIsSaleAttribute();
     }
 
     /**
