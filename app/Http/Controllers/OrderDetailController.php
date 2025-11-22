@@ -177,7 +177,7 @@ class OrderDetailController extends Controller
                     $product->decrement('current_stock', $orderData['quantity']);
                 } else {
                     $product->increment('current_stock', $orderData['quantity']);
-                    $product->update(['buy_price' => $orderData['unit_price_at_order']]);
+                    $product->update(['buy_price' => $orderData['unit_price_at_order'], 'profit_percentage' => $orderData['profit_percentage']]);
                 }
                 
                 $quantityMoved = $order->getIsSaleAttribute() ? -$orderData['quantity'] : $orderData['quantity'];
@@ -289,6 +289,7 @@ class OrderDetailController extends Controller
                 'quantity' => abs($request->validated('quantity', $orderDetail->quantity)),
                 'unit_price_at_order' => $request->validated('unit_price_at_order', $orderDetail->unit_price_at_order),
                 'discount_percentage_by_unit' => $request->validated('discount_percentage_by_unit', $orderDetail->discount_percentage_by_unit),
+                'profit_percentage' => $request->validated('profit_percentage', $orderDetail->product->profit_percentage),
             ];
         
             $order = $orderDetail->order;
@@ -310,8 +311,9 @@ class OrderDetailController extends Controller
             $quantityChanged = $orderDetail->quantity != $validatedData['quantity'];
             $unitPriceChanged = $orderDetail->unit_price_at_order != $validatedData['unit_price_at_order'];
             $discountChanged = ($orderDetail->discount_percentage_by_unit ?? 0) != ($validatedData['discount_percentage_by_unit'] ?? 0);
+            $profitChanged = ($orderDetail->product->profit_percentage ?? 0) != ($validatedData['profit_percentage'] ?? 0);
 
-            if (!$quantityChanged && !$unitPriceChanged && !$discountChanged) {
+            if (!$quantityChanged && !$unitPriceChanged && !$discountChanged && !$profitChanged) {
                 DB::rollBack();
                 return $this->errorResponse(
                     'No se detectaron cambios en el detalle del pedido',
@@ -401,7 +403,7 @@ class OrderDetailController extends Controller
 
             //Actualizar precio de producto
             if($order->getIsPurchaseAttribute() && $request->filled('unit_price_at_order')){
-                $orderDetail->product->update(['buy_price' => $validatedData['unit_price_at_order']]);
+                $orderDetail->product->update(['buy_price' => $validatedData['unit_price_at_order'], 'profit_percentage' => $validatedData['profit_percentage']]);
             }
             
             DB::commit();
