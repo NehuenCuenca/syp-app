@@ -50,7 +50,10 @@ class StoreOrderDetailRequest extends BaseApiRequest
                 'max:999999'
             ],
             'order_detail.discount_percentage_by_unit' => [
-                'required',
+                'numeric',
+                'min:0',
+            ],
+            'order_detail.profit_percentage' => [
                 'numeric',
                 'min:0',
             ]
@@ -75,6 +78,21 @@ class StoreOrderDetailRequest extends BaseApiRequest
                     
                 if ($existingDetail) {
                     $validator->errors()->add('order_detail.id_product', 'Ya existe un detalle con este producto en el pedido. Debe editarlo en lugar de crear uno nuevo.');
+                }
+            }
+
+            // Validación personalizada: verificar que profit_percentage no este presente si el pedido es una venta
+            $order = Order::find($this->id_order);
+
+            if ($this->filled('id_order') && $this->filled('order_detail.profit_percentage')) {
+                if ($order && $order->getIsSaleAttribute()) {
+                    $validator->errors()->add('order_detail.profit_percentage', 'No se puede agregar un porcentaje de ganancia si el pedido es una venta.');
+                }
+            }
+
+            if ($this->filled('id_order') && $this->filled('order_detail.discount_percentage_by_unit')) {
+                 if ($order && $order->getIsPurchaseAttribute()) {
+                    $validator->errors()->add('order_detail.discount_percentage_by_unit', 'No se puede agregar un porcentaje de descuento si el pedido es una compra.');
                 }
             }
         });
