@@ -11,6 +11,7 @@ use App\Models\Order;
 use App\Models\OrderDetail;
 use App\Models\StockMovement;
 use App\Models\Product;
+use Carbon\Carbon;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -128,7 +129,9 @@ class OrderController extends Controller
                     }
 
                     $lineGrossSubtotal = $detail['quantity'] * $detail['unit_price_at_order'];
-                    $totalDiscount += (int)($detail['quantity'] * $detail['unit_price_at_order'] * ($detail['discount_percentage_by_unit'] / 100));
+                    if($order->getIsSaleAttribute()){
+                        $totalDiscount += (int)($detail['quantity'] * $detail['unit_price_at_order'] * ($detail['discount_percentage_by_unit'] / 100));
+                    }
                     $totalGross += $lineGrossSubtotal;
                     
                     $stockToDiscount = ($detail['quantity'] >= $product->current_stock && $order->getIsSaleAttribute()) 
@@ -148,7 +151,7 @@ class OrderController extends Controller
                     }
 
                     if ($order->getIsPurchaseAttribute()) {
-                        $product->update(['buy_price' => $detail['unit_price_at_order']]);
+                        $product->update(['buy_price' => $detail['unit_price_at_order'], 'profit_percentage' => $detail['profit_percentage']]);
                     }
 
                     $this->createStockMovement($order, $detailRecord);
@@ -372,8 +375,7 @@ class OrderController extends Controller
             $data = [
                 'order_types' => Order::getOrderTypes(),
                 'contacts' => Contact::select('id', 'company_name', 'contact_name', 'contact_type')->get(),
-                'date_from' => Order::min('created_at'),
-                'date_to' => Order::max('created_at'),
+                'before_equal_date' => Carbon::parse(Order::min('created_at'))->format('Y-m-d'),
                 'sort_by' => self::ALLOWED_SORT_FIELDS,
                 'sort_direction' => self::ALLOWED_SORT_DIRECTIONS
             ];
@@ -414,19 +416,15 @@ class OrderController extends Controller
                 $query->where('id_contact', $request->id_contact);
             }
 
-            if ($request->filled('date_from')) {
-                $query->whereDate('created_at', '>=', $request->date_from);
-            }
-
-            if ($request->filled('date_to')) {
-                $query->whereDate('created_at', '<=', $request->date_to);
+            if ($request->filled('before_equal_date')) {
+                $query->whereDate('created_at', '<=', $request->before_equal_date);
             }
 
             $search = $request->get('search', '');
             if ($request->has('search')) {
                 $query->where(function ($q) use ($search) {
-                    $q->where('code', 'like', "%{$search}%")
-                      ->orWhere('notes', 'like', "%{$search}%");
+                    $q->where('code', 'like', "{$search}%")
+                    ->orWhereRelation('contact', 'company_name', 'like', "%{$search}%");
                 });
             }
             
