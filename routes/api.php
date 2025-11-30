@@ -41,6 +41,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::patch('/{id}/restore', [ProductController::class, 'restore'])->name('products.restore');
         Route::get('/filters', [ProductController::class, 'getFilters'])->name('orders.filters');
         Route::get('/filtered', [ProductController::class, 'getFilteredProducts'])->name('products.filtered');
+        Route::get('/export-catalog', [ProductController::class, 'exportCatalog'])->name('products.export-catalog');
     });
     Route::apiResource('products', ProductController::class);
 

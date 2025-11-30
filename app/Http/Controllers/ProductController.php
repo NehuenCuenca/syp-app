@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\CatalogExport;
 use App\Http\Requests\FilterProductsRequest;
 use App\Http\Requests\StoreProductRequest;
 use App\Http\Requests\UpdateProductRequest;
@@ -16,6 +17,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Maatwebsite\Excel\Facades\Excel;
 
 class ProductController extends Controller
 {
@@ -519,5 +521,22 @@ class ProductController extends Controller
                 500
             );
         }
+    }
+
+    /**
+     * Exportar catálogo de productos a Excel
+     * 
+     * @return \Symfony\Component\HttpFoundation\BinaryFileResponse
+     */
+    public function exportCatalog()
+    {
+        // Generar el nombre del archivo con la fecha actual
+        $fileName = 'catalogo_productos_' . date('Ymd') . '.xlsx';
+        
+        // Descargar el archivo Excel
+        return Excel::download(new CatalogExport(), $fileName, null, [
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'X-Filename' => $fileName
+        ]);
     }
 }
