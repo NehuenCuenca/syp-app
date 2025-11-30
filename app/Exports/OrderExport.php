@@ -267,7 +267,7 @@ class OrderExport implements FromCollection, WithHeadings, WithMapping, WithStyl
         $styles["E{$totalRow}:F{$totalRow}"] = [
             'font' => [
                 'bold' => true,
-                'size' => 14
+                'size' => 18
             ],
             'fill' => [
                 'fillType' => Fill::FILL_SOLID,
@@ -275,7 +275,7 @@ class OrderExport implements FromCollection, WithHeadings, WithMapping, WithStyl
             ],
             'borders' => [
                 'allBorders' => [
-                    'borderStyle' => Border::BORDER_THICK,
+                    'borderStyle' => Border::BORDER_THIN,
                 ]
             ],
             'alignment' => [

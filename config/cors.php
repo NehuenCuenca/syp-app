@@ -20,13 +20,13 @@ return [
     'allowed_methods' => ['*'],
 
     // 'allowed_origins' => ['*'],
-    'allowed_origins' => ['http://127.0.0.1:8000', 'http://localhost:5173', 'http://192.168.0.173:5173'],
+    'allowed_origins' => ['http://127.0.0.1:8000', 'http://localhost:5173', 'http://192.168.0.173:5173', 'https://ornate-trifle-ef0252.netlify.app'],
 
     'allowed_origins_patterns' => [],
 
     'allowed_headers' => ['*'],
 
-    'exposed_headers' => [],
+    'exposed_headers' => ['X-Filename'],
 
     'max_age' => 0,
 

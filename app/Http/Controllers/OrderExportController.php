@@ -85,6 +85,7 @@ class OrderExportController extends Controller
             // Retornar archivo para descarga
             return response()->download($filePath, null, [
                 'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                'X-Filename' => $this->orderExportService->generateFileName($order)
             ])->deleteFileAfterSend(true);
 
         } catch (ValidationException $e) {

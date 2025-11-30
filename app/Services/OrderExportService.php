@@ -126,7 +126,7 @@ class OrderExportService
      * @param Order $order
      * @return string
      */
-    private function generateFileName(Order $order): string
+    public function generateFileName(Order $order): string
     {
         $date = $order->created_at->format('Y-m-d');
         $contact = str_replace(' ', '_', $order->contact->company_name);

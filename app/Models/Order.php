@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use NumberFormatter;
 
 class Order extends Model
 {
@@ -125,7 +126,7 @@ class Order extends Model
      */
     public function getOrderTypeWithTotalNetAttribute(): string
     {
-        return "{$this->movementType->name} de \${$this->total_net}";
+        return "{$this->movementType->name} de {$this->formatToCurrency($this->total_net)}";
     }
 
     /**
@@ -158,5 +159,14 @@ class Order extends Model
     public function getTotalProductsAttribute(): int
     {
         return $this->orderDetails->count();
+    }
+
+    private function formatToCurrency($amount)
+    {
+        $formatter = new NumberFormatter('es_AR', NumberFormatter::CURRENCY);
+        $formatter->setAttribute(NumberFormatter::MIN_FRACTION_DIGITS, 0);
+        $formatter->setSymbol(NumberFormatter::CURRENCY_SYMBOL, '$');
+
+        return $formatter->formatCurrency($amount, 'ARS');
     }
 }
