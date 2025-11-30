@@ -18,6 +18,7 @@ use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Maatwebsite\Excel\Facades\Excel;
+use Illuminate\Http\Request;
 
 class ProductController extends Controller
 {
@@ -526,15 +527,29 @@ class ProductController extends Controller
     /**
      * Exportar catálogo de productos a Excel
      * 
+     * @param Request $request
      * @return \Symfony\Component\HttpFoundation\BinaryFileResponse
      */
-    public function exportCatalog()
+    public function exportCatalog(Request $request)
     {
+        // Obtener el ID de la categoría a excluir (opcional)
+        $excludeCategoryId = $request->query('exclude_category');
+        
+        // Validar que sea un número si se proporciona
+        if ($excludeCategoryId && !is_numeric($excludeCategoryId)) {
+            return $this->errorResponse('El parámetro exclude_category no es valido', ['exclude_category' => 'Debe ser un numero'], [], 400);
+        }
+
+        //Validar que el ID de la categoría a excluir exista en la base de datos
+        if ($excludeCategoryId && !Category::find($excludeCategoryId)) {
+            return $this->errorResponse('El parámetro exclude_category no se encontró en la base de datos', [], [], 400);
+        }
+
         // Generar el nombre del archivo con la fecha actual
         $fileName = 'catalogo_productos_' . date('Ymd') . '.xlsx';
         
         // Descargar el archivo Excel
-        return Excel::download(new CatalogExport(), $fileName, null, [
+        return Excel::download(new CatalogExport($excludeCategoryId), $fileName, null, [
             'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
             'X-Filename' => $fileName
         ]);

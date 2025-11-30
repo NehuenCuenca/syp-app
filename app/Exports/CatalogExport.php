@@ -13,11 +13,20 @@ use Illuminate\Support\Collection;
 class CatalogExport implements FromCollection, WithHeadings, WithEvents, ShouldAutoSize
 {
     protected $categories;
+    protected $excludeCategoryId;
 
-    public function __construct()
+    public function __construct($excludeCategoryId = null)
     {
-        // Cargar categorías con sus productos
-        $this->categories = Category::with('products')->get();
+        $this->excludeCategoryId = $excludeCategoryId;
+        
+        // Cargar categorías con sus productos, excluyendo la categoría indicada
+        $query = Category::with('products');
+        
+        if ($this->excludeCategoryId) {
+            $query->where('id', '!=', $this->excludeCategoryId);
+        }
+        
+        $this->categories = $query->get();
     }
 
     /**
@@ -38,7 +47,7 @@ class CatalogExport implements FromCollection, WithHeadings, WithEvents, ShouldA
             foreach ($category->products as $product) {
                 $rows->push([
                     '    ' . $product->search_alias, // Indentación para diferenciación visual
-                    $product->sale_price
+                    '$'. $product->sale_price
                 ]);
             }
 
@@ -55,7 +64,7 @@ class CatalogExport implements FromCollection, WithHeadings, WithEvents, ShouldA
     public function headings(): array
     {
         return [
-            'Productos por Categoria',
+            'Producto / Categoría',
             'Precio de Venta'
         ];
     }
@@ -70,14 +79,14 @@ class CatalogExport implements FromCollection, WithHeadings, WithEvents, ShouldA
                 $sheet = $event->sheet->getDelegate();
                 
                 // Aplicar negrita a los encabezados
-                $sheet->getStyle('A1:B1')->getFont()->setBold(true);
+                $sheet->getStyle('A1:B1')->getFont()->setBold(true)->setSize(14);
                 
-                // Aplicar negrita a las filas de categorías
+                // Aplicar negrita y estilos a las filas de categorías y productos
                 $rowNumber = 2; // Comenzamos después del encabezado
                 
                 foreach ($this->categories as $category) {
                     // Aplicar negrita a la fila de categoría
-                    $sheet->getStyle("A{$rowNumber}:B{$rowNumber}")->getFont()->setBold(true);
+                    $sheet->getStyle("A{$rowNumber}:B{$rowNumber}")->getFont()->setBold(true)->setSize(20);
                     
                     // Aplicar color de fondo gris claro a la categoría
                     $sheet->getStyle("A{$rowNumber}:B{$rowNumber}")
@@ -86,8 +95,20 @@ class CatalogExport implements FromCollection, WithHeadings, WithEvents, ShouldA
                         ->getStartColor()
                         ->setARGB('FFE0E0E0');
                     
-                    // Avanzar el número de fila: 1 para categoría + cantidad de productos + 1 línea vacía
-                    $rowNumber += 1 + $category->products->count() + 1;
+                    $rowNumber++; // Avanzar a la primera fila de productos
+                    
+                    $productCount = $category->products->count();
+                    if ($productCount > 0) {
+                        $lastProductRow = $rowNumber + $productCount - 1;
+                        $sheet->getStyle("A{$rowNumber}:B{$lastProductRow}")
+                            ->getFont()
+                            ->setSize(18);
+                        
+                        $rowNumber = $lastProductRow + 1;
+                    }
+                    
+                    // Avanzar por la línea vacía
+                    $rowNumber++;
                 }
 
                 // Aplicar formato de moneda a la columna de precio
