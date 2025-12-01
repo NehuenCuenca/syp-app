@@ -34,6 +34,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::patch('/{id}/restore', [ContactController::class, 'restore'])->name('contacts.restore');
         Route::get('/filtered', [ContactController::class, 'getFilteredContacts'])->name('contacts.filtered');
         Route::get('/filters', [ContactController::class, 'getFilters'])->name('contacts.filters');
+        Route::get('/export-list', [ContactController::class, 'exportContacts'])->name('contacts.export');
     });
     Route::apiResource('contacts', ContactController::class);
 
@@ -53,8 +54,8 @@ Route::middleware('auth:sanctum')->group(function () {
         ->name('orders.filtered');
 
     // Exportar pedido a Excel
-    Route::get('/orders/{order}/export-excel', [OrderExportController::class, 'exportOrderToExcel'])
-        ->name('orders.export.excel')
+    Route::get('/orders/{order}/export-ticket', [OrderExportController::class, 'exportOrderToExcel'])
+        ->name('orders.export.ticket')
         ->where('order.id', '[0-9]+');
     
     // Verificar si un pedido es exportable
