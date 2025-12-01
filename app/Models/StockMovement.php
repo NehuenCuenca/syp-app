@@ -116,7 +116,7 @@ class StockMovement extends Model
 
     public function getSignWithQuantityAndProductAttribute(): string
     {
-        $productName = (!$this->product) ? 'Producto Desconocido' : $this->product->name;
+        $productName = (!$this->product) ? 'Producto Borrado' : $this->product->name;
         $text = "{$this->quantity_moved} {$productName}";
         return ($this->quantity_moved > 0) 
                 ? "+{$text}" 
