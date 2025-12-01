@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\ContactsExport;
 use App\Models\Contact;
 use App\Http\Requests\StoreContactRequest;
 use App\Http\Requests\UpdateContactRequest;
@@ -12,6 +13,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
+use Maatwebsite\Excel\Facades\Excel;
 
 class ContactController extends Controller
 {
@@ -260,6 +262,31 @@ class ContactController extends Controller
                 [],
                 Response::HTTP_INTERNAL_SERVER_ERROR
             );
+        }
+    }
+
+    /**
+     * Exportar listado de contactos agrupados por tipo a Excel
+     *
+     * @return \Symfony\Component\HttpFoundation\BinaryFileResponse
+     */
+    public function exportContacts()
+    {
+        try {
+            $fileName = 'listado_contactos_' . date('Ymd') . '.xlsx';
+            
+            return Excel::download(
+                new ContactsExport(),
+                $fileName,
+                \Maatwebsite\Excel\Excel::XLSX,
+                ['X-Filename' => $fileName]
+            );
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al generar el archivo Excel',
+                'error' => $e->getMessage()
+            ], 500);
         }
     }
 }
