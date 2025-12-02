@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use NumberFormatter;
 
 class OrderDetail extends Model
 {
@@ -54,6 +55,9 @@ class OrderDetail extends Model
      */
     protected $hidden = [];
 
+    protected $appends = ['formatted_unit_price', 'formatted_line_subtotal'];
+
+
     /**
      * Relationship: OrderDetail belongs to an Order
      */
@@ -99,15 +103,7 @@ class OrderDetail extends Model
      */
     public function getFormattedUnitPriceAttribute(): string
     {
-        return '$' . number_format($this->unit_price_at_order, 2, ',', '.');
-    }
-
-    /**
-     * Accessor: Get formatted line subtotal
-     */
-    public function getFormattedLineSubtotalAttribute(): string
-    {
-        return '$' . number_format($this->line_subtotal, 2, ',', '.');
+        return $this->formatToCurrency($this->unit_price_at_order);
     }
 
     /**
@@ -142,6 +138,14 @@ class OrderDetail extends Model
     public function getAvailableStockAttribute(): int
     {
         return $this->product?->current_stock ?? 0;
+    }
+
+    /**
+     * Accessor: Get available stock for this product
+     */
+    public function getFormattedLineSubtotalAttribute(): string
+    {
+        return $this->formatToCurrency($this->line_subtotal);
     }
 
     /**
@@ -181,6 +185,15 @@ class OrderDetail extends Model
     {
         $this->line_subtotal = $this->calculateLineSubtotal();
         $this->save();
+    }
+
+    private function formatToCurrency($amount)
+    {
+        $formatter = new NumberFormatter('es_AR', NumberFormatter::CURRENCY);
+        $formatter->setAttribute(NumberFormatter::MIN_FRACTION_DIGITS, 0);
+        $formatter->setSymbol(NumberFormatter::CURRENCY_SYMBOL, '$');
+
+        return $formatter->formatCurrency($amount, 'ARS');
     }
 
     /**
