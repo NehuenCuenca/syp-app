@@ -95,7 +95,7 @@ class OrderController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(StoreOrderRequest $request)
+    /* public function store(StoreOrderRequest $request)
     {
         DB::beginTransaction();
         
@@ -129,10 +129,11 @@ class OrderController extends Controller
                     }
 
                     $lineGrossSubtotal = $detail['quantity'] * $detail['unit_price_at_order'];
+                    $totalGross += $lineGrossSubtotal;
+
                     if($order->getIsSaleAttribute()){
                         $totalDiscount += (int)($detail['quantity'] * $detail['unit_price_at_order'] * ($detail['discount_percentage_by_unit'] / 100));
                     }
-                    $totalGross += $lineGrossSubtotal;
                     
                     $stockToDiscount = ($detail['quantity'] >= $product->current_stock && $order->getIsSaleAttribute()) 
                         ? $product->current_stock 
@@ -159,10 +160,8 @@ class OrderController extends Controller
             }
 
             $subtotal = ($totalGross - $totalDiscount);
-            $order->update(['subtotal' => $subtotal]);
-
-            $totalNet = ($subtotal + $request->adjustment_amount);
-            $order->update(['total_net' => $totalNet]);
+            $totalNet = ($subtotal + $request->adjustment_amount);            
+            $order->update(['subtotal' => $subtotal, 'total_net' => $totalNet]);
 
             DB::commit();
 
@@ -186,6 +185,94 @@ class OrderController extends Controller
                 [],
                 500
             );
+        }
+    } */
+
+    public function store(StoreOrderRequest $request)
+    {
+        DB::beginTransaction();
+        
+        try {
+            // Crear el pedido
+            $order = Order::create([
+                'id_contact' => $request->id_contact,
+                'id_movement_type' => $request->id_movement_type,
+                'notes' => $request->notes,
+                'adjustment_amount' => $request->adjustment_amount ?? 0,
+            ]);
+
+            if (!$order) {
+                throw new Exception('No se pudo crear el pedido');
+            }
+
+            // Crear los detalles del pedido
+            $this->createDetails($request->order_details, $order);
+
+            $orderCode = substr(MovementType::find($request->id_movement_type)->name, 0, 1) . $order->id;
+            $detailsSubtotal = $order->orderDetails->sum('line_subtotal');
+            $totalNet = ($detailsSubtotal + $request->adjustment_amount);            
+
+            $order->update([
+                'code' => $orderCode,
+                'subtotal' => $detailsSubtotal,
+                'total_net' => $totalNet
+            ]);
+
+            DB::commit();
+
+            $orderData = $order->load(['contact', 'orderDetails.product.category', 'movementType']);
+            
+            return $this->createdResponse(
+                $orderData,
+                'Pedido creado exitosamente'
+            );
+
+        } catch (Exception $e) {
+            DB::rollBack();
+            Log::error('Error al crear pedido: ' . $e->getMessage(), [
+                'request_data' => $request->all(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return $this->errorResponse(
+                'Error al crear el pedido',
+                ['exception' => $e->getMessage()],
+                [],
+                500
+            );
+        }
+    }
+
+    public function createDetails(array|null $details, Order $order)
+    {
+        if (!empty($details) && $details!==null) {
+            foreach ($details as $detail) {
+                $product = Product::find($detail['id_product']);
+                
+                if (!$product) { throw new Exception("Producto con ID {$detail['id_product']} no encontrado"); }
+                
+                $stockToDiscount = ($order->getIsSaleAttribute() && $detail['quantity'] >= $product->current_stock) 
+                    ? $product->current_stock //Si la cantidad a vender es mayor al stock disponible, se descuenta lo max de stock (el stock queda en 0)
+                    : $detail['quantity'];
+
+                $detailRecord = OrderDetail::create([
+                    'id_order' => $order->id,
+                    'id_product' => $detail['id_product'],
+                    'quantity' => $stockToDiscount,
+                    'unit_price_at_order' => $detail['unit_price_at_order'],
+                    'discount_percentage_by_unit' => $detail['discount_percentage_by_unit'] ?? 0, // 0 porque en las compras no se aplican descuentos
+                ]);
+
+                if (!$detailRecord) { throw new Exception('Error al crear detalle del pedido'); }
+
+                if ($order->getIsPurchaseAttribute()) {
+                    $product->update(['buy_price' => $detail['unit_price_at_order'], 'profit_percentage' => $detail['profit_percentage']]);
+                }
+
+                $this->createStockMovement($order, $detailRecord);
+            }
+        }else {
+            throw new Exception('No se proporcionaron detalles al pedido');
         }
     }
 
@@ -264,7 +351,7 @@ class OrderController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdateOrderRequest $request, Order $order)
+    /* public function update(UpdateOrderRequest $request, Order $order)
     {
         DB::beginTransaction();
         
@@ -289,6 +376,79 @@ class OrderController extends Controller
             DB::commit();
 
             $orderData = $order->load(['contact', 'orderDetails.product', 'movementType']);
+            
+            return $this->successResponse(
+                $orderData,
+                'Pedido actualizado exitosamente'
+            );
+
+        } catch (Exception $e) {
+            DB::rollBack();
+            Log::error('Error al actualizar pedido: ' . $e->getMessage(), [
+                'order_id' => $order->id,
+                'request_data' => $request->all(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return $this->errorResponse(
+                'Error al actualizar el pedido',
+                ['exception' => $e->getMessage()],
+                [],
+                500
+            );
+        }
+    } */
+
+    /**
+     * Update the specified resource in storage.
+     */
+    public function update(UpdateOrderRequest $request, Order $order)
+    {
+        DB::beginTransaction();
+        
+        try {
+            // Actualizar el pedido
+            $updatedOrder = $order->update([
+                'id_contact' => $request->id_contact,
+                'notes' => $request->notes,
+                'adjustment_amount' => $request->adjustment_amount,
+            ]);
+
+            if (!$updatedOrder) {
+                throw new Exception('No se pudo actualizar el pedido');
+            }
+
+            if($request->has('order_details')){
+                // revert product stock of each detail
+                foreach ($order->orderDetails->all() as $detail) {
+                    $quantityToRevert = StockMovement::where('id_order', $order->id)
+                        ->where('id_product', $detail->id_product)
+                        ->sum('quantity_moved');
+
+                    // Actualizar stock
+                    $product = Product::find($detail->id_product);
+                    if ($product) {
+                        $product->decrement('current_stock', $quantityToRevert);
+                    }
+                }
+
+                $order->stockMovements()->delete();
+                $order->orderDetails()->delete();
+
+                $this->createDetails($request->order_details, $order);
+
+                $detailsSubtotal = $order->refresh()->orderDetails->sum('line_subtotal');
+                $totalNet = ($detailsSubtotal + $request->adjustment_amount);            
+
+                $order->update([
+                    'subtotal' => $detailsSubtotal,
+                    'total_net' => $totalNet
+                ]);
+            }
+
+            DB::commit();
+
+            $orderData = $order->load(['contact', 'orderDetails.product.category', 'movementType']);
             
             return $this->successResponse(
                 $orderData,
