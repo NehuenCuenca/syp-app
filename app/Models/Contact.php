@@ -49,8 +49,9 @@ class Contact extends Model
 
     public function getSearchAliasAttribute()
     {
-        $is_deleted = ($this->trashed()) ? '(BORRADO)' : '';
-        return "{$is_deleted}{$this->code}| {$this->company_name}";
+        $is_deleted = ($this->trashed()) ? '**BORRADO**' : '';
+        $withContactName = (isset($this->contact_name)) ? " ({$this->contact_name})" : '';
+        return "{$is_deleted}{$this->code}| {$this->company_name}{$withContactName}";
     }
 
     public function getPhoneNumberInfoAttribute()
