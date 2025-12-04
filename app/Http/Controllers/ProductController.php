@@ -380,7 +380,8 @@ class ProductController extends Controller
         'sale_price' => 'Precio de venta',   
         'current_stock' => 'Stock actual',   
         'created_at' => 'Fecha de creacion',   
-        'name' => 'Nombre'
+        'name' => 'Nombre',
+        'deleted_at' => 'Fecha de eliminacion'
     ];
 
     public const ALLOWED_SORT_DIRECTIONS = [
@@ -448,7 +449,7 @@ class ProductController extends Controller
     {
         try {
             $filters = $request->getFilters();
-            $query = Product::query()->with(['category']);
+            $query = Product::query()->withTrashed()->with(['category']);
             
             // Aplicar filtros
             if (!empty($filters['id_category'])) {
@@ -479,7 +480,11 @@ class ProductController extends Controller
                 $query->orderBy($filters['sort_by'], $filters['sort_direction']);
             }
             
-            $query->select('id', 'code', 'name', 'current_stock', 'min_stock_alert', 'id_category', DB::raw('(current_stock < min_stock_alert) as is_low_stock'));
+            $query->orderBy('deleted_at')->select(
+                'id', 'code', 'name',
+                'current_stock', 'min_stock_alert', 'id_category',
+                DB::raw('(current_stock < min_stock_alert) as is_low_stock'), 'deleted_at'
+            );
 
             // Paginación
             $products = $query->paginate($filters['per_page']);
