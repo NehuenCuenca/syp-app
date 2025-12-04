@@ -19,6 +19,15 @@ class ContactSeeder extends Seeder
             'contact_type' => 'Cliente',
         ]);
 
+        Contact::create([
+            'company_name' => 'OCASIONAL',
+            'contact_name' => 'Fulanito Detal',
+            'email' => 'fulanito.detal@mailfalso.com',
+            'phone' => '(111) 222-3333',
+            'address' => 'Calle Falsa 123',
+            'contact_type' => 'Cliente',
+        ]);
+
         // Create 15 random contacts
         Contact::factory(15)->create();
     }

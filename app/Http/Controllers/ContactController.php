@@ -100,7 +100,7 @@ class ContactController extends Controller
     public function getFilteredContacts(Request $request): JsonResponse
     {
         try {
-            $query = Contact::query();
+            $query = Contact::query()->withTrashed();
 
             // Filtrar por tipo de contacto si se proporciona
             if ($request->has('contact_type')) {
@@ -123,7 +123,8 @@ class ContactController extends Controller
                 $query->orderBy($sortBy, $sortDirection)
                     ->select(
                         'id', 'code', 'company_name', 
-                        'contact_name', 'phone', 'contact_type'
+                        'contact_name', 'phone', 'contact_type',
+                        'deleted_at'
                     );
             }
 
