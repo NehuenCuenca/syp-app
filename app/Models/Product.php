@@ -33,7 +33,9 @@ class Product extends Model
 
     protected $appends = [
         'search_alias',
-        'stock_availability'
+        'stock_availability',
+        'is_low_stock',
+        'is_empty_stock',
     ];
 
     public function getIsLowStockAttribute()
@@ -41,9 +43,15 @@ class Product extends Model
         return $this->current_stock <= $this->min_stock_alert;
     }
 
+    public function getIsEmptyStockAttribute()
+    {
+        return $this->current_stock <= 0;
+    }
+
     public function getSearchAliasAttribute()
     {
-        return "{$this->code}| {$this->name}";
+        $is_deleted = ($this->trashed()) ? '(BORRADO)' : '';
+        return "{$is_deleted}{$this->code}| {$this->name}";
     }
 
     public function getStockAvailabilityAttribute()
