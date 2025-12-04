@@ -317,7 +317,7 @@ class OrderController extends Controller
                 ->get();
 
             $products = Product::with('category:id,name')
-                ->select('id', 'code', 'name', 'current_stock', 'min_stock_alert', 'sale_price', 'buy_price', 'id_category')
+                ->select('id', 'code', 'name', 'current_stock', 'min_stock_alert', 'profit_percentage', 'sale_price', 'buy_price', 'id_category')
                 ->orderBy('name')
                 ->get();
 
