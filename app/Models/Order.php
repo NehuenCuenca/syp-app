@@ -51,7 +51,10 @@ class Order extends Model
      */
     protected $hidden = [];
 
-    protected $appends = ['search_alias', 'order_type_with_total_net', 'is_exportable'];
+    protected $appends = [
+        'search_alias', 'order_type_with_total_net', 'is_exportable',
+        'subtotal_currency', 'adjustment_currency', 'total_net_currency'
+    ];
 
     /**
      * Constants for order types
@@ -64,7 +67,7 @@ class Order extends Model
      */
     public function contact(): BelongsTo
     {
-        return $this->belongsTo(Contact::class, 'id_contact');
+        return $this->belongsTo(Contact::class, 'id_contact')->withTrashed();
     }
 
     /**
@@ -136,6 +139,32 @@ class Order extends Model
     {
         return $this->getIsSaleAttribute();
     }
+
+    /**
+     * Accessor: Get subtotal formatted as currency
+     */
+    public function getSubtotalCurrencyAttribute(): string
+    {
+        return $this->formatToCurrency($this->subtotal);
+    }
+
+    /**
+     * Accessor: Get adjustment formatted as currency 
+     */
+    
+    public function getAdjustmentCurrencyAttribute(): string
+    {
+        return $this->formatToCurrency($this->adjustment_amount);
+    }
+    
+    /**
+     * Accessor: Get total net formatted as currency 
+     */
+    public function getTotalNetCurrencyAttribute(): string
+    {
+        return $this->formatToCurrency($this->total_net);
+    }
+
 
     /**
      * Accessor: Check if order is a purchase
