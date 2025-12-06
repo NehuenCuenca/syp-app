@@ -25,7 +25,7 @@ class ContactController extends Controller
     public function index(): JsonResponse
     {
         try {
-            $contacts = Contact::select('id', 'code', 'company_name', 'contact_name', 'phone', 'contact_type')
+            $contacts = Contact::select('id', 'code', 'company_name', 'contact_name', 'phone', 'contact_type', 'deleted_at')
                                 ->orderBy('created_at', 'desc')->get();
 
             return $this->successResponse(
@@ -66,7 +66,7 @@ class ContactController extends Controller
                 ->orderBy('contact_type')
                 ->pluck('contact_type');
 
-            $contacts = Contact::select('id', 'code', 'company_name')
+            $contacts = Contact::select('id', 'code', 'company_name', 'contact_name', 'deleted_at')
                 ->distinct()->get();
                 
             $filterData = [
