@@ -27,7 +27,7 @@ class ProductController extends Controller
     public function index(): JsonResponse
     {
         try {
-            $products = Product::select('id', 'code', 'name', 'current_stock', 'min_stock_alert')->get();
+            $products = Product::select('id', 'code', 'name', 'current_stock', 'min_stock_alert', 'deleted_at')->get();
             
             $meta = [
                 'total' => $products->count()
@@ -395,7 +395,7 @@ class ProductController extends Controller
     public function getFilters(): JsonResponse
     {
         try {
-            $products = Product::select('id', 'code', 'name')->get();
+            $products = Product::select('id', 'code', 'name', 'deleted_at')->get();
 
             $categories = Category::select('id', 'name')->orderBy('id', 'asc')->get();
 

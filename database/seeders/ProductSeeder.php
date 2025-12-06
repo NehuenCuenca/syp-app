@@ -9,17 +9,6 @@ class ProductSeeder extends Seeder
 {
     public function run(): void
     {
-        // Create a typical product
-        Product::create([
-            'name' => 'Professional Laptop Stand',
-            'buy_price' => 25,
-            'profit_percentage' => 50,
-            'sale_price' => 37,
-            'current_stock' => 15,
-            'min_stock_alert' => 5,
-            'id_category' => 1
-        ]);
-
         $realProducts = [
             [
                 'name' => '15W40 x 150 cc.',
@@ -1866,5 +1855,16 @@ class ProductSeeder extends Seeder
         foreach ($realProducts as $product) {
             Product::create($product);
         }
+
+                // Create a typical product
+        Product::create([
+            'name' => 'Professional Laptop Stand',
+            'buy_price' => 25,
+            'profit_percentage' => 50,
+            'sale_price' => 37,
+            'current_stock' => 15,
+            'min_stock_alert' => 5,
+            'id_category' => 1
+        ]);
     }
 }
