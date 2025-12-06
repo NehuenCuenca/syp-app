@@ -90,7 +90,7 @@ class OrderDetailController extends Controller
     {
         try {
             $products = Product::with('category:id,name')
-                ->select('id', 'code', 'name', 'current_stock', 'min_stock_alert', 'buy_price', 'sale_price', 'profit_percentage', 'id_category')
+                ->select('id', 'code', 'name', 'current_stock', 'min_stock_alert', 'buy_price', 'sale_price', 'profit_percentage', 'id_category', 'deleted_at')
                 ->orderBy('name')
                 ->get();
 
@@ -159,16 +159,16 @@ class OrderDetailController extends Controller
             }
             
             // Calcular subtotal
-            $lineSubtotal = $orderData['quantity'] * $orderData['unit_price_at_order'];
+            $lineSubtotal = $orderData['quantity'] * $orderData['unit_price'];
             
             // Crear el detalle del pedido
             $orderDetail = OrderDetail::create([
                 'id_order' => $orderId,
                 'id_product' => $orderData['id_product'],
                 'quantity' => $orderData['quantity'],
-                'unit_price_at_order' => $orderData['unit_price_at_order'],
+                'unit_price' => $orderData['unit_price'],
                 'line_subtotal' => $lineSubtotal,
-                'discount_percentage_by_unit' => $orderData['discount_percentage_by_unit'] ?? 0,
+                'percentage_applied' => $orderData['percentage_applied'] ?? 0,
             ]);
             
             // Manejar stock y movimientos 
@@ -177,7 +177,7 @@ class OrderDetailController extends Controller
                     $product->decrement('current_stock', $orderData['quantity']);
                 } else {
                     $product->increment('current_stock', $orderData['quantity']);
-                    $product->update(['buy_price' => $orderData['unit_price_at_order'], 'profit_percentage' => $orderData['profit_percentage']]);
+                    $product->update(['buy_price' => $orderData['unit_price'], 'profit_percentage' => $orderData['profit_percentage']]);
                 }
                 
                 $quantityMoved = $order->getIsSaleAttribute() ? -$orderData['quantity'] : $orderData['quantity'];
@@ -287,8 +287,8 @@ class OrderDetailController extends Controller
             $validatedData = [
                 'id_product' => $request->validated('id_product', $orderDetail->id_product),
                 'quantity' => abs($request->validated('quantity', $orderDetail->quantity)),
-                'unit_price_at_order' => $request->validated('unit_price_at_order', $orderDetail->unit_price_at_order),
-                'discount_percentage_by_unit' => $request->validated('discount_percentage_by_unit', $orderDetail->discount_percentage_by_unit),
+                'unit_price' => $request->validated('unit_price', $orderDetail->unit_price),
+                'percentage_applied' => $request->validated('percentage_applied', $orderDetail->percentage_applied),
                 'profit_percentage' => $request->validated('profit_percentage', $orderDetail->product->profit_percentage),
             ];
         
@@ -309,8 +309,8 @@ class OrderDetailController extends Controller
             
             // Verificar si hay cambios en cantidad o precio
             $quantityChanged = $orderDetail->quantity != $validatedData['quantity'];
-            $unitPriceChanged = $orderDetail->unit_price_at_order != $validatedData['unit_price_at_order'];
-            $discountChanged = ($orderDetail->discount_percentage_by_unit ?? 0) != ($validatedData['discount_percentage_by_unit'] ?? 0);
+            $unitPriceChanged = $orderDetail->unit_price != $validatedData['unit_price'];
+            $discountChanged = ($orderDetail->percentage_applied ?? 0) != ($validatedData['percentage_applied'] ?? 0);
             $profitChanged = ($orderDetail->product->profit_percentage ?? 0) != ($validatedData['profit_percentage'] ?? 0);
 
             if (!$quantityChanged && !$unitPriceChanged && !$discountChanged && !$profitChanged) {
@@ -390,20 +390,20 @@ class OrderDetailController extends Controller
             }
             
             // Actualizar el detalle del pedido
-            $lineSubtotal = $validatedData['quantity'] * $validatedData['unit_price_at_order'];
+            $lineSubtotal = $validatedData['quantity'] * $validatedData['unit_price'];
             
             $orderDetail->update([
-                'unit_price_at_order' => $validatedData['unit_price_at_order'],
+                'unit_price' => $validatedData['unit_price'],
                 'line_subtotal' => $lineSubtotal,
-                'discount_percentage_by_unit' => $validatedData['discount_percentage_by_unit'] ?? 0,
+                'percentage_applied' => $validatedData['percentage_applied'] ?? 0,
             ]);
             
             // Actualizar totales del pedido
             $this->updateOrderTotals($order->id);
 
             //Actualizar precio de producto
-            if($order->getIsPurchaseAttribute() && $request->filled('unit_price_at_order')){
-                $orderDetail->product->update(['buy_price' => $validatedData['unit_price_at_order'], 'profit_percentage' => $validatedData['profit_percentage']]);
+            if($order->getIsPurchaseAttribute() && $request->filled('unit_price')){
+                $orderDetail->product->update(['buy_price' => $validatedData['unit_price'], 'profit_percentage' => $validatedData['profit_percentage']]);
             }
             
             DB::commit();

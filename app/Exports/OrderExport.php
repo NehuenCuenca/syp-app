@@ -63,8 +63,8 @@ class OrderExport implements FromCollection, WithHeadings, WithMapping, WithStyl
             $row->code,
             $row->product_name,
             number_format($row->quantity, 0),
-            '$' . number_format($row->unit_price_at_order, 0),
-            number_format(($row->discount_percentage_by_unit), 0) . '%',
+            '$' . number_format($row->unit_price, 0),
+            number_format(($row->percentage_applied), 0) . '%',
             '$' . number_format($row->line_subtotal, 0)
         ];
     }

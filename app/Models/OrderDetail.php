@@ -33,8 +33,8 @@ class OrderDetail extends Model
         'id_order',
         'id_product',
         'quantity',
-        'unit_price_at_order',
-        'discount_percentage_by_unit',
+        'unit_price',
+        'percentage_applied',
         'line_subtotal',
     ];
 
@@ -43,8 +43,8 @@ class OrderDetail extends Model
      */
     protected $casts = [
         'quantity' => 'integer',
-        'unit_price_at_order' => 'integer',
-        'discount_percentage_by_unit' => 'integer',
+        'unit_price' => 'integer',
+        'percentage_applied' => 'integer',
         'line_subtotal' => 'integer',
         'created_at' => 'datetime:Y-m-d H:i:s',
         'updated_at' => 'datetime:Y-m-d H:i:s'
@@ -103,7 +103,7 @@ class OrderDetail extends Model
      */
     public function getFormattedUnitPriceAttribute(): string
     {
-        return $this->formatToCurrency($this->unit_price_at_order);
+        return $this->formatToCurrency($this->unit_price);
     }
 
     /**
@@ -167,7 +167,7 @@ class OrderDetail extends Model
      */
     public function calculateDiscountSubtotal(): int
     {
-        return (int)(($this->discount_percentage_by_unit/100) * $this->quantity * $this->unit_price_at_order);
+        return (int)(($this->percentage_applied/100) * $this->quantity * $this->unit_price);
     }
 
     /**
@@ -175,7 +175,13 @@ class OrderDetail extends Model
      */
     public function calculateLineSubtotal(): int
     {
-        return (int)($this->quantity * $this->unit_price_at_order) - $this->calculateDiscountSubtotal();
+        $lineSubtotal = (int)($this->quantity * $this->unit_price);
+        
+        if( $this->order->getIsSaleAttribute()){
+            $lineSubtotal = $lineSubtotal - $this->calculateDiscountSubtotal();
+        }
+
+        return (int)($lineSubtotal);
     }
 
     /**
@@ -210,7 +216,7 @@ class OrderDetail extends Model
 
         // Calcular subtotal antes de actualizar
         static::updating(function ($orderDetail) {
-            if ($orderDetail->isDirty(['quantity', 'unit_price_at_order', 'discount_percentage_by_unit'])) {
+            if ($orderDetail->isDirty(['quantity', 'unit_price', 'percentage_applied'])) {
                 $orderDetail->line_subtotal = $orderDetail->calculateLineSubtotal();
             }
         });

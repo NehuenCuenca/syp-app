@@ -106,8 +106,8 @@ class OrderExportService
             ->select([
                 'od.id',
                 'od.quantity',
-                'od.unit_price_at_order',
-                'od.discount_percentage_by_unit',
+                'od.unit_price',
+                'od.percentage_applied',
                 'od.line_subtotal',
                 'p.code',
                 'p.name as product_name'

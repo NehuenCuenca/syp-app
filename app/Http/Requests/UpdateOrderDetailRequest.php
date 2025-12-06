@@ -29,12 +29,12 @@ class UpdateOrderDetailRequest extends BaseApiRequest
                 'min:1',
                 'max:999999'
             ],
-            'unit_price_at_order' => [
+            'unit_price' => [
                 'numeric',
                 'min:0',
                 'max:999999'
             ],
-            'discount_percentage_by_unit' => [
+            'percentage_applied' => [
                 'numeric',
                 'min:0',
             ],
@@ -63,9 +63,9 @@ class UpdateOrderDetailRequest extends BaseApiRequest
                 }
             }
 
-            if ($this->filled('discount_percentage_by_unit')) {
+            if ($this->filled('percentage_applied')) {
                  if ($order && $order->getIsPurchaseAttribute()) {
-                    $validator->errors()->add('order_detail.discount_percentage_by_unit', 'No se puede agregar un porcentaje de descuento si el pedido es una compra.');
+                    $validator->errors()->add('order_detail.percentage_applied', 'No se puede agregar un porcentaje de descuento si el pedido es una compra.');
                 }
             }
         });
