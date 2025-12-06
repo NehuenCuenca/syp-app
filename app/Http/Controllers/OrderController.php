@@ -58,12 +58,12 @@ class OrderController extends Controller
     public function create()
     {
         try {
-            $contacts = Contact::select('id', 'code', 'company_name', 'contact_name', 'contact_type')
+            $contacts = Contact::select('id', 'code', 'company_name', 'contact_name', 'deleted_at', 'contact_type')
                 ->orderBy('company_name')
                 ->get();
 
             $products = Product::with('category:id,name')
-                ->select('id', 'code', 'name', 'current_stock', 'min_stock_alert', 'buy_price', 'sale_price', 'id_category')
+                ->select('id', 'code', 'name', 'current_stock', 'min_stock_alert', 'buy_price', 'sale_price', 'id_category', 'deleted_at')
                 ->orderBy('name')
                 ->get();
 
@@ -91,102 +91,6 @@ class OrderController extends Controller
             );
         }
     }
-
-    /**
-     * Store a newly created resource in storage.
-     */
-    /* public function store(StoreOrderRequest $request)
-    {
-        DB::beginTransaction();
-        
-        try {
-            // Crear el pedido
-            $order = Order::create([
-                'id_contact' => $request->id_contact,
-                'id_movement_type' => $request->id_movement_type,
-                'notes' => $request->notes,
-                'adjustment_amount' => $request->adjustment_amount ?? 0,
-            ]);
-
-            if (!$order) {
-                throw new Exception('No se pudo crear el pedido');
-            }
-
-            $orderCode = substr(MovementType::find($request->id_movement_type)->name, 0, 1) . $order->id;
-            $order->update(['code' => $orderCode]);
-
-            $totalDiscount = 0;
-            $totalGross = 0;
-            $totalNet = 0;
-
-            // Crear los detalles del pedido
-            if (!empty($request->order_details)) {
-                foreach ($request->order_details as $detail) {
-                    $product = Product::find($detail['id_product']);
-                    
-                    if (!$product) {
-                        throw new Exception("Producto con ID {$detail['id_product']} no encontrado");
-                    }
-
-                    $lineGrossSubtotal = $detail['quantity'] * $detail['unit_price_at_order'];
-                    $totalGross += $lineGrossSubtotal;
-
-                    if($order->getIsSaleAttribute()){
-                        $totalDiscount += (int)($detail['quantity'] * $detail['unit_price_at_order'] * ($detail['discount_percentage_by_unit'] / 100));
-                    }
-                    
-                    $stockToDiscount = ($detail['quantity'] >= $product->current_stock && $order->getIsSaleAttribute()) 
-                        ? $product->current_stock 
-                        : $detail['quantity'];
-
-                    $detailRecord = OrderDetail::create([
-                        'id_order' => $order->id,
-                        'id_product' => $detail['id_product'],
-                        'quantity' => $stockToDiscount,
-                        'unit_price_at_order' => $detail['unit_price_at_order'],
-                        'discount_percentage_by_unit' => $detail['discount_percentage_by_unit'] ?? 0,
-                    ]);
-
-                    if (!$detailRecord) {
-                        throw new Exception('Error al crear detalle del pedido');
-                    }
-
-                    if ($order->getIsPurchaseAttribute()) {
-                        $product->update(['buy_price' => $detail['unit_price_at_order'], 'profit_percentage' => $detail['profit_percentage']]);
-                    }
-
-                    $this->createStockMovement($order, $detailRecord);
-                }
-            }
-
-            $subtotal = ($totalGross - $totalDiscount);
-            $totalNet = ($subtotal + $request->adjustment_amount);            
-            $order->update(['subtotal' => $subtotal, 'total_net' => $totalNet]);
-
-            DB::commit();
-
-            $orderData = $order->load(['contact', 'orderDetails.product.category']);
-            
-            return $this->createdResponse(
-                $orderData,
-                'Pedido creado exitosamente'
-            );
-
-        } catch (Exception $e) {
-            DB::rollBack();
-            Log::error('Error al crear pedido: ' . $e->getMessage(), [
-                'request_data' => $request->all(),
-                'trace' => $e->getTraceAsString()
-            ]);
-            
-            return $this->errorResponse(
-                'Error al crear el pedido',
-                ['exception' => $e->getMessage()],
-                [],
-                500
-            );
-        }
-    } */
 
     public function store(StoreOrderRequest $request)
     {
@@ -259,14 +163,14 @@ class OrderController extends Controller
                     'id_order' => $order->id,
                     'id_product' => $detail['id_product'],
                     'quantity' => $stockToDiscount,
-                    'unit_price_at_order' => $detail['unit_price_at_order'],
-                    'discount_percentage_by_unit' => $detail['discount_percentage_by_unit'] ?? 0, // 0 porque en las compras no se aplican descuentos
+                    'unit_price' => $detail['unit_price'],
+                    'percentage_applied' => $detail['percentage_applied'] ?? 0,
                 ]);
 
                 if (!$detailRecord) { throw new Exception('Error al crear detalle del pedido'); }
 
                 if ($order->getIsPurchaseAttribute()) {
-                    $product->update(['buy_price' => $detail['unit_price_at_order'], 'profit_percentage' => $detail['profit_percentage']]);
+                    $product->update(['buy_price' => $detail['unit_price'], 'profit_percentage' => $detail['percentage_applied']]);
                 }
 
                 $this->createStockMovement($order, $detailRecord);
@@ -312,14 +216,20 @@ class OrderController extends Controller
         try {
             $order->load(['contact', 'orderDetails.product.category']);
 
-            $contacts = Contact::select('id', 'code', 'company_name', 'contact_name', 'contact_type')
+            $contacts = Contact::select('id', 'code', 'company_name', 'contact_name', 'deleted_at', 'contact_type')
                 ->orderBy('company_name')
                 ->get();
 
             $products = Product::with('category:id,name')
-                ->select('id', 'code', 'name', 'current_stock', 'min_stock_alert', 'profit_percentage', 'sale_price', 'buy_price', 'id_category')
+                ->select('id', 'code', 'name', 'current_stock', 'min_stock_alert', 'profit_percentage', 'sale_price', 'buy_price', 'id_category', 'deleted_at')
                 ->orderBy('name')
                 ->get();
+
+            foreach($order->orderDetails as $detail) {
+                // Modificación temporal del stock
+                $quantityToRevert = ($order->getIsSaleAttribute()) ? $detail->quantity : -$detail->quantity;
+                $detail->product->current_stock = $detail->product->current_stock + $quantityToRevert;
+            }
 
             $data = [
                 'order' => $order,
@@ -347,57 +257,6 @@ class OrderController extends Controller
             );
         }
     }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    /* public function update(UpdateOrderRequest $request, Order $order)
-    {
-        DB::beginTransaction();
-        
-        try {
-            // Actualizar el pedido
-            $updateResult = $order->update([
-                'id_contact' => $request->id_contact,
-                'notes' => $request->notes,
-                'adjustment_amount' => $request->adjustment_amount,
-            ]);
-
-            if($request->has('adjustment_amount')){
-                $subTotal = $order->orderDetails->sum('line_subtotal');
-                $totalNet = ($subTotal + $request->adjustment_amount);
-                $order->update(['total_net' => $totalNet]);
-            }
-
-            if (!$updateResult) {
-                throw new Exception('No se pudo actualizar el pedido');
-            }
-
-            DB::commit();
-
-            $orderData = $order->load(['contact', 'orderDetails.product', 'movementType']);
-            
-            return $this->successResponse(
-                $orderData,
-                'Pedido actualizado exitosamente'
-            );
-
-        } catch (Exception $e) {
-            DB::rollBack();
-            Log::error('Error al actualizar pedido: ' . $e->getMessage(), [
-                'order_id' => $order->id,
-                'request_data' => $request->all(),
-                'trace' => $e->getTraceAsString()
-            ]);
-            
-            return $this->errorResponse(
-                'Error al actualizar el pedido',
-                ['exception' => $e->getMessage()],
-                [],
-                500
-            );
-        }
-    } */
 
     /**
      * Update the specified resource in storage.
@@ -534,7 +393,7 @@ class OrderController extends Controller
         try {
             $data = [
                 'order_types' => Order::getOrderTypes(),
-                'contacts' => Contact::select('id', 'company_name', 'contact_name', 'contact_type')->get(),
+                'contacts' => Contact::select('id', 'code', 'company_name', 'contact_name', 'deleted_at', 'contact_type')->get(),
                 'before_equal_date' => Carbon::parse(Order::min('created_at'))->format('Y-m-d'),
                 'sort_by' => self::ALLOWED_SORT_FIELDS,
                 'sort_direction' => self::ALLOWED_SORT_DIRECTIONS
