@@ -90,7 +90,7 @@ class ProductController extends Controller
                 'id_order_detail' => null,
                 'id_movement_type' => MovementType::where('name', 'Ajuste Positivo')->first()->id,
                 'quantity_moved' => $product->current_stock,
-                'notes' => "Stock inicial del producto {$product->name}",
+                'notes' => "Inicio de stock",
             ]);
             
             DB::commit();

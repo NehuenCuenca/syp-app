@@ -54,7 +54,7 @@ class ProductObserver
     public function updating(Product $product)
     {
         // if product buy_price or profit_percentage are updated, update sell_price
-        if ($product->isDirty('buy_price') || $product->isDirty('profit_percentage')) {
+        if (($product->isDirty('buy_price') || $product->isDirty('profit_percentage')) && !$product->isDirty('sale_price')) {
             $product->sale_price = $product->calculateSellPrice();
         }
 
