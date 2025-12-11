@@ -193,7 +193,7 @@ class OrderDetail extends Model
         $this->save();
     }
 
-    private function formatToCurrency($amount)
+    public function formatToCurrency($amount)
     {
         $formatter = new NumberFormatter('es_AR', NumberFormatter::CURRENCY);
         $formatter->setAttribute(NumberFormatter::MIN_FRACTION_DIGITS, 0);

@@ -63,7 +63,7 @@ class OrderController extends Controller
                 ->get();
 
             $products = Product::with('category:id,name')
-                ->select('id', 'code', 'name', 'current_stock', 'min_stock_alert', 'buy_price', 'sale_price', 'id_category', 'deleted_at')
+                ->select('id', 'code', 'name', 'current_stock', 'min_stock_alert', 'buy_price', 'sale_price', 'id_category', 'deleted_at', 'profit_percentage')
                 ->orderBy('name')
                 ->get();
 
@@ -565,6 +565,14 @@ class OrderController extends Controller
     {
         try {
             $quantity = ($order->getIsSaleAttribute()) ? -$detail->quantity : $detail->quantity;
+            $lineSubtotalAsCurrency = $detail->formatToCurrency($detail->line_subtotal);
+            $movementAction = ($order->getIsSaleAttribute()) 
+                                ? "Vendí a $lineSubtotalAsCurrency" 
+                                : "Compré a $lineSubtotalAsCurrency";
+            if ($detail->quantity > 1) {
+                $unitPriceAsCurrency = $detail->formatToCurrency($detail->unit_price);
+                $movementAction.= " (x1: {$unitPriceAsCurrency})";
+            }
 
             $stockMovement = StockMovement::create([
                 'id_product' => $detail->id_product,
@@ -572,7 +580,7 @@ class OrderController extends Controller
                 'id_order_detail' => $detail->id,
                 'id_movement_type' => $order->id_movement_type,
                 'quantity_moved' => $quantity,
-                'notes' => "Movimiento automático por pedido '{$order->code}'",
+                'notes' => $movementAction,
             ]);
 
             if (!$stockMovement) {
