@@ -47,7 +47,8 @@ class OrderController extends Controller
                 'Error interno del servidor al obtener los pedidos',
                 ['exception' => $e->getMessage()],
                 [],
-                500
+                500,
+                config('app.debug') ? $e : null
             );
         }
     }
@@ -87,7 +88,8 @@ class OrderController extends Controller
                 'Error interno del servidor al obtener los datos necesarios',
                 ['exception' => $e->getMessage()],
                 [],
-                500
+                500,
+                config('app.debug') ? $e : null
             );
         }
     }
@@ -142,7 +144,8 @@ class OrderController extends Controller
                 'Error al crear el pedido',
                 ['exception' => $e->getMessage()],
                 [],
-                500
+                500,
+                config('app.debug') ? $e : null
             );
         }
     }
@@ -203,7 +206,8 @@ class OrderController extends Controller
                 'Error interno del servidor al obtener el pedido',
                 ['exception' => $e->getMessage()],
                 [],
-                500
+                500,
+                config('app.debug') ? $e : null
             );
         }
     }
@@ -253,7 +257,8 @@ class OrderController extends Controller
                 'Error interno del servidor al obtener los datos de edición',
                 ['exception' => $e->getMessage()],
                 [],
-                500
+                500,
+                config('app.debug') ? $e : null
             );
         }
     }
@@ -326,7 +331,8 @@ class OrderController extends Controller
                 'Error al actualizar el pedido',
                 ['exception' => $e->getMessage()],
                 [],
-                500
+                500,
+                config('app.debug') ? $e : null
             );
         }
     }
@@ -380,7 +386,8 @@ class OrderController extends Controller
                 'Error al eliminar el pedido',
                 ['exception' => $e->getMessage()],
                 [],
-                500
+                500,
+                config('app.debug') ? $e : null
             );
         }
     }
@@ -413,7 +420,8 @@ class OrderController extends Controller
                 'Error interno del servidor al obtener los filtros',
                 ['exception' => $e->getMessage()],
                 [],
-                500
+                500,
+                config('app.debug') ? $e : null
             );
         }
     }
@@ -485,7 +493,8 @@ class OrderController extends Controller
                 'Error interno del servidor al filtrar los pedidos',
                 ['exception' => $e->getMessage()],
                 [],
-                500
+                500,
+                config('app.debug') ? $e : null
             );
         }
     }
@@ -512,7 +521,8 @@ class OrderController extends Controller
                 'Error interno del servidor al obtener los detalles',
                 ['exception' => $e->getMessage()],
                 [],
-                500
+                500,
+                config('app.debug') ? $e : null
             );
         }
     }
@@ -540,7 +550,8 @@ class OrderController extends Controller
                 'Error interno del servidor al obtener los movimientos de stock',
                 ['exception' => $e->getMessage()],
                 [],
-                500
+                500,
+                config('app.debug') ? $e : null
             );
         }
     }

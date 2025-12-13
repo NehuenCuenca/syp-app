@@ -4,14 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Models\StockMovement;
 use App\Models\Product;
-use App\Http\Requests\StoreStockMovementRequest;
-use App\Http\Requests\UpdateStockMovementRequest;
 use App\Http\Traits\ApiResponseTrait;
 use App\Models\MovementType;
 use App\Models\Order;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Exception;
 
@@ -46,159 +43,11 @@ class StockMovementController extends Controller
                 'Error al obtener los movimientos de stock',
                 ['exception' => $e->getMessage()],
                 [],
-                500
+                500,
+                config('app.debug') ? $e : null
             );
         }
     }
-
-    /* public function create(): JsonResponse
-    {
-        try {
-            $products = Product::with('category:id,name')
-                ->select('id', 'name', 'current_stock', 'min_stock_alert', 'id_category')
-                ->orderBy('name')
-                ->get();
-
-            $data = [
-                'products' => $products,
-                'increment_movement_types' => MovementType::where('increase_stock', true)->get(),
-                'decrement_movement_types' => MovementType::where('increase_stock', false)->get(),
-            ];
-
-            return $this->successResponse(
-                $data,
-                'Datos para crear movimiento de stock obtenidos exitosamente'
-            );
-
-        } catch (Exception $e) {
-            Log::error('Error al obtener datos para crear movimiento de stock: ' . $e->getMessage(), [
-                'trace' => $e->getTraceAsString()
-            ]);
-
-            return $this->errorResponse(
-                'Error al obtener los datos necesarios para crear el movimiento de stock',
-                ['exception' => $e->getMessage()],
-                [],
-                500
-            );
-        }
-    } */
-
-    /* public function edit(StockMovement $stockMovement): JsonResponse
-    {
-        try {
-            $products = Product::with('category:id,name')
-                ->select('id', 'name', 'current_stock', 'min_stock_alert', 'id_category')
-                ->orderBy('name')
-                ->get();
-
-            $data = [
-                'stock_movement' => $stockMovement->load(['product.category', 'order.contact']),
-                'increment_movement_types' => MovementType::where('increase_stock', true)->get(),
-                'decrement_movement_types' => MovementType::where('increase_stock', false)->get(),
-                'products' => $products,
-            ];
-
-            return $this->successResponse(
-                $data,
-                'Datos para editar el movimiento de stock obtenidos exitosamente'
-            );
-
-        } catch (Exception $e) {
-            Log::error('Error al obtener datos para editar movimiento de stock: ' . $e->getMessage(), [
-                'stock_movement_id' => $stockMovement->id ?? null,
-                'trace' => $e->getTraceAsString()
-            ]);
-
-            return $this->errorResponse(
-                'Error al obtener los datos necesarios para editar el movimiento de stock',
-                ['exception' => $e->getMessage()],
-                [],
-                500
-            );
-        }
-    } */
-
-    /**
-     * Store a newly created resource in storage.
-     */
-    /* public function store(StoreStockMovementRequest $request): JsonResponse
-    {
-        try {
-            DB::beginTransaction();
-            
-            $validated = $request->validated();
-
-            // Obtener el producto
-            $product = Product::findOrFail($validated['id_product']);
-
-            // Obtener el tipo de movimiento
-            $movementType = MovementType::find($validated['id_movement_type']);
-            if (!$movementType) {
-                DB::rollBack();
-                return $this->errorResponse(
-                    'Tipo de movimiento no válido',
-                    ['id_movement_type' => $validated['id_movement_type']]
-                );
-            }
-
-            // Determinar si es incremento o decremento según el tipo de movimiento
-            $isIncrement = in_array($validated['id_movement_type'], MovementType::getIncrementMovementTypes());
-            $quantityMoved = $validated['quantity_moved'];
-
-            // Verificar stock suficiente para decrementos
-            if (!$isIncrement && $product->current_stock < $quantityMoved) {
-                DB::rollBack();
-                return $this->errorResponse(
-                    'Stock insuficiente',
-                    ['current_stock' => $product->current_stock, 'required' => $quantityMoved],
-                    ['product_id' => $product->id, 'product_name' => $product->name]
-                );
-            }
-
-            // Crear el movimiento con la cantidad con signo correspondiente
-            $stockMovement = StockMovement::create([
-                'id_product' => $validated['id_product'],
-                'id_order' => $validated['id_order'] ?? null,
-                'id_order_detail' => $validated['id_order_detail'] ?? null,
-                'id_movement_type' => $movementType->id,
-                'quantity_moved' => $isIncrement ? $quantityMoved : -$quantityMoved,
-                'notes' => $validated['notes'] ?? null,
-            ]);
-
-            // Actualizar el stock del producto
-            if ($isIncrement) {
-                $product->increment('current_stock', $quantityMoved);
-            } else {
-                $product->decrement('current_stock', $quantityMoved);
-            }
-
-            DB::commit();
-
-            // Cargar las relaciones para la respuesta
-            $stockMovement->load(['product.category', 'order']);
-
-            return $this->createdResponse(
-                $stockMovement,
-                'Movimiento de stock creado exitosamente'
-            );
-
-        } catch (Exception $e) {
-            DB::rollBack();
-            
-            Log::error('Error al crear movimiento de stock: ' . $e->getMessage(), [
-                'request_data' => $request->validated(),
-                'trace' => $e->getTraceAsString()
-            ]);
-
-            return $this->errorResponse(
-                'Error al crear el movimiento de stock',
-                ['exception' => $e->getMessage()],
-                [],
-                500
-            );
-        }
-    } */
 
     /**
      * Display the specified resource.
@@ -223,141 +72,11 @@ class StockMovementController extends Controller
                 'Error al obtener el movimiento de stock',
                 ['exception' => $e->getMessage()],
                 [],
-                500
+                500,
+                config('app.debug') ? $e : null
             );
         }
     }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    /* public function update(UpdateStockMovementRequest $request, StockMovement $stockMovement): JsonResponse
-    {
-        try {
-            DB::beginTransaction();
-
-            $validated = $request->validated();
-            $product = Product::findOrFail($stockMovement->id_product);
-
-            // Revertir el movimiento anterior
-            $product->current_stock -= $stockMovement->quantity_moved;
-
-            // Determinar si es incremento o decremento según el nuevo tipo de movimiento
-            $isIncrement = in_array($validated['id_movement_type'], MovementType::getIncrementMovementTypes());
-            $quantityMoved = $validated['quantity_moved'];
-
-            // Verificar stock suficiente para decrementos
-            if (!$isIncrement && $product->current_stock < $quantityMoved) {
-                DB::rollBack();
-                return $this->errorResponse(
-                    'Stock insuficiente después de revertir el movimiento anterior',
-                    ['available_stock' => $product->current_stock, 'required' => $quantityMoved],
-                    ['product_id' => $product->id, 'product_name' => $product->name]
-                );
-            }
-
-            // Obtener el tipo de movimiento
-            $movementType = MovementType::find($validated['id_movement_type']);
-            if (!$movementType) {
-                DB::rollBack();
-                return $this->errorResponse(
-                    'Tipo de movimiento no válido',
-                    ['id_movement_type' => $validated['id_movement_type']]
-                );
-            }
-
-            // Actualizar el movimiento con la nueva cantidad con signo
-            $stockMovement->update([
-                'id_movement_type' => $movementType->id,
-                'quantity_moved' => $isIncrement ? $quantityMoved : -$quantityMoved,
-                'notes' => $validated['notes'] ?? $stockMovement->notes
-            ]);
-
-            // Aplicar el nuevo movimiento
-            if ($isIncrement) {
-                $product->current_stock += $quantityMoved;
-            } else {
-                $product->current_stock -= $quantityMoved;
-            }
-
-            $product->save();
-
-            DB::commit();
-
-            $stockMovement->load(['product.category', 'order']);
-
-            return $this->successResponse(
-                $stockMovement,
-                'Movimiento de stock actualizado exitosamente'
-            );
-
-        } catch (Exception $e) {
-            DB::rollBack();
-            
-            Log::error('Error al actualizar movimiento de stock: ' . $e->getMessage(), [
-                'stock_movement_id' => $stockMovement->id ?? null,
-                'request_data' => $request->validated(),
-                'trace' => $e->getTraceAsString()
-            ]);
-
-            return $this->errorResponse(
-                'Error al actualizar el movimiento de stock',
-                ['exception' => $e->getMessage()],
-                [],
-                500
-            );
-        }
-    } */
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    /* public function destroy(StockMovement $stockMovement): JsonResponse
-    {
-        try {
-            DB::beginTransaction();
-
-            if($stockMovement->order) {
-                return $this->errorResponse(
-                    'No se puede eliminar un movimiento de stock que tiene un pedido asociado',
-                    ['stock_movement_id' => $stockMovement->id, 'order_id' => $stockMovement->order->id]
-                );
-            }
-
-            $product = Product::findOrFail($stockMovement->id_product);
-            $stockMovementId = $stockMovement->id;
-
-            // Revertir el movimiento de stock
-            $product->current_stock -= $stockMovement->quantity_moved;
-            $product->save();
-
-            // Eliminar el registro
-            $stockMovement->delete();
-
-            DB::commit();
-
-            return $this->deletedResponse(
-                $stockMovementId,
-                'Movimiento de stock eliminado exitosamente',
-                true // hard delete
-            );
-
-        } catch (Exception $e) {
-            DB::rollBack();
-            
-            Log::error('Error al eliminar movimiento de stock: ' . $e->getMessage(), [
-                'stock_movement_id' => $stockMovement->id ?? null,
-                'trace' => $e->getTraceAsString()
-            ]);
-
-            return $this->errorResponse(
-                'Error al eliminar el movimiento de stock',
-                ['exception' => $e->getMessage()],
-                [],
-                500
-            );
-        }
-    } */
 
     public const ALLOWED_SORT_FIELDS = [
         'id_order' => 'Pedido',
@@ -407,7 +126,8 @@ class StockMovementController extends Controller
                 'Error al obtener los filtros',
                 ['exception' => $e->getMessage(), 'line' => $e->getLine()],
                 [],
-                500
+                500,
+                config('app.debug') ? $e : null
             );
         }
     }
@@ -489,7 +209,8 @@ class StockMovementController extends Controller
                 'Error al obtener los movimientos de stock filtrados',
                 ['exception' => $e->getMessage()],
                 [],
-                500
+                500,
+                config('app.debug') ? $e : null
             );
         }
     }

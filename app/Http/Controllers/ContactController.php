@@ -38,7 +38,8 @@ class ContactController extends Controller
                 'Error al recuperar los contactos.',
                 ['exception' => $e->getMessage()],
                 [],
-                Response::HTTP_INTERNAL_SERVER_ERROR
+                Response::HTTP_INTERNAL_SERVER_ERROR,
+                config('app.debug') ? $e : null
             );
         }
     }
@@ -82,14 +83,16 @@ class ContactController extends Controller
                 'Error al recuperar los tipos de contactos.',
                 ['database_error' => $e->getMessage()],
                 [],
-                Response::HTTP_INTERNAL_SERVER_ERROR
+                Response::HTTP_INTERNAL_SERVER_ERROR,
+                config('app.debug') ? $e : null
             );
         } catch (\Exception $e) {
             return $this->errorResponse(
                 'Error inesperado al obtener los filtros.',
                 ['exception' => $e->getMessage()],
                 [],
-                Response::HTTP_INTERNAL_SERVER_ERROR
+                Response::HTTP_INTERNAL_SERVER_ERROR,
+                config('app.debug') ? $e : null
             );
         }
     }
@@ -150,7 +153,8 @@ class ContactController extends Controller
                 'Error al procesar la consulta de contactos.',
                 ['exception' => $e->getMessage()],
                 [],
-                Response::HTTP_INTERNAL_SERVER_ERROR
+                Response::HTTP_INTERNAL_SERVER_ERROR,
+                config('app.debug') ? $e : null
             );
         }
     }
@@ -168,7 +172,8 @@ class ContactController extends Controller
                 'Error al crear el contacto.',
                 ['exception' => $e->getMessage()],
                 [],
-                Response::HTTP_INTERNAL_SERVER_ERROR
+                Response::HTTP_INTERNAL_SERVER_ERROR,
+                config('app.debug') ? $e : null
             );
         }
     }
@@ -188,7 +193,8 @@ class ContactController extends Controller
                 'Error al recuperar el contacto.',
                 ['exception' => $e->getMessage()],
                 [],
-                Response::HTTP_INTERNAL_SERVER_ERROR
+                Response::HTTP_INTERNAL_SERVER_ERROR,
+                config('app.debug') ? $e : null
             );
         }
     }
@@ -206,7 +212,8 @@ class ContactController extends Controller
                 'Error al actualizar el contacto.',
                 ['exception' => $e->getMessage()],
                 [],
-                Response::HTTP_INTERNAL_SERVER_ERROR
+                Response::HTTP_INTERNAL_SERVER_ERROR,
+                config('app.debug') ? $e : null
             );
         }
     }
@@ -224,14 +231,16 @@ class ContactController extends Controller
                 'No se puede eliminar este contacto porque se está utilizando en pedidos.',
                 [],
                 [],
-                Response::HTTP_CONFLICT
+                Response::HTTP_CONFLICT,
+                config('app.debug') ? $e : null
             );
         } catch (\Exception $e) {
             return $this->errorResponse(
                 'Error al eliminar el contacto.',
                 ['exception' => $e->getMessage()],
                 [],
-                Response::HTTP_INTERNAL_SERVER_ERROR
+                Response::HTTP_INTERNAL_SERVER_ERROR,
+                config('app.debug') ? $e : null
             );
         }
     }
@@ -261,7 +270,8 @@ class ContactController extends Controller
                 'Error al restaurar el contacto.',
                 ['exception' => $e->getMessage()],
                 [],
-                Response::HTTP_INTERNAL_SERVER_ERROR
+                Response::HTTP_INTERNAL_SERVER_ERROR,
+                config('app.debug') ? $e : null
             );
         }
     }

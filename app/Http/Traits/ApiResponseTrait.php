@@ -3,6 +3,7 @@
 namespace App\Http\Traits;
 
 use App\Services\ApiResponseService;
+use Illuminate\Support\Facades\App;
 
 /**
  * Trait ApiResponseTrait
@@ -35,9 +36,17 @@ trait ApiResponseTrait
     /**
      * Respuesta de error
      */
-    protected function errorResponse($message = 'Ha ocurrido un error', $errors = [], $meta = [], $statusCode = 400)
+    protected function errorResponse($message = 'Ha ocurrido un error', $errors = [], $meta = [], $statusCode = 400, $exception = null)
     {
-        // dd($message, $errors, $meta, $statusCode);
+        // dd(config('app.debug'), App::environment('local'), $exception);
+        if ( config('app.debug') && App::environment('local') && $exception ) {
+            $errors = $errors ?? [];
+            $errors['exception'] = $exception->getMessage() ?? '';
+            $errors['line'] = $exception->getLine() ?? '';
+            $errors['file'] = $exception->getFile() ?? '';
+            $errors['trace'] = $exception->getTrace() ?? '';
+        }
+        
         return ApiResponseService::error($message, $errors, $meta, $statusCode);
     }
 

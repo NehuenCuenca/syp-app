@@ -49,7 +49,8 @@ class ProductController extends Controller
                 'Error al recuperar los productos desde la base de datos.',
                 [],
                 [],
-                500
+                500,
+                config('app.debug') ? $e : null
             );
             
         } catch (Exception $e) {
@@ -62,7 +63,8 @@ class ProductController extends Controller
                 'Se produjo un error inesperado al recuperar los productos.',
                 ['exception' => $e->getMessage()],
                 [],
-                500
+                500,
+                config('app.debug') ? $e : null
             );
         }
     }
@@ -115,7 +117,8 @@ class ProductController extends Controller
                     'El producto con este nombre ya existe.',
                     ['name' => ['El nombre debe ser único.']],
                     [],
-                    409
+                    409,
+                config('app.debug') ? $e : null
                 );
             }
             
@@ -123,7 +126,8 @@ class ProductController extends Controller
                 'Error al crear el producto en la base de datos.',
                 [],
                 [],
-                500
+                500,
+                config('app.debug') ? $e : null
             );
             
         } catch (Exception $e) {
@@ -139,7 +143,8 @@ class ProductController extends Controller
                 'Se produjo un error inesperado al crear el producto.',
                 [],
                 [],
-                500
+                500,
+                config('app.debug') ? $e : null
             );
         }
     }
@@ -165,7 +170,8 @@ class ProductController extends Controller
                 'Se produjo un error inesperado al recuperar el producto.',
                 ['exception' => $e->getMessage()],
                 [],
-                500
+                500,
+                config('app.debug') ? $e : null
             );
         }
     }
@@ -224,7 +230,8 @@ class ProductController extends Controller
                     'El producto con este nombre ya existe.',
                     ['name' => ['El nombre debe ser único.']],
                     [],
-                    409
+                    409,
+                config('app.debug') ? $e : null
                 );
             }
             
@@ -232,7 +239,8 @@ class ProductController extends Controller
                 'Error al actualizar el producto en la base de datos.',
                 [],
                 [],
-                500
+                500,
+                config('app.debug') ? $e : null
             );
             
         } catch (Exception $e) {
@@ -249,7 +257,8 @@ class ProductController extends Controller
                 'Se produjo un error inesperado al actualizar el producto.',
                 ['exception' => $e->getMessage()],
                 [],
-                500
+                500,
+                config('app.debug') ? $e : null
             );
         }
     }
@@ -282,7 +291,8 @@ class ProductController extends Controller
                 'No se puede eliminar este producto porque se está utilizando en pedidos o movimientos de stock.',
                 [],
                 [],
-                409
+                409,
+                config('app.debug') ? $e : null
             );
             
         } catch (Exception $e) {
@@ -298,7 +308,8 @@ class ProductController extends Controller
                 'Se produjo un error inesperado al eliminar el producto.',
                 ['exception' => $e->getMessage()],
                 [],
-                500
+                500,
+                config('app.debug') ? $e : null
             );
         }
     }
@@ -353,7 +364,8 @@ class ProductController extends Controller
                 'Error al restaurar el producto en la base de datos.',
                 [],
                 [],
-                500
+                500,
+                config('app.debug') ? $e : null
             );
             
         } catch (Exception $e) {
@@ -369,7 +381,8 @@ class ProductController extends Controller
                 'Se produjo un error inesperado al restaurar el producto.',
                 ['exception' => $e->getMessage()],
                 [],
-                500
+                500,
+                config('app.debug') ? $e : null
             );
         }
     }
@@ -421,7 +434,8 @@ class ProductController extends Controller
                 'Error al obtener los datos de filtros desde la base de datos.',
                 [],
                 [],
-                500
+                500,
+                config('app.debug') ? $e : null
             );
             
         } catch (Exception $e) {
@@ -434,7 +448,8 @@ class ProductController extends Controller
                 'Se produjo un error inesperado al obtener los filtros.',
                 ['exception' => $e->getMessage()],
                 [],
-                500
+                500,
+                config('app.debug') ? $e : null
             );
         }
     }
@@ -510,7 +525,8 @@ class ProductController extends Controller
                 'Error al filtrar los productos desde la base de datos.',
                 [],
                 [],
-                500
+                500,
+                config('app.debug') ? $e : null
             );
             
         } catch (Exception $e) {
@@ -524,7 +540,8 @@ class ProductController extends Controller
                 'Se produjo un error inesperado al filtrar los productos.',
                 ['exception' => $e->getMessage()],
                 [],
-                500
+                500,
+                config('app.debug') ? $e : null
             );
         }
     }

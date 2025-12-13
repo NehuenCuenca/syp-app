@@ -10,6 +10,8 @@ use App\Http\Requests\RegisterUserRequest;
 use App\Http\Requests\LoginUserRequest;
 use App\Http\Traits\ApiResponseTrait;
 use Exception;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException; 
 
 class AuthController extends Controller
@@ -24,6 +26,7 @@ class AuthController extends Controller
      */
     public function register(RegisterUserRequest $request)
     {
+        DB::beginTransaction();
         try {
             $user = User::create([
                 'username' => $request->username,
@@ -34,7 +37,15 @@ class AuthController extends Controller
             ]);            
 
             $token = $user->createToken('authToken')->plainTextToken;
+            throw new Exception("Error Processing Request", 1);
+            
+            DB::commit();
 
+            Log::info('User created', [
+                'id_user' => $user->id,
+                'ip' => $request->ip(),
+            ]);
+            
             return $this->createdResponse([
                 'id' => $user->id,
                 'username' => $user->username,
@@ -43,13 +54,15 @@ class AuthController extends Controller
                 'role' => $user->role,
                 'token' => $token,
             ], 'Usuario registrado exitosamente');
-
         } catch (\Exception $e) { 
+            DB::rollBack();
+
             return $this->errorResponse(
                 'Ocurrió un error inesperado al registrar el usuario.', 
-                ['exception' => $e->getMessage()],
                 [],
-                500
+                [],
+                500,
+                config('app.debug') ? $e : null
             );
         }
     }
@@ -71,12 +84,12 @@ class AuthController extends Controller
                     'email' => ['Las credenciales proporcionadas son incorrectas.'],
                 ]);
             }
-
+            
             $token = $user->createToken('authToken')->plainTextToken;
 
             return $this->successResponse([
                 'user' => [
-                    'id_user' => $user->id_user,
+                    'id' => $user->id,
                     'username' => $user->username,
                     'email' => $user->email,
                     'phone' => $user->phone,
@@ -91,14 +104,16 @@ class AuthController extends Controller
                 'Error de autenticación',
                 $e->errors(),
                 [],
-                401
+                401,
+                config('app.debug') ? $e : null
             );
         } catch (\Exception $e) {
             return $this->errorResponse(
                 'Ocurrió un error inesperado durante el login.',
                 ['exception' => $e->getMessage()],
                 [],
-                500
+                500,
+                config('app.debug') ? $e : null
             );
         }
     }
@@ -124,7 +139,8 @@ class AuthController extends Controller
                 'Ocurrió un error inesperado al cerrar la sesión.',
                 ['exception' => $e->getMessage()],
                 [],
-                500
+                500,
+                config('app.debug') ? $e : null
             );
         }
     }

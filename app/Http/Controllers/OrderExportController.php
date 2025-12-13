@@ -111,7 +111,8 @@ class OrderExportController extends Controller
                 'Error interno del servidor al generar el archivo Excel',
                 ['exception' => $e->getMessage()],
                 ['order_id' => $order->id],
-                500
+                500,
+                config('app.debug') ? $e : null
             );
         }
     }
@@ -180,7 +181,8 @@ class OrderExportController extends Controller
                 'Error interno del servidor al verificar la exportabilidad del pedido',
                 ['exception' => $e->getMessage()],
                 ['order_id' => $order->id],
-                500
+                500,
+                config('app.debug') ? $e : null
             );
         }
     }
@@ -212,7 +214,8 @@ class OrderExportController extends Controller
                 'Error interno del servidor al obtener los tipos de ticket',
                 ['exception' => $e->getMessage()],
                 [],
-                500
+                500,
+                config('app.debug') ? $e : null
             );
         }
     }

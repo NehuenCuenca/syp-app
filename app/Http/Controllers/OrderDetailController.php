@@ -64,7 +64,8 @@ class OrderDetailController extends Controller
                 'Error al recuperar los detalles de la base de datos',
                 ['database_error' => 'Error de consulta a la base de datos'],
                 [],
-                Response::HTTP_INTERNAL_SERVER_ERROR
+                Response::HTTP_INTERNAL_SERVER_ERROR,
+                config('app.debug') ? $e : null
             );
 
         } catch (Exception $e) {
@@ -78,7 +79,8 @@ class OrderDetailController extends Controller
                 'Error inesperado al recuperar los detalles',
                 ['exception' => $e->getMessage()],
                 [],
-                Response::HTTP_INTERNAL_SERVER_ERROR
+                Response::HTTP_INTERNAL_SERVER_ERROR,
+                config('app.debug') ? $e : null
             );
         }
     }
@@ -112,7 +114,8 @@ class OrderDetailController extends Controller
                 'Error interno del servidor al obtener los datos necesarios para crear un detalle de pedido',
                 ['exception' => $e->getMessage()],
                 [],
-                500
+                500,
+                config('app.debug') ? $e : null
             );
         }
     }
@@ -203,7 +206,8 @@ class OrderDetailController extends Controller
                     'Error al procesar el movimiento de stock',
                     ['exception' => $e->getMessage()],
                     [],
-                    Response::HTTP_INTERNAL_SERVER_ERROR
+                    Response::HTTP_INTERNAL_SERVER_ERROR,
+                config('app.debug') ? $e : null
                 );
             }
             
@@ -228,7 +232,8 @@ class OrderDetailController extends Controller
                 'Error de base de datos al crear el detalle del pedido',
                 ['database_error' => 'Error en la operación de base de datos'],
                 [],
-                Response::HTTP_INTERNAL_SERVER_ERROR
+                Response::HTTP_INTERNAL_SERVER_ERROR,
+                config('app.debug') ? $e : null
             );
             
         } catch (Exception $e) {
@@ -243,7 +248,8 @@ class OrderDetailController extends Controller
                 'Error inesperado al crear el detalle del pedido',
                 ['exception' => $e->getMessage()],
                 [],
-                Response::HTTP_INTERNAL_SERVER_ERROR
+                Response::HTTP_INTERNAL_SERVER_ERROR,
+                config('app.debug') ? $e : null
             );
         }
     }
@@ -271,7 +277,8 @@ class OrderDetailController extends Controller
                 'Error al obtener el detalle del pedido',
                 ['exception' => $e->getMessage()],
                 [],
-                Response::HTTP_INTERNAL_SERVER_ERROR
+                Response::HTTP_INTERNAL_SERVER_ERROR,
+                config('app.debug') ? $e : null
             );
         }
     }
@@ -385,7 +392,8 @@ class OrderDetailController extends Controller
                     'Error al procesar el movimiento de stock',
                     ['stock_movement_error' => $e->getMessage()],
                     [],
-                    Response::HTTP_INTERNAL_SERVER_ERROR
+                    Response::HTTP_INTERNAL_SERVER_ERROR,
+                config('app.debug') ? $e : null
                 );
             }
             
@@ -425,7 +433,8 @@ class OrderDetailController extends Controller
                 'Error de base de datos al actualizar el detalle del pedido',
                 ['database_error' => 'Error en la operación de base de datos'],
                 [],
-                Response::HTTP_INTERNAL_SERVER_ERROR
+                Response::HTTP_INTERNAL_SERVER_ERROR,
+                config('app.debug') ? $e : null
             );
             
         } catch (Exception $e) {
@@ -441,7 +450,8 @@ class OrderDetailController extends Controller
                 'Error inesperado al actualizar el detalle del pedido',
                 ['exception' => $e->getMessage()],
                 [],
-                Response::HTTP_INTERNAL_SERVER_ERROR
+                Response::HTTP_INTERNAL_SERVER_ERROR,
+                config('app.debug') ? $e : null
             );
         }
     }
@@ -486,7 +496,8 @@ class OrderDetailController extends Controller
                     'Error al revertir el stock del producto',
                     ['stock_reversion_error' => $e->getMessage()],
                     [],
-                    Response::HTTP_INTERNAL_SERVER_ERROR
+                    Response::HTTP_INTERNAL_SERVER_ERROR,
+                config('app.debug') ? $e : null
                 );
             }
             
@@ -517,7 +528,8 @@ class OrderDetailController extends Controller
                 'Error de base de datos al eliminar el detalle del pedido',
                 ['database_error' => 'Error en la operación de base de datos'],
                 [],
-                Response::HTTP_INTERNAL_SERVER_ERROR
+                Response::HTTP_INTERNAL_SERVER_ERROR,
+                config('app.debug') ? $e : null
             );
             
         } catch (Exception $e) {
@@ -532,7 +544,8 @@ class OrderDetailController extends Controller
                 'Error inesperado al eliminar el detalle del pedido',
                 ['exception' => $e->getMessage()],
                 [],
-                Response::HTTP_INTERNAL_SERVER_ERROR
+                Response::HTTP_INTERNAL_SERVER_ERROR,
+                config('app.debug') ? $e : null
             );
         }
     }
