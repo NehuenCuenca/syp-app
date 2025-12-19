@@ -7,7 +7,6 @@ use App\Http\Controllers\OrderDetailController;
 use App\Http\Controllers\OrderExportController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\StockMovementController;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -22,80 +21,78 @@ use Illuminate\Support\Facades\Route;
 */
 
 // Rutas de autenticación abiertas
-Route::post('/register', [AuthController::class, 'register'])->name('api.register');
-Route::post('/login', [AuthController::class, 'login'])->name('api.login');
+// Route::post('/register', [AuthController::class, 'register'])->name('api.register');
+Route::post('/login', [AuthController::class, 'login'])
+    ->name('api.login')
+    ->middleware('throttle:login');
 
 // Rutas protegidas por autenticación de Sanctum
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout'])->name('api.logout');
     Route::get('/user', [AuthController::class, 'user'])->name('api.user');
 
+    /*
+    |--------------------------------------------------------------------------
+    | Contacts
+    |--------------------------------------------------------------------------
+    */
     Route::prefix('contacts')->group(function () {
-        Route::patch('/{id}/restore', [ContactController::class, 'restore'])->name('contacts.restore');
-        Route::get('/filtered', [ContactController::class, 'getFilteredContacts'])->name('contacts.filtered');
-        Route::get('/filters', [ContactController::class, 'getFilters'])->name('contacts.filters');
-        Route::get('/export-list', [ContactController::class, 'exportContacts'])->name('contacts.export');
+        Route::get('filters', [ContactController::class, 'getFilters']);
+        Route::get('filtered', [ContactController::class, 'getFilteredContacts']);
+        Route::get('export', [ContactController::class, 'exportContacts']);
+        Route::patch('{contact}/restore', [ContactController::class, 'restore']);
     });
     Route::apiResource('contacts', ContactController::class);
 
+    /*
+    |--------------------------------------------------------------------------
+    | Products
+    |--------------------------------------------------------------------------
+    */
     Route::prefix('products')->group(function () {
-        Route::patch('/{id}/restore', [ProductController::class, 'restore'])->name('products.restore');
-        Route::get('/filters', [ProductController::class, 'getFilters'])->name('orders.filters');
-        Route::get('/filtered', [ProductController::class, 'getFilteredProducts'])->name('products.filtered');
-        Route::get('/export-catalog', [ProductController::class, 'exportCatalog'])->name('products.export-catalog');
+        Route::get('filters', [ProductController::class, 'getFilters']);
+        Route::get('filtered', [ProductController::class, 'getFilteredProducts']);
+        Route::get('export-catalog', [ProductController::class, 'exportCatalog']);
+        Route::patch('{product}/restore', [ProductController::class, 'restore']);
     });
     Route::apiResource('products', ProductController::class);
 
-    // Ruta adicional para filtros y ordenamiento
-    Route::get('/orders/filters', [OrderController::class, 'getFilters'])
-        ->name('orders.filters');
-        
-    Route::get('/orders/filtered', [OrderController::class, 'getFilteredOrders'])
-        ->name('orders.filtered');
+    /*
+    |--------------------------------------------------------------------------
+    | Orders
+    |--------------------------------------------------------------------------
+    */
+    Route::prefix('orders')->group(function () {
+        Route::get('filters', [OrderController::class, 'getFilters']);
+        Route::get('filtered', [OrderController::class, 'getFilteredOrders']);
 
-    // Exportar pedido a Excel
-    Route::get('/orders/{order}/export-ticket', [OrderExportController::class, 'exportOrderToExcel'])
-        ->name('orders.export.ticket')
-        ->where('order.id', '[0-9]+');
-    
-    // Verificar si un pedido es exportable
-    Route::get('/orders/{order}/check-exportable', [OrderExportController::class, 'checkOrderExportability'])
-        ->name('orders.check.exportable')
-        ->where('order.id', '[0-9]+');
+        Route::get('create', [OrderController::class, 'create']);
+        Route::get('{order}/edit', [OrderController::class, 'edit']);
 
-    // Make a route to get the order details
-    Route::get('/orders/{order}/details', [OrderController::class, 'getOrderDetails'])
-    ->name('orders.details');
-    
-    // Make a route to get the stock movements
-    Route::get('/orders/{order}/stock-movements', [OrderController::class, 'getStockMovements'])
-    ->name('orders.stock-movements');
+        Route::get('{order}/details', [OrderController::class, 'getOrderDetails']);
+        Route::get('{order}/stock-movements', [OrderController::class, 'getStockMovements']);
 
-    // Rutas resource para Orders
-    Route::resource('orders', OrderController::class);
+        Route::get('{order}/export-ticket', [OrderExportController::class, 'exportOrderToExcel']);
+        Route::get('{order}/check-exportable', [OrderExportController::class, 'checkOrderExportability']);
+    });
+    Route::apiResource('orders', OrderController::class);
 
-    Route::resource('order-details', OrderDetailController::class, [
-        'names' => [
-            'index' => 'order-details.index',
-            'create' => 'order-details.create',
-            'store' => 'order-details.store',
-            'show' => 'order-details.show',
-            'edit' => 'order-details.edit',
-            'update' => 'order-details.update',
-            'destroy' => 'order-details.destroy'
-        ]
-    ]);
+    /*
+    |--------------------------------------------------------------------------
+    | Order details
+    |--------------------------------------------------------------------------
+    */
+    Route::apiResource('order-details', OrderDetailController::class);
 
-    Route::get('/stock-movements/filters', [StockMovementController::class, 'getFilters'])
-        ->name('stock-movements.filters');
-        
-    Route::get('/stock-movements/filtered', [StockMovementController::class, 'getFilteredMovements'])
-        ->name('stock-movements.filtered');
-
-    Route::resource('stock-movements', StockMovementController::class, [
-        'names' => [
-            'index' => 'stock-movements.index',
-            'show' => 'stock-movements.show',
-        ]
-    ]);
+    /*
+    |--------------------------------------------------------------------------
+    | Stock Movements
+    |--------------------------------------------------------------------------
+    */
+    Route::prefix('stock-movements')->group(function () {
+        Route::get('filters', [StockMovementController::class, 'getFilters']);
+        Route::get('filtered', [StockMovementController::class, 'getFilteredMovements']);
+    });
+    Route::apiResource('stock-movements', StockMovementController::class)
+        ->only(['index', 'show']);
 });
