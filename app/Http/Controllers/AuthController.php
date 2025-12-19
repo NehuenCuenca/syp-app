@@ -37,12 +37,11 @@ class AuthController extends Controller
             ]);            
 
             $token = $user->createToken('authToken')->plainTextToken;
-            throw new Exception("Error Processing Request", 1);
             
             DB::commit();
 
             Log::info('User created', [
-                'id_user' => $user->id,
+                'user_email' => $user->email,
                 'ip' => $request->ip(),
             ]);
             
@@ -56,6 +55,15 @@ class AuthController extends Controller
             ], 'Usuario registrado exitosamente');
         } catch (\Exception $e) { 
             DB::rollBack();
+
+            Log::error('User register failed', [
+                'user_email' => $request->user()->email,
+                'ip' => $request->ip(),
+                'error' => $e->getMessage(),
+                'code' => $e->getCode(),
+                'line' => $e->getLine(),
+                'data' => $request->all()
+            ]);
 
             return $this->errorResponse(
                 'Ocurrió un error inesperado al registrar el usuario.', 
@@ -79,13 +87,26 @@ class AuthController extends Controller
             $user = User::where('email', $request->email)->first();
 
             if (!$user || !Hash::check($request->password, $user->password)) {
+                Log::error('User has entered incorrect credentials', [
+                    'user_email' => $request->email,
+                    'ip' => $request->ip(),
+                ]);
+
                 // Si las credenciales son incorrectas, lanzamos una ValidationException manualmente
                 throw ValidationException::withMessages([
                     'email' => ['Las credenciales proporcionadas son incorrectas.'],
                 ]);
             }
             
-            $token = $user->createToken('authToken')->plainTextToken;
+            $token = $user->createToken(
+                'authToken',
+                ['server:read', 'server:create', 'server:update', 'server:delete', 'server:restore']
+            )->plainTextToken;
+
+            Log::info('User logged in', [
+                'user_email' => $request->email,
+                'ip' => $request->ip(),
+            ]);
 
             return $this->successResponse([
                 'user' => [
@@ -100,6 +121,14 @@ class AuthController extends Controller
 
         } catch (ValidationException $e) {
             // Capturamos ValidationException específicamente para credenciales incorrectas
+            Log::error('User has entered invalid credentials', [
+                'email' => $request->email,
+                'ip' => $request->ip(),
+                'error' => $e->getMessage(),
+                'code' => $e->getCode(),
+                'line' => $e->getLine(),
+            ]);
+
             return $this->errorResponse(
                 'Error de autenticación',
                 $e->errors(),
@@ -108,6 +137,14 @@ class AuthController extends Controller
                 config('app.debug') ? $e : null
             );
         } catch (\Exception $e) {
+            Log::error('Unexpected error while login', [
+                'email' => $request->email,
+                'ip' => $request->ip(),
+                'error' => $e->getMessage(),
+                'code' => $e->getCode(),
+                'line' => $e->getLine(),
+            ]);
+
             return $this->errorResponse(
                 'Ocurrió un error inesperado durante el login.',
                 ['exception' => $e->getMessage()],
@@ -129,12 +166,25 @@ class AuthController extends Controller
         try {
             $request->user()->currentAccessToken()->delete();
 
+            Log::info('User logged out', [
+                'user_email' => $request->user()->email,
+                'ip' => $request->ip(),
+            ]);
+
             return $this->successResponse(
                 null,
                 'Sesión cerrada exitosamente.'
             );
 
         } catch (\Exception $e) {
+            Log::info('Unexpected error while user try to logout', [
+                'user_email' => $request->user()->email,
+                'ip' => $request->ip(),
+                'error' => $e->getMessage(),
+                'code' => $e->getCode(),
+                'line' => $e->getLine(),
+            ]);
+
             return $this->errorResponse(
                 'Ocurrió un error inesperado al cerrar la sesión.',
                 ['exception' => $e->getMessage()],
@@ -153,6 +203,11 @@ class AuthController extends Controller
      */
     public function user(Request $request)
     {
+        Log::info('User information retrieved', [
+            'user_email' => $request->user()->email,
+            'ip' => $request->ip(),
+        ]);
+
         return $this->successResponse([
             'user' => [
                 'id_user' => $request->user()->id,
