@@ -46,6 +46,11 @@ class OrderExportController extends Controller
 
             // Verificar si el pedido existe y es válido
             if (!$this->orderExportService->isOrderExportable($order->id)) {
+                Log::error('Order not allowed to export', [
+                    'user_email' => $request->user()->email,
+                    'ip' => $request->ip(),
+                ]);
+
                 return $this->errorResponse(
                     'El pedido no cumple con los criterios para exportación',
                     [],
@@ -82,29 +87,51 @@ class OrderExportController extends Controller
                 );
             }
 
+            Log::info('Export order to excel file', [
+                'user_email' => $request->user()->email,
+                'ip' => $request->ip(),
+            ]);
+
             // Retornar archivo para descarga
             return response()->download($filePath, null, [
                 'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
                 'X-Filename' => $this->orderExportService->generateFileName($order)
             ])->deleteFileAfterSend(true);
-
         } catch (ValidationException $e) {
+            Log::error('Error of validation trying to export an order', [
+                'user_email' => $request->user()->email,
+                'ip' => $request->ip(),
+                'error' => $e->getMessage(),
+                'code' => $e->getCode(),
+                'line' => $e->getLine(),
+                'data' => $request->all()
+            ]);
+
             return $this->validationErrorResponse(
                 $e->errors(),
                 'Error de validación en los parámetros de entrada'
             );
-            
         } catch (ModelNotFoundException $e) {
+            Log::error('Error trying to export an order that doesnt exist', [
+                'user_email' => $request->user()->email,
+                'ip' => $request->ip(),
+                'error' => $e->getMessage(),
+                'code' => $e->getCode(),
+                'line' => $e->getLine(),
+                'data' => $request->all()
+            ]);
+
             return $this->notFoundResponse(
                 'El pedido solicitado no fue encontrado'
             );
-            
         } catch (Exception $e) {
-            // Log del error para debugging
-            Log::error('Error en exportOrderToExcel', [
-                'order_id' => $order->id,
+            Log::error('Unexpected error trying to export an order', [
+                'user_email' => $request->user()->email,
+                'ip' => $request->ip(),
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'code' => $e->getCode(),
+                'line' => $e->getLine(),
+                'data' => $request->all()
             ]);
 
             return $this->errorResponse(
@@ -168,7 +195,6 @@ class OrderExportController extends Controller
             return $this->notFoundResponse(
                 'El pedido solicitado no fue encontrado'
             );
-            
         } catch (Exception $e) {
             // Log del error para debugging
             Log::error('Error en checkOrderExportability', [
