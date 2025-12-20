@@ -8,7 +8,6 @@ use App\Models\Order;
 use Illuminate\Contracts\Validation\Validator;
 use App\Models\Product;
 use Illuminate\Http\Exceptions\HttpResponseException;
-use Illuminate\Validation\Rule;
 
 class StoreOrderRequest extends BaseApiRequest
 {
@@ -17,7 +16,7 @@ class StoreOrderRequest extends BaseApiRequest
      */
     public function authorize(): bool
     {
-        return true;
+        return auth()->user()->tokenCan('server:create', Order::class);
     }
 
     /**

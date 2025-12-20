@@ -24,14 +24,18 @@ class OrderController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
         try {
             $orders = Order::with(['contact', 'movementType'])
                 ->orderBy('created_at', 'desc')
                 ->get();
 
-            
+            Log::info('All orders retrieved (without filters)', [
+                'user_email' => $request->user()->email,
+                'ip' => $request->ip(),
+            ]);    
+
             return $this->successResponse(
                 $orders, 
                 'Todos los pedidos recuperados exitosamente',
@@ -39,8 +43,13 @@ class OrderController extends Controller
             );
 
         } catch (Exception $e) {
-            Log::error('Error al obtener los pedidos: ' . $e->getMessage(), [
-                'trace' => $e->getTraceAsString()
+            Log::error('Error trying to get all orders (without filters)', [
+                'user_email' => $request->user()->email,
+                'ip' => $request->ip(),
+                'error' => $e->getMessage(),
+                'code' => $e->getCode(),
+                'line' => $e->getLine(),
+                'data' => $request->all()
             ]);
             
             return $this->errorResponse(
@@ -56,7 +65,7 @@ class OrderController extends Controller
     /**
      * Show the form for creating a new resource.
      */
-    public function create()
+    public function create(Request $request)
     {
         try {
             $contacts = Contact::select('id', 'code', 'company_name', 'contact_name', 'deleted_at', 'contact_type')
@@ -74,14 +83,23 @@ class OrderController extends Controller
                 'products' => $products
             ];
 
+            Log::info('Retrieve the data necessary to create an order', [
+                'user_email' => $request->user()->email,
+                'ip' => $request->ip()
+            ]);
+
             return $this->successResponse(
                 $data,
                 'Datos para crear pedido obtenidos exitosamente'
             );
-
         } catch (Exception $e) {
-            Log::error('Error al obtener datos para crear pedido: ' . $e->getMessage(), [
-                'trace' => $e->getTraceAsString()
+            Log::error('Error trying to get the data for create an order', [
+                'user_email' => $request->user()->email,
+                'ip' => $request->ip(),
+                'error' => $e->getMessage(),
+                'code' => $e->getCode(),
+                'line' => $e->getLine(),
+                'data' => $request->all()
             ]);
             
             return $this->errorResponse(
@@ -127,17 +145,27 @@ class OrderController extends Controller
             DB::commit();
 
             $orderData = $order->load(['contact', 'orderDetails.product.category', 'movementType']);
+
+            Log::info('Retrieve the data necessary to create an order', [
+                'user_email' => $request->user()->email,
+                'ip' => $request->ip(),
+                'id_order' => $order->id
+            ]);
             
             return $this->createdResponse(
                 $orderData,
                 'Pedido creado exitosamente'
             );
-
         } catch (Exception $e) {
             DB::rollBack();
-            Log::error('Error al crear pedido: ' . $e->getMessage(), [
-                'request_data' => $request->all(),
-                'trace' => $e->getTraceAsString()
+
+            Log::error('Error trying to create an order: ', [
+                'user_email' => $request->user()->email,
+                'ip' => $request->ip(),
+                'error' => $e->getMessage(),
+                'code' => $e->getCode(),
+                'line' => $e->getLine(),
+                'data' => $request->all()
             ]);
             
             return $this->errorResponse(
@@ -171,11 +199,21 @@ class OrderController extends Controller
                 ]);
 
                 if (!$detailRecord) { throw new Exception('Error al crear detalle del pedido'); }
+                Log::info('Detail of order has been created', [
+                    'id_detail' => $detailRecord->id,
+                    'id_product' => $detail['id_product'],
+                ]);
 
                 if ($order->getIsPurchaseAttribute()) {
                     $product->update(['buy_price' => $detail['unit_price'], 'profit_percentage' => $detail['percentage_applied']]);
-                }
 
+                    Log::info('Update buy price and profit percentage of product', [
+                        'id_product' => $product->id,
+                        'buy_price' => $detail['unit_price'],
+                        'profit_percentage' => $detail['percentage_applied'],
+                    ]);
+                }
+                
                 $this->createStockMovement($order, $detailRecord);
             }
         }else {
@@ -186,20 +224,30 @@ class OrderController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Order $order)
+    public function show(Request $request, Order $order)
     {
         try {
             $orderData = $order->load(['contact', 'orderDetails.product.category', 'movementType']);
+
+            Log::info('Order has been retrieved', [
+                'user_email' => $request->user()->email,
+                'ip' => $request->ip(),
+                'id_order' => $order->id,
+            ]);
             
             return $this->successResponse(
                 $orderData,
                 'Pedido obtenido exitosamente'
             );
-
         } catch (Exception $e) {
-            Log::error('Error al obtener pedido: ' . $e->getMessage(), [
-                'order_id' => $order->id,
-                'trace' => $e->getTraceAsString()
+            Log::error('Error trying to retrieve a order', [
+                'user_email' => $request->user()->email,
+                'ip' => $request->ip(),
+                'id_order' => $order->id,
+                'error' => $e->getMessage(),
+                'code' => $e->getCode(),
+                'line' => $e->getLine(),
+                'data' => $request->all()
             ]);
             
             return $this->errorResponse(
@@ -215,7 +263,7 @@ class OrderController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Order $order)
+    public function edit(Request $request, Order $order)
     {
         try {
             $order->load(['contact', 'orderDetails.product.category']);
@@ -242,15 +290,25 @@ class OrderController extends Controller
                 'order_types' => Order::getOrderTypes(),
             ];
 
+            Log::info('Retrieved data to edit an order', [
+                'user_email' => $request->user()->email,
+                'ip' => $request->ip(),
+                'id_order' => $order->id,
+            ]);
+
             return $this->successResponse(
                 $data,
                 'Datos para editar pedido obtenidos exitosamente'
             );
-
         } catch (Exception $e) {
-            Log::error('Error al obtener datos para editar pedido: ' . $e->getMessage(), [
+            Log::error('Error trying to retrieve the data to edit an order', [
+                'user_email' => $request->user()->email,
+                'ip' => $request->ip(),
                 'order_id' => $order->id,
-                'trace' => $e->getTraceAsString()
+                'error' => $e->getMessage(),
+                'code' => $e->getCode(),
+                'line' => $e->getLine(),
+                'data' => $request->all()
             ]);
             
             return $this->errorResponse(
@@ -312,6 +370,12 @@ class OrderController extends Controller
 
             DB::commit();
 
+            Log::info('Order has been updated', [
+                'user_email' => $request->user()->email,
+                'ip' => $request->ip(),
+                'id_order' => $order->id,
+            ]);
+
             $orderData = $order->load(['contact', 'orderDetails.product.category', 'movementType']);
             
             return $this->successResponse(
@@ -321,10 +385,15 @@ class OrderController extends Controller
 
         } catch (Exception $e) {
             DB::rollBack();
-            Log::error('Error al actualizar pedido: ' . $e->getMessage(), [
-                'order_id' => $order->id,
-                'request_data' => $request->all(),
-                'trace' => $e->getTraceAsString()
+
+            Log::error('Error trying updating a order', [
+                'user_email' => $request->user()->email,
+                'ip' => $request->ip(),
+                'id_order' => $order->id,
+                'error' => $e->getMessage(),
+                'code' => $e->getCode(),
+                'line' => $e->getLine(),
+                'data' => $request->all()
             ]);
             
             return $this->errorResponse(
@@ -340,7 +409,7 @@ class OrderController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Order $order)
+    public function destroy(Request $request, Order $order)
     {
         DB::beginTransaction();
         
@@ -368,18 +437,29 @@ class OrderController extends Controller
             }
 
             DB::commit();
+
+            Log::info('Order, details and stock movements has been deleted', [
+                'user_email' => $request->user()->email,
+                'ip' => $request->ip(),
+                'id_order' => $order->id,
+            ]);
             
             return $this->deletedResponse(
                 $order->id,
                 'Pedido eliminado exitosamente',
                 false
             );
-
         } catch (Exception $e) {
             DB::rollBack();
-            Log::error('Error al eliminar pedido: ' . $e->getMessage(), [
+
+            Log::error('Error trying to delete an order', [
+                'user_email' => $request->user()->email,
+                'ip' => $request->ip(),
                 'order_id' => $order->id,
-                'trace' => $e->getTraceAsString()
+                'error' => $e->getMessage(),
+                'code' => $e->getCode(),
+                'line' => $e->getLine(),
+                'data' => $request->all()
             ]);
             
             return $this->errorResponse(
@@ -395,7 +475,7 @@ class OrderController extends Controller
     /**
      * Get filters to be used in the index view
      */
-    public function getFilters()
+    public function getFilters(Request $request)
     {
         try {
             $data = [
@@ -406,14 +486,23 @@ class OrderController extends Controller
                 'sort_direction' => self::ALLOWED_SORT_DIRECTIONS
             ];
 
+            Log::info('Retrieved the filters for orders', [
+                'user_email' => $request->user()->email,
+                'ip' => $request->ip(),
+            ]);
+
             return $this->successResponse(
                 $data,
                 'Datos para filtrar pedidos obtenidos exitosamente'
             );
-
         } catch (Exception $e) {
-            Log::error('Error al obtener filtros de pedidos: ' . $e->getMessage(), [
-                'trace' => $e->getTraceAsString()
+            Log::error('Unexpected error trying to get the order filters', [
+                'user_email' => $request->user()->email,
+                'ip' => $request->ip(),
+                'error' => $e->getMessage(),
+                'code' => $e->getCode(),
+                'line' => $e->getLine(),
+                'data' => $request->all()
             ]);
             
             return $this->errorResponse(
@@ -477,16 +566,24 @@ class OrderController extends Controller
                 ]
             ];
 
+            Log::info('Retrieved orders filtered', [
+                'user_email' => $request->user()->email,
+                'ip' => $request->ip(),
+            ]);
+
             return $this->paginatedResponse(
                 $orders,
                 'Pedidos filtrados recuperados exitosamente',
                 $meta
             );
-
         } catch (Exception $e) {
-            Log::error('Error al filtrar pedidos: ' . $e->getMessage(), [
-                'request_data' => $request->all(),
-                'trace' => $e->getTraceAsString()
+            Log::error('Error trying to get filtered orders', [
+                'user_email' => $request->user()->email,
+                'ip' => $request->ip(),
+                'error' => $e->getMessage(),
+                'code' => $e->getCode(),
+                'line' => $e->getLine(),
+                'data' => $request->all()
             ]);
             
             return $this->errorResponse(
@@ -502,19 +599,30 @@ class OrderController extends Controller
     /**
      * Get order details
      */
-    public function getOrderDetails(Order $order)
+    public function getOrderDetails(Request $request, Order $order)
     {
         try {
             $order->load(['orderDetails.product.category']);
+
+            Log::info('Order and his details has been retrieved', [
+                'user_email' => $request->user()->email,
+                'ip' => $request->ip(),
+                'id_order' => $order->id,
+            ]);
+
             return $this->successResponse(
                 $order->orderDetails,
                 'Detalles del pedido obtenidos exitosamente'
             );
-
         } catch (Exception $e) {
-            Log::error('Error al obtener detalles del pedido: ' . $e->getMessage(), [
-                'order_id' => $order->id,
-                'trace' => $e->getTraceAsString()
+            Log::error('Error trying to show order and his details', [
+                'user_email' => $request->user()->email,
+                'ip' => $request->ip(),
+                'id_order' => $order->id,
+                'error' => $e->getMessage(),
+                'code' => $e->getCode(),
+                'line' => $e->getLine(),
+                'data' => $request->all()
             ]);
             
             return $this->errorResponse(
@@ -530,20 +638,30 @@ class OrderController extends Controller
     /**
      * Get stock movements for order
      */
-    public function getStockMovements(Order $order)
+    public function getStockMovements(Request $request,Order $order)
     {
         try {
             $order->load(['stockMovements.product.category']);
+
+            Log::info('Order and his stock movements has been retrieved', [
+                'user_email' => $request->user()->email,
+                'ip' => $request->ip(),
+                'id_order' => $order->id,
+            ]);
             
             return $this->successResponse(
                 $order->stockMovements,
                 'Movimientos de stock obtenidos exitosamente'
             );
-
         } catch (Exception $e) {
-            Log::error('Error al obtener movimientos de stock del pedido: ' . $e->getMessage(), [
-                'order_id' => $order->id,
-                'trace' => $e->getTraceAsString()
+            Log::error('Error trying to show order and his details', [
+                'user_email' => $request->user()->email,
+                'ip' => $request->ip(),
+                'id_order' => $order->id,
+                'error' => $e->getMessage(),
+                'code' => $e->getCode(),
+                'line' => $e->getLine(),
+                'data' => $request->all()
             ]);
             
             return $this->errorResponse(
@@ -597,6 +715,7 @@ class OrderController extends Controller
             if (!$stockMovement) {
                 throw new Exception('No se pudo crear el movimiento de stock');
             }
+            Log::info('Stock movement has been created');
 
             // Actualizar stock actual del producto
             $product = Product::find($detail->id_product);
@@ -605,13 +724,13 @@ class OrderController extends Controller
             }
             
             $product->increment('current_stock', $quantity);
-
+            Log::info('Stock of product has been updated');
         } catch (Exception $e) {
-            Log::error('Error al crear movimiento de stock: ' . $e->getMessage(), [
-                'order_id' => $order->id,
-                'detail_id' => $detail->id,
-                'product_id' => $detail->id_product,
-                'trace' => $e->getTraceAsString()
+            Log::error('Error trying to create the stock movement', [
+                'error' => $e->getMessage(),
+                'code' => $e->getCode(),
+                'line' => $e->getLine(),
+                'detail' => $detail->toArray()
             ]);
             
             throw new Exception('Error al crear movimiento de stock: ' . $e->getMessage());
