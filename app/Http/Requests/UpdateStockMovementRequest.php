@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Models\StockMovement;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Http\Exceptions\HttpResponseException;
@@ -13,7 +14,7 @@ class UpdateStockMovementRequest extends BaseApiRequest
      */
     public function authorize(): bool
     {
-        return auth()->check();
+        return auth()->user()->tokenCan('server:update', StockMovement::class);
     }
 
     /**

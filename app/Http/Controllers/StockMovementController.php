@@ -19,7 +19,7 @@ class StockMovementController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
         try {
             $stockMovements = StockMovement::with(['product', 'order', 'movementType', 'orderDetail'])
@@ -28,15 +28,24 @@ class StockMovementController extends Controller
 
             $meta = ['total' => $stockMovements->count()];
 
+            Log::info('All stock movements retrieved (without filters)', [
+                'user_email' => $request->user()->email,
+                'ip' => $request->ip(),
+            ]);
+
             return $this->successResponse(
                 $stockMovements, 
                 'Todos los movimientos de stock recuperados exitosamente.', 
                 $meta
             );
-
         } catch (Exception $e) {
-            Log::error('Error al obtener movimientos de stock: ' . $e->getMessage(), [
-                'trace' => $e->getTraceAsString()
+            Log::error('Error trying to retrieve all stock movements', [
+                'user_email' => $request->user()->email,
+                'ip' => $request->ip(),
+                'error' => $e->getMessage(),
+                'code' => $e->getCode(),
+                'line' => $e->getLine(),
+                'data' => $request->all()
             ]);
 
             return $this->errorResponse(
@@ -52,20 +61,29 @@ class StockMovementController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(StockMovement $stockMovement): JsonResponse
+    public function show(Request $request,StockMovement $stockMovement): JsonResponse
     {
         try {
             $stockMovement->load(['product.category', 'order', 'movementType', 'orderDetail']);
+
+            Log::info('Retrieved a stock movement', [
+                'user_email' => $request->user()->email,
+                'ip' => $request->ip(),
+            ]);
 
             return $this->successResponse(
                 $stockMovement,
                 'Movimiento de stock obtenido exitosamente'
             );
-
         } catch (Exception $e) {
-            Log::error('Error al obtener movimiento de stock: ' . $e->getMessage(), [
+            Log::error('Error trying to retrieve a stock movement', [
+                'user_email' => $request->user()->email,
+                'ip' => $request->ip(),
                 'stock_movement_id' => $stockMovement->id ?? null,
-                'trace' => $e->getTraceAsString()
+                'error' => $e->getMessage(),
+                'code' => $e->getCode(),
+                'line' => $e->getLine(),
+                'data' => $request->all()
             ]);
 
             return $this->errorResponse(
@@ -93,7 +111,7 @@ class StockMovementController extends Controller
     /**
      * Get filters to be used in the index view
      */
-    public function getFilters(): JsonResponse
+    public function getFilters(Request $request): JsonResponse
     {
         try {
             $orders = Order::select('id', 'code', 'id_contact', 'id_movement_type', 'total_net', 'created_at')->get();
@@ -112,14 +130,23 @@ class StockMovementController extends Controller
                 'sort_direction' => self::ALLOWED_SORT_DIRECTIONS
             ];
 
+            Log::info('Retrieve filters for stock movements', [
+                'user_email' => $request->user()->email,
+                'ip' => $request->ip(),
+            ]);
+
             return $this->successResponse(
                 $data,
                 'Datos para filtrar movimientos de stock obtenidos exitosamente'
             );
-
         } catch (Exception $e) {
-            Log::error('Error al obtener filtros de movimientos de stock: ' . $e->getMessage(), [
-                'trace' => $e->getTraceAsString()
+            Log::error('Error trying to retrieve filters for stock movements', [
+                'user_email' => $request->user()->email,
+                'ip' => $request->ip(),
+                'error' => $e->getMessage(),
+                'code' => $e->getCode(),
+                'line' => $e->getLine(),
+                'data' => $request->all()
             ]);
 
             return $this->errorResponse(
@@ -187,22 +214,30 @@ class StockMovementController extends Controller
 
             $filtersApplied = [
                 // 'search' => $search,
-                'sort_by' => $sortBy,
+                'sort_by' => $sortBy, 
                 'sort_direction' => $sortDirection,
                 'per_page' => $perPage,
                 'page' => $request->integer('page', 1)
             ];
+
+            Log::info('Retrieve filtered stock movements', [
+                'user_email' => $request->user()->email,
+                'ip' => $request->ip()
+            ]);
             
             return $this->paginatedResponse(
                 $stockMovements,
                 'Movimientos de stock filtrados recuperados exitosamente.',
                 ['filters_applied' => $filtersApplied]
             );
-
         } catch (Exception $e) {
-            Log::error('Error al obtener movimientos de stock filtrados: ' . $e->getMessage(), [
-                'filters' => $request->all(),
-                'trace' => $e->getTraceAsString()
+            Log::error('Error trying to retrieve filtered stock movements', [
+                'user_email' => $request->user()->email,
+                'ip' => $request->ip(),
+                'error' => $e->getMessage(),
+                'code' => $e->getCode(),
+                'line' => $e->getLine(),
+                'data' => $request->all()
             ]);
 
             return $this->errorResponse(
