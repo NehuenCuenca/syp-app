@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Product;
 use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Contracts\Validation\Validator;
 
@@ -12,7 +13,7 @@ class FilterProductsRequest extends BaseApiRequest
      */
     public function authorize(): bool
     {
-        return true; // Ajusta según tu lógica de autorización
+        return auth()->user()->tokenCan('server:read', Product::class);
     }
 
     /**

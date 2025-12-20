@@ -3,12 +3,14 @@
 namespace App\Http\Requests;
 
 use App\Models\Category;
+use App\Models\Product;
 
 class StoreProductRequest extends BaseApiRequest
 {
     public function authorize(): bool
     {
-        return true; // Add proper authorization logic later
+        // return true; // Add proper authorization logic later
+        return auth()->user()->tokenCan('server:create', Product::class);
     }
 
     public function rules(): array

@@ -24,7 +24,7 @@ class ProductController extends Controller
 {
     use ApiResponseTrait;
 
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
         try {
             $products = Product::select('id', 'code', 'name', 'current_stock', 'min_stock_alert', 'deleted_at')->get();
@@ -32,17 +32,25 @@ class ProductController extends Controller
             $meta = [
                 'total' => $products->count()
             ];
+
+            Log::info('All products retrieved (without filters)', [
+                'user_email' => $request->user()->email,
+                'ip' => $request->ip(),
+            ]);
             
             return $this->successResponse(
                 $products, 
                 'Todos los productos recuperados exitosamente.',
                 $meta
             );
-            
         } catch (QueryException $e) {
-            Log::error('Error de base de datos al recuperar productos', [
+            Log::error('Error trying to get all contacts (without filters)', [
+                'user_email' => $request->user()->email,
+                'ip' => $request->ip(),
                 'error' => $e->getMessage(),
-                'code' => $e->getCode()
+                'code' => $e->getCode(),
+                'line' => $e->getLine(),
+                'data' => $request->all()
             ]);
             
             return $this->errorResponse(
@@ -54,9 +62,13 @@ class ProductController extends Controller
             );
             
         } catch (Exception $e) {
-            Log::error('Error inesperado al recuperar productos', [
+            Log::error('Unexpected error trying to get all products (without filters)', [
+                'user_email' => $request->user()->email,
+                'ip' => $request->ip(),
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'code' => $e->getCode(),
+                'line' => $e->getLine(),
+                'data' => $request->all()
             ]);
             
             return $this->errorResponse(
@@ -73,7 +85,6 @@ class ProductController extends Controller
     {
         DB::beginTransaction();
         try {
-
             $product = Product::create($request->only([
                 'name',
                 'buy_price',
@@ -96,18 +107,26 @@ class ProductController extends Controller
             ]);
             
             DB::commit();
+
+            Log::info('Product has been created', [
+                'user_email' => $request->user()->email,
+                'ip' => $request->ip(),
+                'id_product' => $product->id,
+            ]);
             
             return $this->createdResponse(
                 $product,
                 'Producto creado exitosamente.'
             );
-            
         } catch (QueryException $e) {
             DB::rollBack();
             
-            Log::error('Error de base de datos al crear producto', [
+            Log::error('Error trying to create a product', [
+                'user_email' => $request->user()->email,
+                'ip' => $request->ip(),
                 'error' => $e->getMessage(),
                 'code' => $e->getCode(),
+                'line' => $e->getLine(),
                 'data' => $request->all()
             ]);
             
@@ -118,7 +137,7 @@ class ProductController extends Controller
                     ['name' => ['El nombre debe ser único.']],
                     [],
                     409,
-                config('app.debug') ? $e : null
+                    config('app.debug') ? $e : null
                 );
             }
             
@@ -133,9 +152,12 @@ class ProductController extends Controller
         } catch (Exception $e) {
             DB::rollBack();
             
-            Log::error('Error inesperado al crear producto', [
+            Log::error('Unexpected error trying to create a product', [
+                'user_email' => $request->user()->email,
+                'ip' => $request->ip(),
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
+                'code' => $e->getCode(),
+                'line' => $e->getLine(),
                 'data' => $request->all()
             ]);
             
@@ -158,12 +180,15 @@ class ProductController extends Controller
                 $product,
                 'Producto recuperado exitosamente.'
             );
-            
         } catch (Exception $e) {
-            Log::error('Error inesperado al mostrar producto', [
+            Log::error('Unexpected error trying to show a product', [
+                'user_email' => $request->user()->email,
+                'ip' => $request->ip(),
                 'product_id' => $product->id ?? null,
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'code' => $e->getCode(),
+                'line' => $e->getLine(),
+                'data' => $request->all()
             ]);
             
             return $this->errorResponse(
@@ -201,7 +226,7 @@ class ProductController extends Controller
                     'id_order_detail' => null,
                     'id_movement_type' => MovementType::where('name', $movementType)->first()->id,
                     'quantity_moved' => $stockDifference,
-                    'notes' => "Actualización de stock del producto {$product->name}",
+                    'notes' => "Actualización de stock",
                 ]);
             }
 
@@ -209,7 +234,13 @@ class ProductController extends Controller
             $product->load('category');
 
             DB::commit();
-            
+
+            Log::info('Product has been updated', [
+                'user_email' => $request->user()->email,
+                'ip' => $request->ip(),
+                'product_id' => $product->id ?? null,
+            ]);
+
             return $this->successResponse(
                 $product,
                 'Producto actualizado exitosamente.'
@@ -218,10 +249,13 @@ class ProductController extends Controller
         } catch (QueryException $e) {
             DB::rollBack();
             
-            Log::error('Error de base de datos al actualizar producto', [
+            Log::error('Error from the database while updating a product', [
+                'user_email' => $request->user()->email,
+                'ip' => $request->ip(),
                 'product_id' => $product->id,
                 'error' => $e->getMessage(),
                 'code' => $e->getCode(),
+                'line' => $e->getLine(),
                 'data' => $request->all()
             ]);
             
@@ -246,10 +280,13 @@ class ProductController extends Controller
         } catch (Exception $e) {
             DB::rollBack();
             
-            Log::error('Error inesperado al actualizar producto', [
-                'product_id' => $product->id,
+            Log::error('Unexpected error while updating a product', [
+                'user_email' => $request->user()->email,
+                'ip' => $request->ip(),
+                'product_id' => $product->id ?? null,
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
+                'code' => $e->getCode(),
+                'line' => $e->getLine(),
                 'data' => $request->all()
             ]);
             
@@ -263,7 +300,7 @@ class ProductController extends Controller
         }
     }
 
-    public function destroy(Product $product): JsonResponse
+    public function destroy(Request $request,Product $product): JsonResponse
     {
         DB::beginTransaction();
         
@@ -272,6 +309,12 @@ class ProductController extends Controller
             $product->delete();
             
             DB::commit();
+
+            Log::info('Product has been soft deleted', [
+                'user_email' => $request->user()->email,
+                'ip' => $request->ip(),
+                'product_id' => $product->id ?? null,
+            ]);
             
             return $this->deletedResponse(
                 $productId,
@@ -281,10 +324,14 @@ class ProductController extends Controller
         } catch (QueryException $e) {
             DB::rollBack();
             
-            Log::error('Error de base de datos al eliminar producto', [
-                'product_id' => $product->id,
+            Log::error('Error from database while trying delete a product', [
+                'user_email' => $request->user()->email,
+                'ip' => $request->ip(),
+                'product_id' => $product->id ?? null,
                 'error' => $e->getMessage(),
-                'code' => $e->getCode()
+                'code' => $e->getCode(),
+                'line' => $e->getLine(),
+                'data' => $request->all()
             ]);
             
             return $this->errorResponse(
@@ -298,10 +345,14 @@ class ProductController extends Controller
         } catch (Exception $e) {
             DB::rollBack();
             
-            Log::error('Error inesperado al eliminar producto', [
-                'product_id' => $product->id,
+            Log::error('Unexpected error while trying to delete a product', [
+                'user_email' => $request->user()->email,
+                'ip' => $request->ip(),
+                'product_id' => $product->id ?? null,
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'code' => $e->getCode(),
+                'line' => $e->getLine(),
+                'data' => $request->all()
             ]);
             
             return $this->errorResponse(
@@ -314,7 +365,7 @@ class ProductController extends Controller
         }
     }
 
-    public function restore($id): JsonResponse
+    public function restore(Request $request,$id): JsonResponse
     {
         DB::beginTransaction();
         
@@ -334,17 +385,28 @@ class ProductController extends Controller
             $product->load('category');
 
             DB::commit();
-            
+
+            Log::info('Product has been restored', [
+                'user_email' => $request->user()->email,
+                'ip' => $request->ip(),
+                'product_id' => $product->id ?? null,
+            ]);
+
             return $this->restoredResponse(
                 $product,
                 'Producto restaurado exitosamente.'
-            );
-            
+            );  
         } catch (ModelNotFoundException $e) {
             DB::rollBack();
             
-            Log::warning('Intento de restaurar producto no encontrado', [
-                'product_id' => $id
+            Log::error('Error trying to restore a product', [
+                'user_email' => $request->user()->email,
+                'ip' => $request->ip(),
+                'product_id' => $product->id ?? null,
+                'error' => $e->getMessage(),
+                'code' => $e->getCode(),
+                'line' => $e->getLine(),
+                'data' => $request->all()
             ]);
             
             return $this->notFoundResponse(
@@ -354,10 +416,13 @@ class ProductController extends Controller
         } catch (QueryException $e) {
             DB::rollBack();
             
-            Log::error('Error de base de datos al restaurar producto', [
+            Log::error('Error from database trying to restore a product', [
+                'user_email' => $request->user()->email,
+                'ip' => $request->ip(),
                 'product_id' => $id,
                 'error' => $e->getMessage(),
-                'code' => $e->getCode()
+                'code' => $e->getCode(),
+                'line' => $e->getLine(),
             ]);
             
             return $this->errorResponse(
@@ -371,10 +436,14 @@ class ProductController extends Controller
         } catch (Exception $e) {
             DB::rollBack();
             
-            Log::error('Error inesperado al restaurar producto', [
-                'product_id' => $id,
+            Log::error('Unexpected error trying to restore a product', [
+                'user_email' => $request->user()->email,
+                'ip' => $request->ip(),
+                'product_id' => $product->id ?? null,
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'code' => $e->getCode(),
+                'line' => $e->getLine(),
+                'data' => $request->all()
             ]);
             
             return $this->errorResponse(
@@ -405,7 +474,7 @@ class ProductController extends Controller
     /**
      * Get filters to be used in the index view
      */
-    public function getFilters(): JsonResponse
+    public function getFilters(Request $request): JsonResponse
     {
         try {
             $products = Product::select('id', 'code', 'name', 'deleted_at')->get();
@@ -418,6 +487,11 @@ class ProductController extends Controller
                 'sort_by' => self::ALLOWED_SORT_FIELDS,
                 'sort_direction' => self::ALLOWED_SORT_DIRECTIONS
             ];
+
+            Log::info('Retrieved filters for products', [
+                'user_email' => $request->user()->email,
+                'ip' => $request->ip(),
+            ]);
             
             return $this->successResponse(
                 $data,
@@ -425,9 +499,14 @@ class ProductController extends Controller
             );
             
         } catch (QueryException $e) {
-            Log::error('Error de base de datos al obtener filtros', [
+            Log::error('Error trying to get filters por product', [
+                'user_email' => $request->user()->email,
+                'ip' => $request->ip(),
+                'product_id' => $product->id ?? null,
                 'error' => $e->getMessage(),
-                'code' => $e->getCode()
+                'code' => $e->getCode(),
+                'line' => $e->getLine(),
+                'data' => $request->all()
             ]);
             
             return $this->errorResponse(
@@ -439,9 +518,13 @@ class ProductController extends Controller
             );
             
         } catch (Exception $e) {
-            Log::error('Error inesperado al obtener filtros', [
+            Log::error('Unexpected error trying to get the filter for products', [
+                'user_email' => $request->user()->email,
+                'ip' => $request->ip(),
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'code' => $e->getCode(),
+                'line' => $e->getLine(),
+                'data' => $request->all()
             ]);
             
             return $this->errorResponse(
@@ -507,6 +590,11 @@ class ProductController extends Controller
             $additionalMeta = [
                 'filters_applied' => $filters
             ];
+
+            Log::info('Retrieved filtered products', [
+                'user_email' => $request->user()->email,
+                'ip' => $request->ip(),
+            ]);
             
             return $this->paginatedResponse(
                 $products,
@@ -515,10 +603,13 @@ class ProductController extends Controller
             );
             
         } catch (QueryException $e) {
-            Log::error('Error de base de datos al filtrar productos', [
+            Log::error('Error from database trying to filter products', [
+                'user_email' => $request->user()->email,
+                'ip' => $request->ip(),
                 'error' => $e->getMessage(),
                 'code' => $e->getCode(),
-                'filters' => $request->all()
+                'line' => $e->getLine(),
+                'data' => $request->all()
             ]);
             
             return $this->errorResponse(
@@ -530,10 +621,13 @@ class ProductController extends Controller
             );
             
         } catch (Exception $e) {
-            Log::error('Error inesperado al filtrar productos', [
+            Log::error('Unexpected error trying to get filtered products', [
+                'user_email' => $request->user()->email,
+                'ip' => $request->ip(),
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-                'filters' => $request->all()
+                'code' => $e->getCode(),
+                'line' => $e->getLine(),
+                'data' => $request->all()
             ]);
             
             return $this->errorResponse(
@@ -559,16 +653,35 @@ class ProductController extends Controller
         
         // Validar que sea un número si se proporciona
         if ($excludeCategoryId && !is_numeric($excludeCategoryId)) {
+            Log::error('Error of validation trying to export catalog excluding a category', [
+                'user_email' => $request->user()->email,
+                'ip' => $request->ip(),
+                'error' => 'Invalid parameter at exclude_category (must be a number)',
+                'data' => $request->all()
+            ]);
+
             return $this->errorResponse('El parámetro exclude_category no es valido', ['exclude_category' => 'Debe ser un numero'], [], 400);
         }
 
         //Validar que el ID de la categoría a excluir exista en la base de datos
         if ($excludeCategoryId && !Category::find($excludeCategoryId)) {
+            Log::error('Error of validation trying to export catalog excluding a category', [
+                'user_email' => $request->user()->email,
+                'ip' => $request->ip(),
+                'error' => 'Category not found',
+                'data' => $request->all()
+            ]);
+
             return $this->errorResponse('El parámetro exclude_category no se encontró en la base de datos', [], [], 400);
         }
 
         // Generar el nombre del archivo con la fecha actual
         $fileName = 'catalogo_productos_' . date('Ymd') . '.xlsx';
+
+        Log::info('Products catalog has been exported', [
+            'user_email' => $request->user()->email,
+            'ip' => $request->ip(),
+        ]);
         
         // Descargar el archivo Excel
         return Excel::download(new CatalogExport($excludeCategoryId), $fileName, null, [
