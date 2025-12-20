@@ -12,7 +12,7 @@ class StoreOrderDetailRequest extends BaseApiRequest
      */
     public function authorize(): bool
     {
-        return true;
+        return auth()->user()->tokenCan('server:create', OrderDetail::class);
     }
 
     /**

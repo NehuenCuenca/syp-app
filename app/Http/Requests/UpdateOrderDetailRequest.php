@@ -12,7 +12,7 @@ class UpdateOrderDetailRequest extends BaseApiRequest
      */
     public function authorize(): bool
     {
-        return true;
+        return auth()->user()->tokenCan('server:update', OrderDetail::class);
     }
 
     /**
