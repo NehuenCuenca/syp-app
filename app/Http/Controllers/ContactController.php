@@ -12,7 +12,7 @@ use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Response;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Maatwebsite\Excel\Facades\Excel;
 
 class ContactController extends Controller
@@ -22,11 +22,16 @@ class ContactController extends Controller
     /**
      * Display a listing of all contacts.
      */
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
         try {
             $contacts = Contact::select('id', 'code', 'company_name', 'contact_name', 'phone', 'contact_type', 'deleted_at')
                                 ->orderBy('created_at', 'desc')->get();
+
+            Log::info('All contacts retrieved (without filters)', [
+                'user_email' => $request->user()->email,
+                'ip' => $request->ip(),
+            ]);
 
             return $this->successResponse(
                 $contacts,
@@ -34,6 +39,15 @@ class ContactController extends Controller
                 ['total' => $contacts->count()]
             );
         } catch (\Exception $e) {
+            Log::error('Error trying to get all contacts (without filters)', [
+                'user_email' => $request->user()->email,
+                'ip' => $request->ip(),
+                'error' => $e->getMessage(),
+                'code' => $e->getCode(),
+                'line' => $e->getLine(),
+                'data' => $request->all()
+            ]);
+
             return $this->errorResponse(
                 'Error al recuperar los contactos.',
                 ['exception' => $e->getMessage()],
@@ -57,7 +71,7 @@ class ContactController extends Controller
         'desc' => 'Descendente'
     ];
 
-    public function getFilters(): JsonResponse
+    public function getFilters(Request $request): JsonResponse
     {
         try {
             $contactTypes = Contact::select('contact_type')
@@ -77,8 +91,22 @@ class ContactController extends Controller
                 'sort_direction' => self::ALLOWED_SORT_DIRECTIONS
             ];
 
+            Log::info('Retrieved filters for contacts', [
+                'user_email' => $request->user()->email,
+                'ip' => $request->ip(),
+            ]);
+
             return $this->successResponse($filterData, 'Filtros obtenidos exitosamente.');
         } catch (QueryException $e) {
+            Log::error('Error trying to get contact types', [
+                'user_email' => $request->user()->email,
+                'ip' => $request->ip(),
+                'error' => $e->getMessage(),
+                'code' => $e->getCode(),
+                'line' => $e->getLine(),
+                'data' => $request->all()
+            ]);
+
             return $this->errorResponse(
                 'Error al recuperar los tipos de contactos.',
                 ['database_error' => $e->getMessage()],
@@ -87,6 +115,15 @@ class ContactController extends Controller
                 config('app.debug') ? $e : null
             );
         } catch (\Exception $e) {
+            Log::error('Unexpected error trying to get the contact filters', [
+                'user_email' => $request->user()->email,
+                'ip' => $request->ip(),
+                'error' => $e->getMessage(),
+                'code' => $e->getCode(),
+                'line' => $e->getLine(),
+                'data' => $request->all()
+            ]);
+
             return $this->errorResponse(
                 'Error inesperado al obtener los filtros.',
                 ['exception' => $e->getMessage()],
@@ -143,12 +180,26 @@ class ContactController extends Controller
                 'page' => $request->integer('page', 1)
             ];
 
+            Log::info('Retrieved contacts filtered', [
+                'user_email' => $request->user()->email,
+                'ip' => $request->ip(),
+            ]);
+
             return $this->paginatedResponse(
                 $contacts,
                 'Contactos filtrados recuperados exitosamente.',
                 ['filters_applied' => $filtersApplied]
             );
         } catch (\Exception $e) {
+            Log::error('Error trying to get filtered contacts ', [
+                'user_email' => $request->user()->email,
+                'ip' => $request->ip(),
+                'error' => $e->getMessage(),
+                'code' => $e->getCode(),
+                'line' => $e->getLine(),
+                'data' => $request->all()
+            ]);
+
             return $this->errorResponse(
                 'Error al procesar la consulta de contactos.',
                 ['exception' => $e->getMessage()],
@@ -166,8 +217,24 @@ class ContactController extends Controller
     {
         try {
             $contact = Contact::create($request->validated());
+
+            Log::info('Contact has been created', [
+                'user_email' => $request->user()->email,
+                'id_contact' => $contact->id,
+                'ip' => $request->ip(),
+            ]);
+
             return $this->createdResponse($contact, 'Contacto creado exitosamente.');
         } catch (\Exception $e) {
+            Log::error('Error trying to create a contact', [
+                'user_email' => $request->user()->email,
+                'ip' => $request->ip(),
+                'error' => $e->getMessage(),
+                'code' => $e->getCode(),
+                'line' => $e->getLine(),
+                'data' => $request->all()
+            ]);
+
             return $this->errorResponse(
                 'Error al crear el contacto.',
                 ['exception' => $e->getMessage()],
@@ -181,14 +248,41 @@ class ContactController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show($id): JsonResponse
+    public function show(Request $request, $id): JsonResponse
     {
         try {
             $contact = Contact::withTrashed()->findOrFail($id);
+
+            Log::info('Contact has been shown', [
+                'user_email' => $request->user()->email,
+                'id_contact' => $contact->id,
+                'ip' => $request->ip(),
+            ]);
+
             return $this->successResponse($contact, 'Contacto recuperado exitosamente.');
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            Log::error('Contact to show was not founded', [
+                'user_email' => $request->user()->email,
+                'id_contact' => $id,
+                'ip' => $request->ip(),
+                'error' => $e->getMessage(),
+                'code' => $e->getCode(),
+                'line' => $e->getLine(),
+                'data' => $request->all()
+            ]);
+
             return $this->notFoundResponse('Contacto no encontrado.');
         } catch (\Exception $e) {
+            Log::error('Unexpected error trying to show a contact', [
+                'user_email' => $request->user()->email,
+                'id_contact' => $id,
+                'ip' => $request->ip(),
+                'error' => $e->getMessage(),
+                'code' => $e->getCode(),
+                'line' => $e->getLine(),
+                'data' => $request->all()
+            ]);
+
             return $this->errorResponse(
                 'Error al recuperar el contacto.',
                 ['exception' => $e->getMessage()],
@@ -206,8 +300,25 @@ class ContactController extends Controller
     {
         try {
             $contact->update($request->validated());
+
+            Log::info('Contact has been updated', [
+                'user_email' => $request->user()->email,
+                'id_contact' => $contact->id,
+                'ip' => $request->ip(),
+            ]);
+
             return $this->successResponse($contact->fresh(), 'Contacto actualizado exitosamente.');
         } catch (\Exception $e) {
+            Log::error('Error trying updating a contact', [
+                'user_email' => $request->user()->email,
+                'id_contact' => $contact->id,
+                'ip' => $request->ip(),
+                'error' => $e->getMessage(),
+                'code' => $e->getCode(),
+                'line' => $e->getLine(),
+                'data' => $request->all()
+            ]);
+
             return $this->errorResponse(
                 'Error al actualizar el contacto.',
                 ['exception' => $e->getMessage()],
@@ -221,12 +332,29 @@ class ContactController extends Controller
     /**
      * Remove the specified resource from storage (soft delete).
      */
-    public function destroy(Contact $contact): JsonResponse
+    public function destroy(Request $request, Contact $contact): JsonResponse
     {
         try {
             $contact->delete();
+
+            Log::info('Contact has been soft deleted', [
+                'user_email' => $request->user()->email,
+                'id_contact' => $contact->id,
+                'ip' => $request->ip(),
+            ]);
+
             return $this->deletedResponse($contact->id, 'Contacto eliminado exitosamente.');
         } catch (QueryException $e) {
+            Log::error('Error trying deleting a contact because it has orders', [
+                'user_email' => $request->user()->email,
+                'id_contact' => $contact->id,
+                'ip' => $request->ip(),
+                'error' => $e->getMessage(),
+                'code' => $e->getCode(),
+                'line' => $e->getLine(),
+                'data' => $request->all()
+            ]);
+
             return $this->errorResponse(
                 'No se puede eliminar este contacto porque se está utilizando en pedidos.',
                 [],
@@ -235,6 +363,16 @@ class ContactController extends Controller
                 config('app.debug') ? $e : null
             );
         } catch (\Exception $e) {
+            Log::error('Unexpeted error trying to delete a contact', [
+                'user_email' => $request->user()->email,
+                'id_contact' => $contact->id,
+                'ip' => $request->ip(),
+                'error' => $e->getMessage(),
+                'code' => $e->getCode(),
+                'line' => $e->getLine(),
+                'data' => $request->all()
+            ]);
+
             return $this->errorResponse(
                 'Error al eliminar el contacto.',
                 ['exception' => $e->getMessage()],
@@ -248,7 +386,7 @@ class ContactController extends Controller
     /**
      * Restore a soft deleted contact.
      */
-    public function restore($id): JsonResponse
+    public function restore(Request $request,$id): JsonResponse
     {
         if (!is_numeric($id)) {
             return $this->validationErrorResponse(
@@ -264,8 +402,25 @@ class ContactController extends Controller
 
         try {
             $contact->restore();
+
+            Log::info('Contact has been restored', [
+                'user_email' => $request->user()->email,
+                'id_contact' => $contact->id,
+                'ip' => $request->ip(),
+            ]);
+
             return $this->restoredResponse($contact, 'Contacto restaurado exitosamente.');
         } catch (\Exception $e) {
+            Log::error('Error trying to restore a contact', [
+                'user_email' => $request->user()->email,
+                'id_contact' => $contact->id,
+                'ip' => $request->ip(),
+                'error' => $e->getMessage(),
+                'code' => $e->getCode(),
+                'line' => $e->getLine(),
+                'data' => $request->all()
+            ]);
+
             return $this->errorResponse(
                 'Error al restaurar el contacto.',
                 ['exception' => $e->getMessage()],
@@ -281,10 +436,15 @@ class ContactController extends Controller
      *
      * @return \Symfony\Component\HttpFoundation\BinaryFileResponse
      */
-    public function exportContacts()
+    public function exportContacts(Request $request)
     {
         try {
             $fileName = 'listado_contactos_' . date('Ymd') . '.xlsx';
+
+            Log::info('List of contacts has been exported', [
+                'user_email' => $request->user()->email,
+                'ip' => $request->ip(),
+            ]);
             
             return Excel::download(
                 new ContactsExport(),
@@ -293,6 +453,15 @@ class ContactController extends Controller
                 ['X-Filename' => $fileName]
             );
         } catch (\Exception $e) {
+            Log::error('Error trying to export the list of contacts', [
+                'user_email' => $request->user()->email,
+                'ip' => $request->ip(),
+                'error' => $e->getMessage(),
+                'code' => $e->getCode(),
+                'line' => $e->getLine(),
+                'data' => $request->all()
+            ]);
+
             return response()->json([
                 'success' => false,
                 'message' => 'Error al generar el archivo Excel',

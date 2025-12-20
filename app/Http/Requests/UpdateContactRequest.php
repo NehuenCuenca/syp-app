@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Contact;
 use Illuminate\Validation\Rule;
 
 class UpdateContactRequest extends BaseApiRequest
@@ -11,7 +12,7 @@ class UpdateContactRequest extends BaseApiRequest
      */
     public function authorize(): bool
     {
-        return true;
+        return auth()->user()->tokenCan('server:update', Contact::class);
     }
 
     /**
