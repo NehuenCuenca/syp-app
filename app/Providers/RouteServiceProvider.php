@@ -41,5 +41,10 @@ class RouteServiceProvider extends ServiceProvider
             $key = strtolower($request->input('email')) . '|' . $request->ip();
             return Limit::perMinutes(5, 5)->by($key);
         });
+
+        RateLimiter::for('health', function (Request $request) {
+            $key = strtolower($request->input('email')) . '|' . $request->ip();
+            return Limit::perMinutes(5, 5)->by($key);
+        });
     }
 }

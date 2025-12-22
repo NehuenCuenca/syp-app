@@ -26,6 +26,10 @@ Route::post('/login', [AuthController::class, 'login'])
     ->name('api.login')
     ->middleware('throttle:login');
 
+Route::get('/health', function () {
+    return response()->json(['status' => 'ok']);
+})->name('api.health')->middleware('throttle:health');
+
 // Rutas protegidas por autenticación de Sanctum
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout'])->name('api.logout');
