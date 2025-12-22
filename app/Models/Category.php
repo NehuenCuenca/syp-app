@@ -27,6 +27,8 @@ class Category extends Model
         'search_alias'
     ];
 
+    const SPECIAL_CATEGORY = 'Analgésicos';
+
     // Relación: una categoría tiene muchos productos
     public function products()
     {
