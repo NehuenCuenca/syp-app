@@ -38,7 +38,6 @@ trait ApiResponseTrait
      */
     protected function errorResponse($message = 'Ha ocurrido un error', $errors = [], $meta = [], $statusCode = 400, $exception = null)
     {
-        // dd(config('app.debug'), App::environment('local'), $exception);
         if ( config('app.debug') && App::environment('local') && $exception ) {
             $errors = $errors ?? [];
             $errors['exception'] = $exception->getMessage() ?? '';

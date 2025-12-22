@@ -42,34 +42,16 @@ class FilterProductsRequest extends BaseApiRequest
     }
 
     protected function prepareForValidation()
-{
-    if ($this->has('low_stock')) {
-        $value = strtolower($this->input('low_stock'));
-
-        if ($value === 'false') {
-            $this->merge(['low_stock' => false]);
-        } elseif ($value === 'true') {
-            $this->merge(['low_stock' => true]);
-        }
-    }
-}
-
-    /**
-     * Handle a failed validation attempt.
-     *
-     * @param  \Illuminate\Contracts\Validation\Validator  $validator
-     * @return void
-     *
-     * @throws \Illuminate\Http\Exceptions\HttpResponseException
-     */
-    protected function failedValidation(Validator $validator)
     {
-        throw new HttpResponseException(
-            $this->validationErrorResponse(
-                $validator->errors()->toArray(),
-                'Los datos proporcionados no son válidos'
-            )
-        );
+        if ($this->has('low_stock')) {
+            $value = strtolower($this->input('low_stock'));
+
+            if ($value === 'false') {
+                $this->merge(['low_stock' => false]);
+            } elseif ($value === 'true') {
+                $this->merge(['low_stock' => true]);
+            }
+        }
     }
 
     /**

@@ -94,17 +94,4 @@ class StoreOrderRequest extends BaseApiRequest
             }
         });
     }
-
-    /**
-     * Handle a failed validation attempt.
-     */
-    protected function failedValidation(Validator $validator)
-    {
-        throw new HttpResponseException(
-            $this->validationErrorResponse(
-                $validator->errors()->toArray(),
-                'Los datos proporcionados no son válidos'
-            )
-        );
-    }
 }

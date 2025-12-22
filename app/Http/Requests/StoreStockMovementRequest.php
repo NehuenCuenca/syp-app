@@ -57,17 +57,4 @@ class StoreStockMovementRequest extends BaseApiRequest
             $this->merge(['notes' => null]);
         }
     }
-
-    /**
-     * Handle a failed validation attempt.
-     */
-    protected function failedValidation(Validator $validator)
-    {
-        throw new HttpResponseException(
-            $this->validationErrorResponse(
-                $validator->errors()->toArray(),
-                'Los datos proporcionados no son válidos'
-            )
-        );
-    }
 }
