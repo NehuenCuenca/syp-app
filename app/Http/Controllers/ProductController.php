@@ -369,17 +369,7 @@ class ProductController extends Controller
     {
         DB::beginTransaction();
         
-        try {
-            // Validar que el ID sea numérico
-            if (!is_numeric($id)) {
-                return $this->errorResponse(
-                    'ID de producto no válido.',
-                    ['id' => ['El ID debe ser un número válido.']],
-                    [],
-                    400
-                );
-            }
-            
+        try {            
             $product = Product::onlyTrashed()->findOrFail($id);
             $product->restore();
             $product->load('category');

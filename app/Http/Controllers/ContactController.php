@@ -387,14 +387,7 @@ class ContactController extends Controller
      * Restore a soft deleted contact.
      */
     public function restore(Request $request,$id): JsonResponse
-    {
-        if (!is_numeric($id)) {
-            return $this->validationErrorResponse(
-                ['id' => 'ID debe ser un número válido.'],
-                'Error de validación en parámetros.'
-            );
-        }
-        
+    {        
         $contact = Contact::onlyTrashed()->find($id);
         if (!$contact) {
             return $this->notFoundResponse('Contacto eliminado no encontrado.');
