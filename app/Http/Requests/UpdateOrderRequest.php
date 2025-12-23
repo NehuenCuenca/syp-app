@@ -27,7 +27,8 @@ class UpdateOrderRequest extends BaseApiRequest
     public function rules(): array
     {
         return [
-            'id_contact' => 'sometimes|required|integer|exists:contacts,id',
+            'id_contact' => 'required_without:new_contact_name|integer|exists:contacts,id',
+            'new_contact_name' => 'required_without:id_contact|string|max:255',
             'adjustment_amount' => 'nullable|numeric',
             'notes' => 'nullable|string|max:1000',
 

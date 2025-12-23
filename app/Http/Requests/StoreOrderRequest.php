@@ -27,11 +27,10 @@ class StoreOrderRequest extends BaseApiRequest
     public function rules(): array
     {
         return [
-            'id_contact' => 'required_without:new_contact|integer|exists:contacts,id',
-            'new_contact' => 'required_without:id_contact|array',
-            'new_contact.company_name' => 'required_with:new_contact|string|max:50|min:4',
+            'id_contact' => 'required_without:new_contact_name|integer|exists:contacts,id',
+            'new_contact_name' => 'required_without:id_contact|string|max:255',
 
-            'id_movement_type' => 'required|exists:movement_types,id|in:1,2',
+            'id_movement_type' => 'required|exists:movement_types,id',
             'notes' => 'nullable|string|max:1000',
             'adjustment_amount' => 'nullable|numeric',
             'sub_total' => 'missing',
@@ -49,21 +48,6 @@ class StoreOrderRequest extends BaseApiRequest
     }
 
     /**
-     * Prepare the data for validation.
-     */
-    protected function prepareForValidation(): void
-    {
-        if(!$this->has('id_contact') && $this->has('new_contact')) {
-            $this->merge([
-                'id_contact' => Contact::firstOrCreate([
-                    'company_name' => $this->new_contact['company_name'],
-                    'contact_type' => 'Cliente',
-                ])->id
-            ]);
-        }
-    }
-
-    /**
      * Configure the validator instance.
      *
      * @param  \Illuminate\Validation\Validator  $validator
@@ -72,6 +56,16 @@ class StoreOrderRequest extends BaseApiRequest
     public function withValidator($validator)
     {
         $validator->after(function ($validator) {
+            //Validar que el tipo de movimiento sea válido
+            $validMovementTypes = [
+                MovementType::firstWhere('name', Order::ORDER_TYPE_SALE)->id,
+                MovementType::firstWhere('name', Order::ORDER_TYPE_PURCHASE)->id,
+            ];
+            
+            if (!in_array($this->id_movement_type, $validMovementTypes)) {
+                $validator->errors()->add('id_movement_type', 'Tipo de movimiento inválido (solo se permiten compras y ventas).');
+            }
+
             // Validación personalizada: verificar duplicados de productos
             $productIds = collect($this->order_details)->pluck('id_product')->toArray();
             $uniqueProductIds = array_unique($productIds);

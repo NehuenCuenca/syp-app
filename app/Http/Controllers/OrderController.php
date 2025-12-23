@@ -68,9 +68,10 @@ class OrderController extends Controller
     public function create(Request $request)
     {
         try {
-            $contacts = Contact::select('id', 'code', 'company_name', 'contact_name', 'deleted_at', 'contact_type')
-                ->orderBy('company_name')
-                ->get();
+            $contacts = Contact::select('id', 'code', 'name', 'deleted_at', 'contact_type')
+                ->orderBy('name')
+                ->get()
+                ->makeHidden(['last_order', 'phone_number_info']);
 
             $products = Product::with('category:id,name')
                 ->select('id', 'code', 'name', 'current_stock', 'min_stock_alert', 'buy_price', 'sale_price', 'id_category', 'deleted_at', 'profit_percentage')
@@ -117,9 +118,19 @@ class OrderController extends Controller
         DB::beginTransaction();
         
         try {
+            // Crear el contacto si no existe
+            if(!$request->has('id_contact')) {
+                $contact = Contact::firstOrCreate([
+                    'name' => $request->new_contact_name,
+                    'contact_type' => 'Cliente',
+                ]);
+            } else {
+                $contact = Contact::find($request->id_contact);
+            }
+            
             // Crear el pedido
             $order = Order::create([
-                'id_contact' => $request->id_contact,
+                'id_contact' => $contact->id,
                 'id_movement_type' => $request->id_movement_type,
                 'notes' => $request->notes,
                 'adjustment_amount' => $request->adjustment_amount ?? 0,
@@ -268,9 +279,10 @@ class OrderController extends Controller
         try {
             $order->load(['contact', 'orderDetails.product.category']);
 
-            $contacts = Contact::select('id', 'code', 'company_name', 'contact_name', 'deleted_at', 'contact_type')
-                ->orderBy('company_name')
-                ->get();
+            $contacts = Contact::select('id', 'code', 'name', 'deleted_at', 'contact_type')
+                ->orderBy('name')
+                ->get()
+                ->makeHidden(['last_order', 'phone_number_info']);
 
             $products = Product::with('category:id,name')
                 ->select('id', 'code', 'name', 'current_stock', 'min_stock_alert', 'profit_percentage', 'sale_price', 'buy_price', 'id_category', 'deleted_at')
@@ -329,9 +341,19 @@ class OrderController extends Controller
         DB::beginTransaction();
         
         try {
+            // Crear el contacto si no existe
+            if(!$request->has('id_contact')) {
+                $contact = Contact::firstOrCreate([
+                    'name' => $request->new_contact_name,
+                    'contact_type' => 'Cliente',
+                ]);
+            } else {
+                $contact = Contact::find($request->id_contact);
+            }
+
             // Actualizar el pedido
             $updatedOrder = $order->update([
-                'id_contact' => $request->id_contact,
+                'id_contact' => $contact->id,
                 'notes' => $request->notes,
                 'adjustment_amount' => $request->adjustment_amount,
             ]);
@@ -478,9 +500,13 @@ class OrderController extends Controller
     public function getFilters(Request $request)
     {
         try {
+            $contacts = Contact::select('id', 'code', 'name', 'deleted_at', 'contact_type')
+                                    ->get()
+                                    ->makeHidden(['last_order', 'phone_number_info']);
+                                    
             $data = [
                 'order_types' => Order::getOrderTypes(),
-                'contacts' => Contact::select('id', 'code', 'company_name', 'contact_name', 'deleted_at', 'contact_type')->get(),
+                'contacts' => $contacts,
                 'before_equal_date' => Carbon::parse(Order::min('created_at'))->format('Y-m-d'),
                 'sort_by' => self::ALLOWED_SORT_FIELDS,
                 'sort_direction' => self::ALLOWED_SORT_DIRECTIONS
@@ -540,7 +566,7 @@ class OrderController extends Controller
             if ($request->has('search')) {
                 $query->where(function ($q) use ($search) {
                     $q->where('code', 'like', "{$search}%")
-                    ->orWhereRelation('contact', 'company_name', 'like', "%{$search}%");
+                    ->orWhereRelation('contact', 'name', 'like', "%{$search}%");
                 });
             }
             
