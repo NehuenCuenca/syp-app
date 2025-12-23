@@ -24,27 +24,67 @@ class ProductController extends Controller
 {
     use ApiResponseTrait;
 
-    public function index(Request $request): JsonResponse
+    public function index(FilterProductsRequest $request): JsonResponse
     {
         try {
-            $products = Product::select('id', 'code', 'name', 'current_stock', 'min_stock_alert', 'deleted_at')->get();
+            $filters = $request->getFilters();
+            $query = Product::query()->withTrashed()->with(['category']);
             
-            $meta = [
-                'total' => $products->count()
+            // Aplicar filtros
+            if (!empty($filters['id_category'])) {
+                $query->where('id_category', $filters['id_category']);
+            }
+            
+            if ($filters['low_stock']) {
+                $query->whereRaw('current_stock < min_stock_alert');
+            }
+            
+            if (!empty($filters['search'])) {
+                $query->where(function ($q) use ($filters) {
+                    $q->where('code', 'like', "{$filters['search']}%")
+                      ->orWhere('name', 'like', "%{$filters['search']}%");
+                });
+            }
+            
+            if (!empty($filters['min_sale_price'])) {
+                $query->where('sale_price', '>=', $filters['min_sale_price']);
+            }
+            
+            if (!empty($filters['max_sale_price'])) {
+                $query->where('sale_price', '<=', $filters['max_sale_price']);
+            }
+            
+            // Ordenamiento
+            if (in_array($filters['sort_by'], array_keys(self::ALLOWED_SORT_FIELDS))) {
+                $query->orderBy($filters['sort_by'], $filters['sort_direction']);
+            }
+            
+            $query->orderBy('deleted_at')->select(
+                'id', 'code', 'name',
+                'current_stock', 'min_stock_alert', 'id_category',
+                DB::raw('(current_stock < min_stock_alert) as is_low_stock'), 'deleted_at'
+            );
+
+            // Paginación
+            $products = $query->paginate($filters['per_page']);
+            
+            $additionalMeta = [
+                'filters_applied' => $filters
             ];
 
-            Log::info('All products retrieved (without filters)', [
+            Log::info('Retrieved filtered products', [
                 'user_email' => $request->user()->email,
                 'ip' => $request->ip(),
             ]);
             
-            return $this->successResponse(
-                $products, 
-                'Todos los productos recuperados exitosamente.',
-                $meta
+            return $this->paginatedResponse(
+                $products,
+                'Productos filtrados recuperados exitosamente.',
+                $additionalMeta
             );
+            
         } catch (QueryException $e) {
-            Log::error('Error trying to get all contacts (without filters)', [
+            Log::error('Error from database trying to filter products', [
                 'user_email' => $request->user()->email,
                 'ip' => $request->ip(),
                 'error' => $e->getMessage(),
@@ -54,7 +94,7 @@ class ProductController extends Controller
             ]);
             
             return $this->errorResponse(
-                'Error al recuperar los productos desde la base de datos.',
+                'Error al filtrar los productos desde la base de datos.',
                 [],
                 [],
                 500,
@@ -62,7 +102,7 @@ class ProductController extends Controller
             );
             
         } catch (Exception $e) {
-            Log::error('Unexpected error trying to get all products (without filters)', [
+            Log::error('Unexpected error trying to get filtered products', [
                 'user_email' => $request->user()->email,
                 'ip' => $request->ip(),
                 'error' => $e->getMessage(),
@@ -72,7 +112,7 @@ class ProductController extends Controller
             ]);
             
             return $this->errorResponse(
-                'Se produjo un error inesperado al recuperar los productos.',
+                'Se produjo un error inesperado al filtrar los productos.',
                 ['exception' => $e->getMessage()],
                 [],
                 500,
@@ -519,109 +559,6 @@ class ProductController extends Controller
             
             return $this->errorResponse(
                 'Se produjo un error inesperado al obtener los filtros.',
-                ['exception' => $e->getMessage()],
-                [],
-                500,
-                config('app.debug') ? $e : null
-            );
-        }
-    }
-
-    /**
-     * Get paginated products with optional filters
-     * 
-     * @param FilterProductsRequest $request
-     * @return JsonResponse
-     */
-    public function getFilteredProducts(FilterProductsRequest $request): JsonResponse
-    {
-        try {
-            $filters = $request->getFilters();
-            $query = Product::query()->withTrashed()->with(['category']);
-            
-            // Aplicar filtros
-            if (!empty($filters['id_category'])) {
-                $query->where('id_category', $filters['id_category']);
-            }
-            
-            if ($filters['low_stock']) {
-                $query->whereRaw('current_stock < min_stock_alert');
-            }
-            
-            if (!empty($filters['search'])) {
-                $query->where(function ($q) use ($filters) {
-                    $q->where('code', 'like', "{$filters['search']}%")
-                      ->orWhere('name', 'like', "%{$filters['search']}%");
-                });
-            }
-            
-            if (!empty($filters['min_sale_price'])) {
-                $query->where('sale_price', '>=', $filters['min_sale_price']);
-            }
-            
-            if (!empty($filters['max_sale_price'])) {
-                $query->where('sale_price', '<=', $filters['max_sale_price']);
-            }
-            
-            // Ordenamiento
-            if (in_array($filters['sort_by'], array_keys(self::ALLOWED_SORT_FIELDS))) {
-                $query->orderBy($filters['sort_by'], $filters['sort_direction']);
-            }
-            
-            $query->orderBy('deleted_at')->select(
-                'id', 'code', 'name',
-                'current_stock', 'min_stock_alert', 'id_category',
-                DB::raw('(current_stock < min_stock_alert) as is_low_stock'), 'deleted_at'
-            );
-
-            // Paginación
-            $products = $query->paginate($filters['per_page']);
-            
-            $additionalMeta = [
-                'filters_applied' => $filters
-            ];
-
-            Log::info('Retrieved filtered products', [
-                'user_email' => $request->user()->email,
-                'ip' => $request->ip(),
-            ]);
-            
-            return $this->paginatedResponse(
-                $products,
-                'Productos filtrados recuperados exitosamente.',
-                $additionalMeta
-            );
-            
-        } catch (QueryException $e) {
-            Log::error('Error from database trying to filter products', [
-                'user_email' => $request->user()->email,
-                'ip' => $request->ip(),
-                'error' => $e->getMessage(),
-                'code' => $e->getCode(),
-                'line' => $e->getLine(),
-                'data' => $request->all()
-            ]);
-            
-            return $this->errorResponse(
-                'Error al filtrar los productos desde la base de datos.',
-                [],
-                [],
-                500,
-                config('app.debug') ? $e : null
-            );
-            
-        } catch (Exception $e) {
-            Log::error('Unexpected error trying to get filtered products', [
-                'user_email' => $request->user()->email,
-                'ip' => $request->ip(),
-                'error' => $e->getMessage(),
-                'code' => $e->getCode(),
-                'line' => $e->getLine(),
-                'data' => $request->all()
-            ]);
-            
-            return $this->errorResponse(
-                'Se produjo un error inesperado al filtrar los productos.',
                 ['exception' => $e->getMessage()],
                 [],
                 500,

@@ -27,23 +27,63 @@ class OrderController extends Controller
     public function index(Request $request)
     {
         try {
-            $orders = Order::with(['contact', 'movementType'])
-                ->orderBy('created_at', 'desc')
-                ->get();
+            $query = Order::with(['contact']);
+            
+            // Filtros
+            if ($request->filled('id_movement_type')) {
+                $query->where('id_movement_type', $request->id_movement_type);
+            }
 
-            Log::info('All orders retrieved (without filters)', [
+            if ($request->filled('id_contact')) {
+                $query->where('id_contact', $request->id_contact);
+            }
+
+            if ($request->filled('before_equal_date')) {
+                $query->whereDate('created_at', '<=', $request->before_equal_date);
+            }
+
+            $search = $request->get('search', '');
+            if ($request->has('search')) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('code', 'like', "{$search}%")
+                    ->orWhereRelation('contact', 'name', 'like', "%{$search}%");
+                });
+            }
+            
+            // Ordenamiento
+            $sortBy = $request->get('sort_by', 'created_at');
+            $sortDirection = $request->get('sort_direction', 'desc');
+
+            if (in_array($sortBy, array_keys(self::ALLOWED_SORT_FIELDS))) {
+                $query->orderBy($sortBy, $sortDirection);
+            }
+
+            // Paginación
+            $perPage = $request->get('per_page', 9);
+            $orders = $query->paginate($perPage);
+
+            $meta = [
+                'filters_applied' => [
+                    'search' => $search,
+                    'sort_by' => $sortBy,
+                    'sort_direction' => $sortDirection,
+                    'per_page' => $perPage,
+                    'page' => $request->integer('page', 1)
+                ]
+            ];
+
+            Log::info('Retrieved orders filtered', [
                 'user_email' => $request->user()->email,
                 'ip' => $request->ip(),
-            ]);    
+            ]);
 
-            return $this->successResponse(
-                $orders, 
-                'Todos los pedidos recuperados exitosamente',
-                ['total' => $orders->count()]
+            return $this->paginatedResponse(
+                $orders,
+                'Pedidos filtrados recuperados exitosamente',
+                $meta
             );
-
         } catch (Exception $e) {
-            Log::error('Error trying to get all orders (without filters)', [
+            Log::error('Error trying to get filtered orders', [
                 'user_email' => $request->user()->email,
                 'ip' => $request->ip(),
                 'error' => $e->getMessage(),
@@ -53,7 +93,7 @@ class OrderController extends Controller
             ]);
             
             return $this->errorResponse(
-                'Error interno del servidor al obtener los pedidos',
+                'Error interno del servidor al filtrar los pedidos',
                 ['exception' => $e->getMessage()],
                 [],
                 500,
@@ -533,87 +573,6 @@ class OrderController extends Controller
             
             return $this->errorResponse(
                 'Error interno del servidor al obtener los filtros',
-                ['exception' => $e->getMessage()],
-                [],
-                500,
-                config('app.debug') ? $e : null
-            );
-        }
-    }
-
-    /**
-     * Get filtered and ordered orders
-     */
-    public function getFilteredOrders(Request $request)
-    {
-        try {
-            $query = Order::with(['contact']);
-            
-            // Filtros
-            if ($request->filled('id_movement_type')) {
-                $query->where('id_movement_type', $request->id_movement_type);
-            }
-
-            if ($request->filled('id_contact')) {
-                $query->where('id_contact', $request->id_contact);
-            }
-
-            if ($request->filled('before_equal_date')) {
-                $query->whereDate('created_at', '<=', $request->before_equal_date);
-            }
-
-            $search = $request->get('search', '');
-            if ($request->has('search')) {
-                $query->where(function ($q) use ($search) {
-                    $q->where('code', 'like', "{$search}%")
-                    ->orWhereRelation('contact', 'name', 'like', "%{$search}%");
-                });
-            }
-            
-            // Ordenamiento
-            $sortBy = $request->get('sort_by', 'created_at');
-            $sortDirection = $request->get('sort_direction', 'desc');
-
-            if (in_array($sortBy, array_keys(self::ALLOWED_SORT_FIELDS))) {
-                $query->orderBy($sortBy, $sortDirection);
-            }
-
-            // Paginación
-            $perPage = $request->get('per_page', 9);
-            $orders = $query->paginate($perPage);
-
-            $meta = [
-                'filters_applied' => [
-                    'search' => $search,
-                    'sort_by' => $sortBy,
-                    'sort_direction' => $sortDirection,
-                    'per_page' => $perPage,
-                    'page' => $request->integer('page', 1)
-                ]
-            ];
-
-            Log::info('Retrieved orders filtered', [
-                'user_email' => $request->user()->email,
-                'ip' => $request->ip(),
-            ]);
-
-            return $this->paginatedResponse(
-                $orders,
-                'Pedidos filtrados recuperados exitosamente',
-                $meta
-            );
-        } catch (Exception $e) {
-            Log::error('Error trying to get filtered orders', [
-                'user_email' => $request->user()->email,
-                'ip' => $request->ip(),
-                'error' => $e->getMessage(),
-                'code' => $e->getCode(),
-                'line' => $e->getLine(),
-                'data' => $request->all()
-            ]);
-            
-            return $this->errorResponse(
-                'Error interno del servidor al filtrar los pedidos',
                 ['exception' => $e->getMessage()],
                 [],
                 500,

@@ -22,24 +22,73 @@ class StockMovementController extends Controller
     public function index(Request $request): JsonResponse
     {
         try {
-            $stockMovements = StockMovement::with(['product', 'order', 'movementType', 'orderDetail'])
-                ->orderBy('created_at', 'desc')
-                ->get();
+            $query = StockMovement::with(['product', 'order', 'movementType', 'orderDetail']);
 
-            $meta = ['total' => $stockMovements->count()];
+            // Filtros
+            if ($request->filled('id_order')) {
+                $query->where('id_order', $request->id_order);
+            }
 
-            Log::info('All stock movements retrieved (without filters)', [
+            if ($request->filled('id_product')) {
+                $query->where('id_product', $request->id_product);
+            }
+
+            if ($request->filled('id_movement_type')) {
+                $query->where('id_movement_type', $request->id_movement_type);
+            }
+
+            if ($request->filled('date_from')) {
+                $query->whereDate('movement_date', '>=', $request->date_from);
+            }
+
+            if ($request->filled('date_to')) {
+                $query->whereDate('movement_date', '<=', $request->date_to);
+            }
+
+            $search = $request->get('search', '');
+            if ($request->filled('search')) {
+                $query->where(function ($q) use ($search) {
+                        $q->whereRelation('product', 'code', 'like', "{$search}%")
+                            ->orWhereRelation('product', 'name', 'like', "%{$search}%");
+                });
+            }
+
+
+            // Ordenamiento
+            $sortBy = $request->get('sort_by', 'created_at');
+            $sortDirection = $request->get('sort_direction', 'desc');
+
+            if (in_array($sortBy, array_keys(self::ALLOWED_SORT_FIELDS))) {
+                $query->orderBy($sortBy, $sortDirection);
+            } else {
+                // Fallback a ordenamiento por defecto si el campo no es válido
+                $query->orderBy('created_at', 'desc');
+            }
+
+            // Paginación
+            $perPage = $request->get('per_page', 9);
+            $stockMovements = $query->paginate($perPage);
+
+            $filtersApplied = [
+                // 'search' => $search,
+                'sort_by' => $sortBy, 
+                'sort_direction' => $sortDirection,
+                'per_page' => $perPage,
+                'page' => $request->integer('page', 1)
+            ];
+
+            Log::info('Retrieve filtered stock movements', [
                 'user_email' => $request->user()->email,
-                'ip' => $request->ip(),
+                'ip' => $request->ip()
             ]);
-
-            return $this->successResponse(
-                $stockMovements, 
-                'Todos los movimientos de stock recuperados exitosamente.', 
-                $meta
+            
+            return $this->paginatedResponse(
+                $stockMovements,
+                'Movimientos de stock filtrados recuperados exitosamente.',
+                ['filters_applied' => $filtersApplied]
             );
         } catch (Exception $e) {
-            Log::error('Error trying to retrieve all stock movements', [
+            Log::error('Error trying to retrieve filtered stock movements', [
                 'user_email' => $request->user()->email,
                 'ip' => $request->ip(),
                 'error' => $e->getMessage(),
@@ -49,7 +98,7 @@ class StockMovementController extends Controller
             ]);
 
             return $this->errorResponse(
-                'Error al obtener los movimientos de stock',
+                'Error al obtener los movimientos de stock filtrados',
                 ['exception' => $e->getMessage()],
                 [],
                 500,
@@ -152,97 +201,6 @@ class StockMovementController extends Controller
             return $this->errorResponse(
                 'Error al obtener los filtros',
                 ['exception' => $e->getMessage(), 'line' => $e->getLine()],
-                [],
-                500,
-                config('app.debug') ? $e : null
-            );
-        }
-    }
-
-    /**
-     * Get filtered and ordered movements
-     */
-    public function getFilteredMovements(Request $request): JsonResponse
-    {
-        try {
-            $query = StockMovement::with(['product', 'order', 'movementType', 'orderDetail']);
-
-            // Filtros
-            if ($request->filled('id_order')) {
-                $query->where('id_order', $request->id_order);
-            }
-
-            if ($request->filled('id_product')) {
-                $query->where('id_product', $request->id_product);
-            }
-
-            if ($request->filled('id_movement_type')) {
-                $query->where('id_movement_type', $request->id_movement_type);
-            }
-
-            if ($request->filled('date_from')) {
-                $query->whereDate('movement_date', '>=', $request->date_from);
-            }
-
-            if ($request->filled('date_to')) {
-                $query->whereDate('movement_date', '<=', $request->date_to);
-            }
-
-            $search = $request->get('search', '');
-            if ($request->filled('search')) {
-                $query->where(function ($q) use ($search) {
-                        $q->whereRelation('product', 'code', 'like', "{$search}%")
-                            ->orWhereRelation('product', 'name', 'like', "%{$search}%");
-                });
-            }
-
-
-            // Ordenamiento
-            $sortBy = $request->get('sort_by', 'created_at');
-            $sortDirection = $request->get('sort_direction', 'desc');
-
-            if (in_array($sortBy, array_keys(self::ALLOWED_SORT_FIELDS))) {
-                $query->orderBy($sortBy, $sortDirection);
-            } else {
-                // Fallback a ordenamiento por defecto si el campo no es válido
-                $query->orderBy('created_at', 'desc');
-            }
-
-            // Paginación
-            $perPage = $request->get('per_page', 9);
-            $stockMovements = $query->paginate($perPage);
-
-            $filtersApplied = [
-                // 'search' => $search,
-                'sort_by' => $sortBy, 
-                'sort_direction' => $sortDirection,
-                'per_page' => $perPage,
-                'page' => $request->integer('page', 1)
-            ];
-
-            Log::info('Retrieve filtered stock movements', [
-                'user_email' => $request->user()->email,
-                'ip' => $request->ip()
-            ]);
-            
-            return $this->paginatedResponse(
-                $stockMovements,
-                'Movimientos de stock filtrados recuperados exitosamente.',
-                ['filters_applied' => $filtersApplied]
-            );
-        } catch (Exception $e) {
-            Log::error('Error trying to retrieve filtered stock movements', [
-                'user_email' => $request->user()->email,
-                'ip' => $request->ip(),
-                'error' => $e->getMessage(),
-                'code' => $e->getCode(),
-                'line' => $e->getLine(),
-                'data' => $request->all()
-            ]);
-
-            return $this->errorResponse(
-                'Error al obtener los movimientos de stock filtrados',
-                ['exception' => $e->getMessage()],
                 [],
                 500,
                 config('app.debug') ? $e : null

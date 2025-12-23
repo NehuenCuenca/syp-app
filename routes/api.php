@@ -42,7 +42,6 @@ Route::middleware('auth:sanctum')->group(function () {
     */
     Route::prefix('contacts')->group(function () {
         Route::get('filters', [ContactController::class, 'getFilters']);
-        Route::get('filtered', [ContactController::class, 'getFilteredContacts']);
         Route::get('export', [ContactController::class, 'exportContacts']);
         Route::patch('{contact}/restore', [ContactController::class, 'restore']);
     });
@@ -55,7 +54,6 @@ Route::middleware('auth:sanctum')->group(function () {
     */
     Route::prefix('products')->group(function () {
         Route::get('filters', [ProductController::class, 'getFilters']);
-        Route::get('filtered', [ProductController::class, 'getFilteredProducts']);
         Route::get('export-catalog', [ProductController::class, 'exportCatalog']);
         Route::patch('{product}/restore', [ProductController::class, 'restore']);
     });
@@ -68,7 +66,6 @@ Route::middleware('auth:sanctum')->group(function () {
     */
     Route::prefix('orders')->group(function () {
         Route::get('filters', [OrderController::class, 'getFilters']);
-        Route::get('filtered', [OrderController::class, 'getFilteredOrders']);
 
         Route::get('create', [OrderController::class, 'create']);
         Route::get('{order}/edit', [OrderController::class, 'edit']);
@@ -95,7 +92,6 @@ Route::middleware('auth:sanctum')->group(function () {
     */
     Route::prefix('stock-movements')->group(function () {
         Route::get('filters', [StockMovementController::class, 'getFilters']);
-        Route::get('filtered', [StockMovementController::class, 'getFilteredMovements']);
     });
     Route::apiResource('stock-movements', StockMovementController::class)
         ->only(['index', 'show']);

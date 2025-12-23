@@ -25,21 +25,57 @@ class ContactController extends Controller
     public function index(Request $request): JsonResponse
     {
         try {
-            $contacts = Contact::select('id', 'code', 'name', 'phone', 'contact_type', 'deleted_at')
-                                ->orderBy('created_at', 'desc')->get();
+            $query = Contact::query()->withTrashed();
 
-            Log::info('All contacts retrieved (without filters)', [
+            // Filtrar por tipo de contacto si se proporciona
+            if ($request->has('contact_type')) {
+                $query->where('contact_type', $request->contact_type);
+            }
+
+            // Búsqueda por nombre de empresa o contacto
+            $search = $request->get('search', '');
+            if ($request->has('search')) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('code', 'like', "{$search}%")
+                      ->orWhere('name', 'like', "%{$search}%");
+                });
+            }
+
+            // Ordenamiento
+            $sortBy = $request->input('sort_by', 'created_at');
+            $sortDirection = $request->input('sort_direction', 'desc');
+            if (in_array($sortBy, array_keys(self::ALLOWED_SORT_FIELDS))) {
+                $query->orderBy($sortBy, $sortDirection)
+                    ->select(
+                        'id', 'code', 'name', 
+                        'phone', 'contact_type', 'deleted_at'
+                    );
+            }
+
+            // Paginación
+            $perPage = $request->get('per_page', 9);
+            $contacts = $query->paginate($perPage);
+
+            $filtersApplied = [
+                'search' => $search,
+                'sort_by' => $sortBy,
+                'sort_direction' => $sortDirection,
+                'per_page' => $perPage,
+                'page' => $request->integer('page', 1)
+            ];
+
+            Log::info('Retrieved contacts filtered', [
                 'user_email' => $request->user()->email,
                 'ip' => $request->ip(),
             ]);
 
-            return $this->successResponse(
+            return $this->paginatedResponse(
                 $contacts,
-                'Todos los contactos recuperados exitosamente.',
-                ['total' => $contacts->count()]
+                'Contactos filtrados recuperados exitosamente.',
+                ['filters_applied' => $filtersApplied]
             );
         } catch (\Exception $e) {
-            Log::error('Error trying to get all contacts (without filters)', [
+            Log::error('Error trying to get filtered contacts ', [
                 'user_email' => $request->user()->email,
                 'ip' => $request->ip(),
                 'error' => $e->getMessage(),
@@ -49,7 +85,7 @@ class ContactController extends Controller
             ]);
 
             return $this->errorResponse(
-                'Error al recuperar los contactos.',
+                'Error al procesar la consulta de contactos.',
                 ['exception' => $e->getMessage()],
                 [],
                 Response::HTTP_INTERNAL_SERVER_ERROR,
@@ -125,81 +161,6 @@ class ContactController extends Controller
 
             return $this->errorResponse(
                 'Error inesperado al obtener los filtros.',
-                ['exception' => $e->getMessage()],
-                [],
-                Response::HTTP_INTERNAL_SERVER_ERROR,
-                config('app.debug') ? $e : null
-            );
-        }
-    }
-
-    /**
-     * Display a filtered and paginated listing of contacts.
-     */
-    public function getFilteredContacts(Request $request): JsonResponse
-    {
-        try {
-            $query = Contact::query()->withTrashed();
-
-            // Filtrar por tipo de contacto si se proporciona
-            if ($request->has('contact_type')) {
-                $query->where('contact_type', $request->contact_type);
-            }
-
-            // Búsqueda por nombre de empresa o contacto
-            $search = $request->get('search', '');
-            if ($request->has('search')) {
-                $query->where(function ($q) use ($search) {
-                    $q->where('code', 'like', "{$search}%")
-                      ->orWhere('name', 'like', "%{$search}%");
-                });
-            }
-
-            // Ordenamiento
-            $sortBy = $request->input('sort_by', 'created_at');
-            $sortDirection = $request->input('sort_direction', 'desc');
-            if (in_array($sortBy, array_keys(self::ALLOWED_SORT_FIELDS))) {
-                $query->orderBy($sortBy, $sortDirection)
-                    ->select(
-                        'id', 'code', 'name', 
-                        'phone', 'contact_type', 'deleted_at'
-                    );
-            }
-
-            // Paginación
-            $perPage = $request->get('per_page', 9);
-            $contacts = $query->paginate($perPage);
-
-            $filtersApplied = [
-                'search' => $search,
-                'sort_by' => $sortBy,
-                'sort_direction' => $sortDirection,
-                'per_page' => $perPage,
-                'page' => $request->integer('page', 1)
-            ];
-
-            Log::info('Retrieved contacts filtered', [
-                'user_email' => $request->user()->email,
-                'ip' => $request->ip(),
-            ]);
-
-            return $this->paginatedResponse(
-                $contacts,
-                'Contactos filtrados recuperados exitosamente.',
-                ['filters_applied' => $filtersApplied]
-            );
-        } catch (\Exception $e) {
-            Log::error('Error trying to get filtered contacts ', [
-                'user_email' => $request->user()->email,
-                'ip' => $request->ip(),
-                'error' => $e->getMessage(),
-                'code' => $e->getCode(),
-                'line' => $e->getLine(),
-                'data' => $request->all()
-            ]);
-
-            return $this->errorResponse(
-                'Error al procesar la consulta de contactos.',
                 ['exception' => $e->getMessage()],
                 [],
                 Response::HTTP_INTERNAL_SERVER_ERROR,
