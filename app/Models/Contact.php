@@ -12,8 +12,7 @@ class Contact extends Model
 
     protected $fillable = [
         'code',
-        'company_name',
-        'contact_name',
+        'name',
         'email',
         'phone',
         'address',
@@ -31,7 +30,6 @@ class Contact extends Model
     ];
 
     protected $appends = [
-        // 'full_name',
         'search_alias',
         'phone_number_info',
         'last_order'
@@ -44,14 +42,13 @@ class Contact extends Model
 
     public function getFullNameAttribute()
     {
-        return $this->company_name . ' (' . $this->contact_type . ')';
+        return $this->name . ' (' . $this->contact_type . ')';
     }
 
     public function getSearchAliasAttribute()
     {
         $is_deleted = ($this->trashed()) ? '**BORRADO**' : '';
-        $withContactName = (isset($this->contact_name)) ? " ({$this->contact_name})" : '';
-        return "{$is_deleted}{$this->code}| {$this->company_name}{$withContactName}";
+        return "{$is_deleted}{$this->code}| {$this->name}";
     }
 
     public function getPhoneNumberInfoAttribute()
@@ -62,10 +59,10 @@ class Contact extends Model
     public function getLastOrderAttribute()
     {
         $lastOrder = $this->orders()
-            ->with(['movementType'])
-            ->select('id', 'id_movement_type', 'total_net', 'created_at')
-            ->orderBy('created_at', 'desc')
-            ->first();
+                            ->with(['movementType'])
+                            ->select('id', 'id_movement_type', 'total_net', 'created_at')
+                            ->orderBy('created_at', 'desc')
+                            ->first();
         
         if (!$lastOrder) {
             return 'No tiene ultimo pedido';

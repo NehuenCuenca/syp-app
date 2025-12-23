@@ -80,7 +80,7 @@ class Order extends Model
 
     public function getSearchAliasAttribute()
     {
-        return "$this->code| {$this->contact->company_name}";
+        return "$this->code| {$this->contact->name}";
     }
     
     /**

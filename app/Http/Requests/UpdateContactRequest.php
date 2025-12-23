@@ -25,8 +25,7 @@ class UpdateContactRequest extends BaseApiRequest
         $contactId = $this->route('contact')->id;
 
         return [
-            'company_name' => 'string|max:255',
-            'contact_name' => 'nullable|string|max:255',
+            'name' => 'string|max:255',
             'email' => [
                 'nullable',
                 'email',

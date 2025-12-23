@@ -24,8 +24,7 @@ class StoreContactRequest extends BaseApiRequest
     public function rules(): array
     {
         return [
-            'company_name' => 'required|string|max:255',
-            'contact_name' => 'nullable|string|max:255',
+            'name' => 'required|string|max:255',
             'email' => 'nullable|email|unique:contacts,email|max:255',
             'phone' => 'nullable|string|max:255',
             'address' => 'nullable|string',

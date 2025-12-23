@@ -129,7 +129,7 @@ class OrderExportService
     public function generateFileName(Order $order): string
     {
         $date = $order->created_at->format('Y-m-d');
-        $contact = str_replace(' ', '_', $order->contact->company_name);
+        $contact = str_replace(' ', '_', $order->contact->name);
         return "boleta_{$contact}_{$date}_{$order->code}" . ".xlsx";
     }
 

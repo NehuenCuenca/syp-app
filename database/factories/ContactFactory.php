@@ -15,8 +15,7 @@ class ContactFactory extends Factory
         $companyName = $this->faker->company();
 
         return [
-            'company_name' => $companyName,
-            'contact_name' => fake()->name(),
+            'name' => $companyName,
             'email' => fake()->unique()->safeEmail(),
             'phone' => fake()->phoneNumber(),
             'address' => fake()->address(),

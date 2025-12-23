@@ -11,20 +11,10 @@ class ContactSeeder extends Seeder
     {
         // Create a typical contact
         Contact::create([
-            'company_name' => 'Acme Corporation',
-            'contact_name' => 'John Doe',
+            'name' => 'Acme Corporation',
             'email' => 'john.doe@acme.com',
             'phone' => '(555) 123-4567',
             'address' => '123 Business Ave, Suite 100, Enterprise City, 12345',
-            'contact_type' => 'Cliente',
-        ]);
-
-        Contact::create([
-            'company_name' => 'OCASIONAL',
-            'contact_name' => 'Fulanito Detal',
-            'email' => 'fulanito.detal@mailfalso.com',
-            'phone' => '(111) 222-3333',
-            'address' => 'Calle Falsa 123',
             'contact_type' => 'Cliente',
         ]);
 

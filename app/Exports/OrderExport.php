@@ -104,7 +104,7 @@ class OrderExport implements FromCollection, WithHeadings, WithMapping, WithStyl
             $currentRow++;
 
             $sheet->setCellValue("A{$currentRow}", 'Comprador:');
-            $comprador = $order->contact ? "{$order->contact->company_name}" : 'N/A';
+            $comprador = $order->contact ? "{$order->contact->name}" : 'N/A';
             $sheet->setCellValue("B{$currentRow}", $comprador);
             $currentRow++;
 

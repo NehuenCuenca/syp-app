@@ -25,7 +25,7 @@ class ContactController extends Controller
     public function index(Request $request): JsonResponse
     {
         try {
-            $contacts = Contact::select('id', 'code', 'company_name', 'contact_name', 'phone', 'contact_type', 'deleted_at')
+            $contacts = Contact::select('id', 'code', 'name', 'phone', 'contact_type', 'deleted_at')
                                 ->orderBy('created_at', 'desc')->get();
 
             Log::info('All contacts retrieved (without filters)', [
@@ -60,8 +60,7 @@ class ContactController extends Controller
 
     public const ALLOWED_SORT_FIELDS  = [
             'code' => 'Codigo', 
-            'company_name' => 'Nombre de negocio', 
-            'contact_name' => 'Nombre de contacto',
+            'name' => 'Nombre de negocio', 
             'contact_type' => 'Tipo de contacto',
             'created_at' => 'Fecha de creación',
     ];
@@ -81,8 +80,8 @@ class ContactController extends Controller
                 ->orderBy('contact_type')
                 ->pluck('contact_type');
 
-            $contacts = Contact::select('id', 'code', 'company_name', 'contact_name', 'deleted_at')
-                ->distinct()->get();
+            $contacts = Contact::select('id', 'code', 'name', 'deleted_at')
+                ->distinct()->get()->makeHidden(['last_order', 'phone_number_info']);
                 
             $filterData = [
                 'contact_types' => $contactTypes,
@@ -152,7 +151,7 @@ class ContactController extends Controller
             if ($request->has('search')) {
                 $query->where(function ($q) use ($search) {
                     $q->where('code', 'like', "{$search}%")
-                      ->orWhere('company_name', 'like', "%{$search}%");
+                      ->orWhere('name', 'like', "%{$search}%");
                 });
             }
 
@@ -162,9 +161,8 @@ class ContactController extends Controller
             if (in_array($sortBy, array_keys(self::ALLOWED_SORT_FIELDS))) {
                 $query->orderBy($sortBy, $sortDirection)
                     ->select(
-                        'id', 'code', 'company_name', 
-                        'contact_name', 'phone', 'contact_type',
-                        'deleted_at'
+                        'id', 'code', 'name', 
+                        'phone', 'contact_type', 'deleted_at'
                     );
             }
 
