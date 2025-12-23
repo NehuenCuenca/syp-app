@@ -125,6 +125,10 @@ class ProductController extends Controller
     {
         DB::beginTransaction();
         try {
+            //create category if dont exist
+            $category = Category::firstOrCreate(['name' => $request->input('category', 'Varios')]);
+            $request->merge(['id_category' => $category->id]);
+            
             $product = Product::create($request->only([
                 'name',
                 'buy_price',

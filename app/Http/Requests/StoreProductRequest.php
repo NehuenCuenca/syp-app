@@ -2,7 +2,6 @@
 
 namespace App\Http\Requests;
 
-use App\Models\Category;
 use App\Models\Product;
 
 class StoreProductRequest extends BaseApiRequest
@@ -24,17 +23,5 @@ class StoreProductRequest extends BaseApiRequest
             'min_stock_alert' => ['required', 'integer', 'min:0'],
             'category' => ['required', 'string', 'max:100'],
         ];
-    }
-
-    /**
-     * Prepare the data for validation.
-     */
-    protected function prepareForValidation(): void
-    {
-        // crear categoria si no existe
-        $category = Category::firstOrCreate(['name' => $this->input('category', 'Varios')]);
-        $this->merge([
-            'id_category' => $category->id
-        ]);
     }
 }
