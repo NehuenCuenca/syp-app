@@ -195,7 +195,7 @@ class ContactController extends Controller
             ]);
 
             return $this->errorResponse(
-                'Error al crear el contacto.',
+                'Error inesperado al crear el contacto.',
                 ['exception' => $e->getMessage()],
                 [],
                 Response::HTTP_INTERNAL_SERVER_ERROR,
@@ -243,7 +243,7 @@ class ContactController extends Controller
             ]);
 
             return $this->errorResponse(
-                'Error al recuperar el contacto.',
+                'Error inesperado al recuperar el contacto.',
                 ['exception' => $e->getMessage()],
                 [],
                 Response::HTTP_INTERNAL_SERVER_ERROR,
@@ -414,11 +414,13 @@ class ContactController extends Controller
                 'data' => $request->all()
             ]);
 
-            return response()->json([
-                'success' => false,
-                'message' => 'Error al generar el archivo Excel',
-                'error' => $e->getMessage()
-            ], 500);
+            return $this->errorResponse(
+                'Error inesperado al exportar el listado de contactos.',
+                ['exception' => $e->getMessage()],
+                [],
+                Response::HTTP_INTERNAL_SERVER_ERROR,
+                config('app.debug') ? $e : null
+            );
         }
     }
 }

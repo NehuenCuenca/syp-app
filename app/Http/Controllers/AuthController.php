@@ -146,7 +146,7 @@ class AuthController extends Controller
             ]);
 
             return $this->errorResponse(
-                'Ocurrió un error inesperado durante el login.',
+                'Ocurrió un error inesperado durante el login. Contacte con el administrador del sistema',
                 ['exception' => $e->getMessage()],
                 [],
                 500,
