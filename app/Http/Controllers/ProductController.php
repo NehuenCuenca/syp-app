@@ -14,6 +14,7 @@ use App\Models\StockMovement;
 use Exception;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Response;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -215,7 +216,7 @@ class ProductController extends Controller
         }
     }
 
-    public function show(Product $product): JsonResponse
+    public function show(Request $request, Product $product): JsonResponse
     {
         try {
             $product->load('category');
@@ -344,7 +345,7 @@ class ProductController extends Controller
         }
     }
 
-    public function destroy(Request $request,Product $product): JsonResponse
+    public function destroy(Request $request, Product $product): JsonResponse
     {
         DB::beginTransaction();
         
@@ -579,45 +580,64 @@ class ProductController extends Controller
      */
     public function exportCatalog(Request $request)
     {
-        // Obtener el ID de la categoría a excluir (opcional)
-        $excludeCategoryId = $request->query('exclude_category');
-        
-        // Validar que sea un número si se proporciona
-        if ($excludeCategoryId && !is_numeric($excludeCategoryId)) {
-            Log::error('Error of validation trying to export catalog excluding a category', [
+        try {
+            // Obtener el ID de la categoría a excluir (opcional)
+            $excludeCategoryId = $request->query('exclude_category');
+            
+            // Validar que sea un número si se proporciona
+            if ($excludeCategoryId && !is_numeric($excludeCategoryId)) {
+                Log::error('Error of validation trying to export catalog excluding a category', [
+                    'user_email' => $request->user()->email,
+                    'ip' => $request->ip(),
+                    'error' => 'Invalid parameter at exclude_category (must be a number)',
+                    'data' => $request->all()
+                ]);
+
+                return $this->errorResponse('El parámetro exclude_category no es valido', ['exclude_category' => 'Debe ser un numero'], [], 400);
+            }
+
+            //Validar que el ID de la categoría a excluir exista en la base de datos
+            if ($excludeCategoryId && !Category::find($excludeCategoryId)) {
+                Log::error('Error of validation trying to export catalog excluding a category', [
+                    'user_email' => $request->user()->email,
+                    'ip' => $request->ip(),
+                    'error' => 'Category not found',
+                    'data' => $request->all()
+                ]);
+
+                return $this->errorResponse('El parámetro exclude_category no se encontró en la base de datos', [], [], 400);
+            }
+
+            // Generar el nombre del archivo con la fecha actual
+            $fileName = 'catalogo_productos_' . date('Ymd') . '.xlsx';
+
+            Log::info('Products catalog has been exported', [
                 'user_email' => $request->user()->email,
                 'ip' => $request->ip(),
-                'error' => 'Invalid parameter at exclude_category (must be a number)',
+            ]);
+            
+            // Descargar el archivo Excel
+            return Excel::download(new CatalogExport($excludeCategoryId), $fileName, null, [
+                'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                'X-Filename' => $fileName
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error trying to export the list of contacts', [
+                'user_email' => $request->user()->email,
+                'ip' => $request->ip(),
+                'error' => $e->getMessage(),
+                'code' => $e->getCode(),
+                'line' => $e->getLine(),
                 'data' => $request->all()
             ]);
 
-            return $this->errorResponse('El parámetro exclude_category no es valido', ['exclude_category' => 'Debe ser un numero'], [], 400);
+            return $this->errorResponse(
+                'Error inesperado al exportar el listado de contactos.',
+                ['exception' => $e->getMessage()],
+                [],
+                Response::HTTP_INTERNAL_SERVER_ERROR,
+                config('app.debug') ? $e : null
+            );
         }
-
-        //Validar que el ID de la categoría a excluir exista en la base de datos
-        if ($excludeCategoryId && !Category::find($excludeCategoryId)) {
-            Log::error('Error of validation trying to export catalog excluding a category', [
-                'user_email' => $request->user()->email,
-                'ip' => $request->ip(),
-                'error' => 'Category not found',
-                'data' => $request->all()
-            ]);
-
-            return $this->errorResponse('El parámetro exclude_category no se encontró en la base de datos', [], [], 400);
-        }
-
-        // Generar el nombre del archivo con la fecha actual
-        $fileName = 'catalogo_productos_' . date('Ymd') . '.xlsx';
-
-        Log::info('Products catalog has been exported', [
-            'user_email' => $request->user()->email,
-            'ip' => $request->ip(),
-        ]);
-        
-        // Descargar el archivo Excel
-        return Excel::download(new CatalogExport($excludeCategoryId), $fileName, null, [
-            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-            'X-Filename' => $fileName
-        ]);
     }
 }
