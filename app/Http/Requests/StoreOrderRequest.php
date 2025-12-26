@@ -56,7 +56,7 @@ class StoreOrderRequest extends BaseApiRequest
     public function withValidator($validator)
     {
         $validator->after(function ($validator) {
-            //Validar que el tipo de movimiento sea válido
+            // Validar tipo de movimiento
             $validMovementTypes = [
                 MovementType::firstWhere('name', Order::ORDER_TYPE_SALE)->id,
                 MovementType::firstWhere('name', Order::ORDER_TYPE_PURCHASE)->id,
@@ -66,7 +66,7 @@ class StoreOrderRequest extends BaseApiRequest
                 $validator->errors()->add('id_movement_type', 'Tipo de movimiento inválido (solo se permiten compras y ventas).');
             }
 
-            // Validación personalizada: verificar duplicados de productos
+            // Validar duplicados de productos
             $productIds = collect($this->order_details)->pluck('id_product')->toArray();
             $uniqueProductIds = array_unique($productIds);
             
@@ -74,17 +74,15 @@ class StoreOrderRequest extends BaseApiRequest
                 $validator->errors()->add('order_details', 'No se pueden repetir productos en el mismo pedido.');
             }
 
-            // Validación personalizada: verificar stock disponible para pedidos de venta
-            if ($this->id_movement_type == MovementType::firstWhere('name', Order::ORDER_TYPE_SALE)->id && $this->order_details) {
-                foreach ($this->order_details as $index => $detail) {
-                    $product = Product::find($detail['id_product']);
-                    if ($product && $product->current_stock < $detail['quantity']) {
-                        $validator->errors()->add(
-                            "order_details.{$index}.quantity",
-                            "Stock insuficiente para el producto {$product->name}. Stock disponible: {$product->current_stock}"
-                        );
-                    }
-                }
+            // Validar stock usando el servicio
+            $orderService = app(\App\Services\OrderService::class);
+            $stockErrors = $orderService->validateStockAvailability(
+                $this->order_details,
+                $this->id_movement_type
+            );
+
+            foreach ($stockErrors as $field => $message) {
+                $validator->errors()->add($field, $message);
             }
         });
     }

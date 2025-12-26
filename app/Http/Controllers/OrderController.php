@@ -11,6 +11,7 @@ use App\Models\Order;
 use App\Models\OrderDetail;
 use App\Models\StockMovement;
 use App\Models\Product;
+use App\Services\OrderService;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Http\Request;
@@ -155,120 +156,34 @@ class OrderController extends Controller
 
     public function store(StoreOrderRequest $request)
     {
-        DB::beginTransaction();
-        
         try {
-            // Crear el contacto si no existe
-            if(!$request->has('id_contact')) {
-                $contact = Contact::firstOrCreate([
-                    'name' => $request->new_contact_name,
-                    'contact_type' => 'Cliente',
-                ]);
-            } else {
-                $contact = Contact::find($request->id_contact);
-            }
-            
-            // Crear el pedido
-            $order = Order::create([
-                'id_contact' => $contact->id,
-                'id_movement_type' => $request->id_movement_type,
-                'notes' => $request->notes,
-                'adjustment_amount' => $request->adjustment_amount ?? 0,
-            ]);
+            $orderService = app(OrderService::class);
+            $order = $orderService->createOrder($request->validated());
 
-            if (!$order) {
-                throw new Exception('No se pudo crear el pedido');
-            }
-
-            // Crear los detalles del pedido
-            $this->createDetails($request->order_details, $order);
-
-            $orderCode = substr(MovementType::find($request->id_movement_type)->name, 0, 1) . $order->id;
-            $detailsSubtotal = $order->orderDetails->sum('line_subtotal');
-            $totalNet = ($detailsSubtotal + $request->adjustment_amount);            
-
-            $order->update([
-                'code' => $orderCode,
-                'subtotal' => $detailsSubtotal,
-                'total_net' => $totalNet
-            ]);
-
-            DB::commit();
-
-            $orderData = $order->load(['contact', 'orderDetails.product.category', 'movementType']);
-
-            Log::info('Retrieve the data necessary to create an order', [
+            Log::info('Order created', [
                 'user_email' => $request->user()->email,
                 'ip' => $request->ip(),
-                'id_order' => $order->id
+                'order_id' => $order->id,
             ]);
-            
+
             return $this->createdResponse(
-                $orderData,
+                $order,
                 'Pedido creado exitosamente'
             );
         } catch (Exception $e) {
-            DB::rollBack();
-
-            Log::error('Error trying to create an order: ', [
+            Log::error('Error creating order', [
                 'user_email' => $request->user()->email,
                 'ip' => $request->ip(),
                 'error' => $e->getMessage(),
-                'code' => $e->getCode(),
-                'line' => $e->getLine(),
-                'data' => $request->all()
+                'data' => $request->all(),
             ]);
-            
+
             return $this->errorResponse(
                 'Error al crear el pedido',
-                ['exception' => $e->getMessage()],
+                config('app.debug') ? ['exception' => $e->getMessage()] : [],
                 [],
-                500,
-                config('app.debug') ? $e : null
+                500
             );
-        }
-    }
-
-    public function createDetails(array|null $details, Order $order)
-    {
-        if (!empty($details) && $details!==null) {
-            foreach ($details as $detail) {
-                $product = Product::find($detail['id_product']);
-                
-                if (!$product) { throw new Exception("Producto con ID {$detail['id_product']} no encontrado"); }
-                
-                $stockToDiscount = ($order->getIsSaleAttribute() && $detail['quantity'] >= $product->current_stock) 
-                    ? $product->current_stock //Si la cantidad a vender es mayor al stock disponible, se descuenta lo max de stock (el stock queda en 0)
-                    : $detail['quantity'];
-
-                $detailRecord = OrderDetail::create([
-                    'id_order' => $order->id,
-                    'id_product' => $detail['id_product'],
-                    'quantity' => $stockToDiscount,
-                    'unit_price' => $detail['unit_price'],
-                    'percentage_applied' => $detail['percentage_applied'] ?? 0,
-                ]);
-
-                if (!$detailRecord) { throw new Exception('Error al crear detalle del pedido'); }
-                Log::info('Detail of order has been created', [
-                    'id_detail' => $detailRecord->id,
-                    'id_product' => $detail['id_product'],
-                ]);
-
-                if ($order->getIsPurchaseAttribute()) {
-                    $product->update(['buy_price' => $detail['unit_price'], 'profit_percentage' => $detail['percentage_applied']]);
-
-                    Log::info('Update buy price and profit percentage of product', [
-                        'id_product' => $product->id,
-                        'buy_price' => $detail['unit_price'],
-                        'profit_percentage' => $detail['percentage_applied'],
-                    ]);
-                }
-                
-                $this->createStockMovement($order, $detailRecord);
-            }
-        }else {
-            throw new Exception('No se proporcionaron detalles al pedido');
         }
     }
 
@@ -378,92 +293,34 @@ class OrderController extends Controller
      */
     public function update(UpdateOrderRequest $request, Order $order)
     {
-        DB::beginTransaction();
-        
         try {
-            // Crear el contacto si no existe
-            if(!$request->has('id_contact')) {
-                $contact = Contact::firstOrCreate([
-                    'name' => $request->new_contact_name,
-                    'contact_type' => 'Cliente',
-                ]);
-            } else {
-                $contact = Contact::find($request->id_contact);
-            }
+            $orderService = app(OrderService::class);
+            $order = $orderService->updateOrder($order, $request->validated());
 
-            // Actualizar el pedido
-            $updatedOrder = $order->update([
-                'id_contact' => $contact->id,
-                'notes' => $request->notes,
-                'adjustment_amount' => $request->adjustment_amount,
-            ]);
-
-            if (!$updatedOrder) {
-                throw new Exception('No se pudo actualizar el pedido');
-            }
-
-            if($request->has('order_details')){
-                // revert product stock of each detail
-                foreach ($order->orderDetails->all() as $detail) {
-                    $quantityToRevert = StockMovement::where('id_order', $order->id)
-                        ->where('id_product', $detail->id_product)
-                        ->sum('quantity_moved');
-
-                    // Actualizar stock
-                    $product = Product::find($detail->id_product);
-                    if ($product) {
-                        $product->decrement('current_stock', $quantityToRevert);
-                    }
-                }
-
-                $order->stockMovements()->delete();
-                $order->orderDetails()->delete();
-
-                $this->createDetails($request->order_details, $order);
-
-                $detailsSubtotal = $order->refresh()->orderDetails->sum('line_subtotal');
-                $totalNet = ($detailsSubtotal + $request->adjustment_amount);            
-
-                $order->update([
-                    'subtotal' => $detailsSubtotal,
-                    'total_net' => $totalNet
-                ]);
-            }
-
-            DB::commit();
-
-            Log::info('Order has been updated', [
+            Log::info('Order updated', [
                 'user_email' => $request->user()->email,
                 'ip' => $request->ip(),
-                'id_order' => $order->id,
+                'order_id' => $order->id,
             ]);
 
-            $orderData = $order->load(['contact', 'orderDetails.product.category', 'movementType']);
-            
             return $this->successResponse(
-                $orderData,
+                $order,
                 'Pedido actualizado exitosamente'
             );
-
         } catch (Exception $e) {
-            DB::rollBack();
-
-            Log::error('Error trying updating a order', [
+            Log::error('Error updating order', [
                 'user_email' => $request->user()->email,
                 'ip' => $request->ip(),
-                'id_order' => $order->id,
+                'order_id' => $order->id,
                 'error' => $e->getMessage(),
-                'code' => $e->getCode(),
-                'line' => $e->getLine(),
-                'data' => $request->all()
+                'data' => $request->all(),
             ]);
-            
+
             return $this->errorResponse(
                 'Error al actualizar el pedido',
-                ['exception' => $e->getMessage()],
+                config('app.debug') ? ['exception' => $e->getMessage()] : [],
                 [],
-                500,
-                config('app.debug') ? $e : null
+                500
             );
         }
     }
@@ -473,63 +330,34 @@ class OrderController extends Controller
      */
     public function destroy(Request $request, Order $order)
     {
-        DB::beginTransaction();
-        
         try {
-            if ($order->orderDetails()->exists()) {
-                foreach ($order->orderDetails->all() as $detail) {
-                    $quantityToRevert = StockMovement::where('id_order', $order->id)
-                        ->where('id_product', $detail->id_product)
-                        ->sum('quantity_moved');
+            $orderService = app(OrderService::class);
+            $orderService->deleteOrder($order);
 
-                    // Actualizar stock
-                    $product = Product::find($detail->id_product);
-                    if ($product) {
-                        $product->decrement('current_stock', $quantityToRevert);
-                    }
-                }
-            }
-           
-            $order->stockMovements()->delete();
-            $order->orderDetails()->delete();            
-            $deleteResult = $order->delete();
-
-            if (!$deleteResult) {
-                throw new Exception('No se pudo eliminar el pedido');
-            }
-
-            DB::commit();
-
-            Log::info('Order, details and stock movements has been deleted', [
+            Log::info('Order deleted', [
                 'user_email' => $request->user()->email,
                 'ip' => $request->ip(),
-                'id_order' => $order->id,
+                'order_id' => $order->id,
             ]);
-            
+
             return $this->deletedResponse(
                 $order->id,
                 'Pedido eliminado exitosamente',
                 false
             );
         } catch (Exception $e) {
-            DB::rollBack();
-
-            Log::error('Error trying to delete an order', [
+            Log::error('Error deleting order', [
                 'user_email' => $request->user()->email,
                 'ip' => $request->ip(),
                 'order_id' => $order->id,
                 'error' => $e->getMessage(),
-                'code' => $e->getCode(),
-                'line' => $e->getLine(),
-                'data' => $request->all()
             ]);
-            
+
             return $this->errorResponse(
                 'Error al eliminar el pedido',
-                ['exception' => $e->getMessage()],
+                config('app.debug') ? ['exception' => $e->getMessage()] : [],
                 [],
-                500,
-                config('app.debug') ? $e : null
+                500
             );
         }
     }
@@ -671,54 +499,4 @@ class OrderController extends Controller
         'asc' => 'Ascendente',
         'desc' => 'Descendente'
     ];
-
-    /**
-     * Crear movimiento de stock para un detalle del pedido
-     */
-    private function createStockMovement(Order $order, OrderDetail $detail)
-    {
-        try {
-            $quantity = ($order->getIsSaleAttribute()) ? -$detail->quantity : $detail->quantity;
-            $lineSubtotalAsCurrency = $detail->formatToCurrency($detail->line_subtotal);
-            $movementAction = ($order->getIsSaleAttribute()) 
-                                ? "Vendí a $lineSubtotalAsCurrency" 
-                                : "Compré a $lineSubtotalAsCurrency";
-            if ($detail->quantity > 1) {
-                $unitPriceAsCurrency = $detail->formatToCurrency($detail->unit_price);
-                $movementAction.= " (x1: {$unitPriceAsCurrency})";
-            }
-
-            $stockMovement = StockMovement::create([
-                'id_product' => $detail->id_product,
-                'id_order' => $order->id,
-                'id_order_detail' => $detail->id,
-                'id_movement_type' => $order->id_movement_type,
-                'quantity_moved' => $quantity,
-                'notes' => $movementAction,
-            ]);
-
-            if (!$stockMovement) {
-                throw new Exception('No se pudo crear el movimiento de stock');
-            }
-            Log::info('Stock movement has been created');
-
-            // Actualizar stock actual del producto
-            $product = Product::find($detail->id_product);
-            if (!$product) {
-                throw new Exception("Producto con ID {$detail->id_product} no encontrado");
-            }
-            
-            $product->increment('current_stock', $quantity);
-            Log::info('Stock of product has been updated');
-        } catch (Exception $e) {
-            Log::error('Error trying to create the stock movement', [
-                'error' => $e->getMessage(),
-                'code' => $e->getCode(),
-                'line' => $e->getLine(),
-                'detail' => $detail->toArray()
-            ]);
-            
-            throw new Exception('Error al crear movimiento de stock: ' . $e->getMessage());
-        }
-    }
 }

@@ -48,7 +48,11 @@ class UpdateOrderRequest extends BaseApiRequest
     public function withValidator($validator)
     {
         $validator->after(function ($validator) {
-            // Validación personalizada: verificar duplicados de productos
+            if (!$this->has('order_details')) {
+                return; // No need to validate if details aren't being updated
+            }
+
+            // Validar duplicados de productos
             $productIds = collect($this->order_details)->pluck('id_product')->toArray();
             $uniqueProductIds = array_unique($productIds);
 
@@ -56,23 +60,15 @@ class UpdateOrderRequest extends BaseApiRequest
                 $validator->errors()->add('order_details', 'No se pueden repetir productos en el mismo pedido.');
             }
 
-            // Validación personalizada: verificar stock disponible para pedidos de venta
-            if ($this->order->getIsSaleAttribute() && $this->order_details) {
-                foreach ($this->order_details as $index => $new_detail) {
-                    $product = Product::find($new_detail['id_product']);
-                    $wasOrdered = $this->order->orderDetails->where('id_product', $product->id)->first();
-                    // Si el producto ya fue ordenado, sumar al stock actual la cantidad anterior
-                    $valid_stock = (isset($wasOrdered)) 
-                                    ? ($product->current_stock + $wasOrdered->quantity)
-                                    : $product->current_stock;
+            // Validar stock usando el servicio
+            $orderService = app(\App\Services\OrderService::class);
+            $stockErrors = $orderService->validateStockAvailabilityForUpdate(
+                $this->order,
+                $this->order_details
+            );
 
-                    if ($product && $valid_stock < $new_detail['quantity']) {
-                        $validator->errors()->add(
-                            "order_details.{$index}.quantity",
-                            "Stock insuficiente para el producto {$product->name}. Stock disponible: {$valid_stock}"
-                        );
-                    }
-                }
+            foreach ($stockErrors as $field => $message) {
+                $validator->errors()->add($field, $message);
             }
         });
     }
