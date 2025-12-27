@@ -186,7 +186,7 @@ class AuthController extends Controller
             ]);
 
             return $this->errorResponse(
-                'Ocurrió un error inesperado al cerrar la sesión.',
+                'Error inesperado al cerrar la sesión.',
                 ['exception' => $e->getMessage()],
                 [],
                 500,

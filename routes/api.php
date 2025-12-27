@@ -83,7 +83,7 @@ Route::middleware('auth:sanctum')->group(function () {
     | Order details
     |--------------------------------------------------------------------------
     */
-    Route::apiResource('order-details', OrderDetailController::class);
+    // Route::apiResource('order-details', OrderDetailController::class);
 
     /*
     |--------------------------------------------------------------------------
