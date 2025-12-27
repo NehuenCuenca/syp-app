@@ -15,6 +15,7 @@ use App\Services\OrderService;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -94,7 +95,7 @@ class OrderController extends Controller
             ]);
             
             return $this->errorResponse(
-                'Error interno del servidor al filtrar los pedidos',
+                'Error inesperado al filtrar los pedidos',
                 ['exception' => $e->getMessage()],
                 [],
                 500,
@@ -145,7 +146,7 @@ class OrderController extends Controller
             ]);
             
             return $this->errorResponse(
-                'Error interno del servidor al obtener los datos necesarios',
+                'Error inesperado del servidor al obtener los datos necesarios',
                 ['exception' => $e->getMessage()],
                 [],
                 500,
@@ -179,10 +180,11 @@ class OrderController extends Controller
             ]);
 
             return $this->errorResponse(
-                'Error al crear el pedido',
-                config('app.debug') ? ['exception' => $e->getMessage()] : [],
+                'Error inesperado al crear el pedido.',
+                ['exception' => $e->getMessage()],
                 [],
-                500
+                Response::HTTP_INTERNAL_SERVER_ERROR,
+                config('app.debug') ? $e : null
             );
         }
     }
@@ -279,7 +281,7 @@ class OrderController extends Controller
             ]);
             
             return $this->errorResponse(
-                'Error interno del servidor al obtener los datos de edición',
+                'Error inesperado del servidor al obtener los datos de edición',
                 ['exception' => $e->getMessage()],
                 [],
                 500,
@@ -317,10 +319,11 @@ class OrderController extends Controller
             ]);
 
             return $this->errorResponse(
-                'Error al actualizar el pedido',
-                config('app.debug') ? ['exception' => $e->getMessage()] : [],
+                'Error inesperado al actualizar el pedido.',
+                ['exception' => $e->getMessage()],
                 [],
-                500
+                Response::HTTP_INTERNAL_SERVER_ERROR,
+                config('app.debug') ? $e : null
             );
         }
     }
@@ -354,10 +357,11 @@ class OrderController extends Controller
             ]);
 
             return $this->errorResponse(
-                'Error al eliminar el pedido',
-                config('app.debug') ? ['exception' => $e->getMessage()] : [],
+                'Error inesperado al eliminar el pedido.',
+                ['exception' => $e->getMessage()],
                 [],
-                500
+                Response::HTTP_INTERNAL_SERVER_ERROR,
+                config('app.debug') ? $e : null
             );
         }
     }

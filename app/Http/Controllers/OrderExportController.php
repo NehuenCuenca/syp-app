@@ -135,7 +135,7 @@ class OrderExportController extends Controller
             ]);
 
             return $this->errorResponse(
-                'Error interno del servidor al generar el archivo Excel',
+                'Error inesperado del servidor al generar el archivo Excel',
                 ['exception' => $e->getMessage()],
                 ['order_id' => $order->id],
                 500,
