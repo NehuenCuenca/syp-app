@@ -16,7 +16,7 @@ use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Style\Border;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
 
-class OrderExport implements FromCollection, WithHeadings, WithMapping, WithStyles, WithCustomStartCell, ShouldAutoSize, WithEvents
+class OrderExport implements FromCollection, WithHeadings, WithMapping, WithStyles, WithCustomStartCell, ShouldAutoSize//, WithEvents
 {
     private array $orderData;
     private bool $includeHeader;
@@ -289,28 +289,28 @@ class OrderExport implements FromCollection, WithHeadings, WithMapping, WithStyl
     /**
      * Registra eventos para proteger el archivo
      */
-    public function registerEvents(): array
-    {
-        return [
-            AfterSheet::class => function(AfterSheet $event) {
-                $sheet = $event->sheet->getDelegate();
+    // public function registerEvents(): array
+    // {
+    //     return [
+    //         AfterSheet::class => function(AfterSheet $event) {
+    //             $sheet = $event->sheet->getDelegate();
                 
-                // OPCIÓN 1: Proteger toda la hoja con contraseña
-                $sheet->getProtection()->setSheet(true);
-                $sheet->getProtection()->setPassword($this->orderData['order']->code);
+    //             // OPCIÓN 1: Proteger toda la hoja con contraseña
+    //             $sheet->getProtection()->setSheet(true);
+    //             $sheet->getProtection()->setPassword($this->orderData['order']->code);
                 
-                // OPCIÓN 2: Proteger elementos específicos
-                $sheet->getProtection()->setSort(true);           // No permitir ordenar
-                $sheet->getProtection()->setInsertRows(true);     // No permitir insertar filas
-                $sheet->getProtection()->setInsertColumns(true);  // No permitir insertar columnas
-                $sheet->getProtection()->setDeleteRows(true);     // No permitir eliminar filas
-                $sheet->getProtection()->setDeleteColumns(true);  // No permitir eliminar columnas
-                $sheet->getProtection()->setFormatCells(true);    // No permitir formatear celdas
-                $sheet->getProtection()->setFormatColumns(true);  // No permitir formatear columnas
-                $sheet->getProtection()->setFormatRows(true);     // No permitir formatear filas
-                $sheet->getProtection()->setSelectLockedCells(true);   // Permitir seleccionar celdas bloqueadas
-                $sheet->getProtection()->setSelectUnlockedCells(true); // Permitir seleccionar celdas desbloqueadas
-            },
-        ];
-    }
+    //             // OPCIÓN 2: Proteger elementos específicos
+    //             $sheet->getProtection()->setSort(true);           // No permitir ordenar
+    //             $sheet->getProtection()->setInsertRows(true);     // No permitir insertar filas
+    //             $sheet->getProtection()->setInsertColumns(true);  // No permitir insertar columnas
+    //             $sheet->getProtection()->setDeleteRows(true);     // No permitir eliminar filas
+    //             $sheet->getProtection()->setDeleteColumns(true);  // No permitir eliminar columnas
+    //             $sheet->getProtection()->setFormatCells(true);    // No permitir formatear celdas
+    //             $sheet->getProtection()->setFormatColumns(true);  // No permitir formatear columnas
+    //             $sheet->getProtection()->setFormatRows(true);     // No permitir formatear filas
+    //             $sheet->getProtection()->setSelectLockedCells(true);   // Permitir seleccionar celdas bloqueadas
+    //             $sheet->getProtection()->setSelectUnlockedCells(true); // Permitir seleccionar celdas desbloqueadas
+    //         },
+    //     ];
+    // }
 }
