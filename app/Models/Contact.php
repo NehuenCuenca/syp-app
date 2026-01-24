@@ -35,6 +35,12 @@ class Contact extends Model
         'last_order'
     ];
 
+    /**
+     * Constants for contacts types
+     */
+    const CONTACT_TYPE_CLIENT = 'Cliente';
+    const CONTACT_TYPE_SUPPLIER = 'Proveedor';    
+
     public function orders()
     {
         return $this->hasMany(Order::class, 'id_contact') ;
