@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('movement_types', function (Blueprint $table) {
             $table->id();
-            $table->string('name'); //'Compra', 'Venta', 'Ajuste_Positivo', 'Ajuste_Negativo', 'Devolucion_Cliente', 'Devolucion_Proveedor'
+            $table->string('name'); //'Compra', 'Venta', 'Ajuste_Positivo', 'Ajuste_Negativo'
             $table->boolean('increase_stock');
             $table->timestamps();
         });

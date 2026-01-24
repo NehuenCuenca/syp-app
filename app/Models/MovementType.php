@@ -37,7 +37,7 @@ class MovementType extends Model
     }
 
     /**
-     * retorna aquellos tipos de movimientos que tienden a incrementar el stock (compra, ajuste positivo, devolucion de cliente)
+     * retorna aquellos tipos de movimientos que tienden a incrementar el stock (compra, ajuste positivo)
      */
     public static function getIncrementMovementTypes(): array
     {
@@ -45,7 +45,7 @@ class MovementType extends Model
     }
 
     /**
-     * retorna aquellos tipos de movimientos que tienden a decrementar> el stock (venta, ajuste negativo, devolucion de proveedor)
+     * retorna aquellos tipos de movimientos que tienden a decrementar> el stock (venta, ajuste negativo)
      */
     public static function getDecrementMovementTypes(): array
     {

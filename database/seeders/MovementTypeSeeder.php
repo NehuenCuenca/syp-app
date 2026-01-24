@@ -29,13 +29,5 @@ class MovementTypeSeeder extends Seeder
             'name' => 'Ajuste Negativo',
             'increase_stock' => false,
         ]);
-        MovementType::create([
-            'name' => 'Devolucion Cliente',
-            'increase_stock' => true,
-        ]);
-        MovementType::create([
-            'name' => 'Devolucion Proveedor',
-            'increase_stock' => false,
-        ]);
     }
 }
