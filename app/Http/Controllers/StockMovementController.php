@@ -163,7 +163,7 @@ class StockMovementController extends Controller
     public function getFilters(Request $request): JsonResponse
     {
         try {
-            $orders = Order::select('id', 'code', 'id_contact', 'id_movement_type', 'total_net', 'created_at')->get();
+            $orders = Order::select('id', 'code', 'id_contact', 'id_movement_type', 'subtotal', 'adjustment_amount', 'total_net', 'created_at')->get();
             $products = Product::select('name', 'id', 'code', 'current_stock', 'min_stock_alert', 'deleted_at')->get();
             $movementTypes = MovementType::select('name', 'id')->get();
             $dateFrom = StockMovement::min('created_at');
