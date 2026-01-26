@@ -47,7 +47,7 @@ class CatalogExport implements FromCollection, WithHeadings, WithEvents, ShouldA
             foreach ($category->products as $product) {
                 $rows->push([
                     '    ' . $product->search_alias, // Indentación para diferenciación visual
-                    '$'. $product->sale_price
+                    format_number_to_currency($product->sale_price)
                 ]);
             }
 
@@ -115,7 +115,7 @@ class CatalogExport implements FromCollection, WithHeadings, WithEvents, ShouldA
                 $lastRow = $sheet->getHighestRow();
                 $sheet->getStyle("B2:B{$lastRow}")
                     ->getNumberFormat()
-                    ->setFormatCode('#,##0');
+                    ->setFormatCode('#.##0');
                 
                 // Aplicar bordes a toda la tabla
                 $sheet->getStyle("A1:B{$lastRow}")
