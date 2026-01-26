@@ -2,6 +2,7 @@
 
 namespace App\Exports;
 
+use App\Models\OrderDetail;
 use App\Models\User;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
@@ -59,15 +60,14 @@ class OrderExport implements FromCollection, WithHeadings, WithMapping, WithStyl
      */
     public function map($row): array
     {
-        // dd($row);
-        $productNameWithCode = "{$row->code}| {$row->product_name}";
+        $detail = OrderDetail::findOrFail($row->id);
         return [
             // $row->code,
-            $productNameWithCode,
-            number_format($row->quantity, 0),
-            '$' . number_format($row->unit_price, 0),
+            $detail->product->search_alias,
+            custom_format_number($detail->quantity),
+            $detail->unit_price_with_discount_as_currency,
             // number_format(($row->percentage_applied), 0) . '%',
-            '$' . number_format($row->line_subtotal, 0)
+            $detail->line_subtotal_as_currency,
         ];
     }
 
@@ -135,19 +135,19 @@ class OrderExport implements FromCollection, WithHeadings, WithMapping, WithStyl
         
         // Agregar fila de subtotal
         $sheet->setCellValue("C{$subTotalRow}", 'SUBTOTAL:');
-        $sheet->setCellValue("D{$subTotalRow}", '$' . number_format($order->subtotal, 0));
+        $sheet->setCellValue("D{$subTotalRow}", format_number_to_currency($order->subtotal));
         
         $currentRow++;
 
         // Agregar fila de ajuste
         $sheet->setCellValue("C{$adjustmentRow}", 'AJUSTE:');
-        $sheet->setCellValue("D{$adjustmentRow}", '$' . number_format($order->adjustment_amount, 0));
+        $sheet->setCellValue("D{$adjustmentRow}", format_number_to_currency($order->adjustment_amount));
         
         $currentRow++;
 
         // Agregar fila de total
         $sheet->setCellValue("C{$totalRow}", 'TOTAL NETO:');
-        $sheet->setCellValue("D{$totalRow}", '$' . number_format($order->total_net, 0));
+        $sheet->setCellValue("D{$totalRow}", format_number_to_currency($order->total_net));
 
         // APLICAR ESTILOS
         $styles = [];

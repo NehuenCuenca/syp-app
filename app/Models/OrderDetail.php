@@ -5,7 +5,6 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use NumberFormatter;
 
 class OrderDetail extends Model
 {
@@ -55,7 +54,7 @@ class OrderDetail extends Model
      */
     protected $hidden = [];
 
-    protected $appends = ['formatted_unit_price', 'formatted_line_subtotal'];
+    protected $appends = ['unit_price_as_currency', 'unit_price_with_discount_as_currency', 'line_subtotal_as_currency'];
 
 
     /**
@@ -101,9 +100,21 @@ class OrderDetail extends Model
     /**
      * Accessor: Get formatted unit price
      */
-    public function getFormattedUnitPriceAttribute(): string
+    public function getUnitPriceAsCurrencyAttribute(): string
     {
-        return $this->formatToCurrency($this->unit_price);
+        return format_number_to_currency($this->unit_price);
+    }
+
+    /**
+     * Accessor: Get formatted unit price with discount applied
+     */
+    public function getUnitPriceWithDiscountAsCurrencyAttribute(): string
+    {
+        if($this->percentage_applied == 0){
+            return format_number_to_currency($this->unit_price);
+        }
+
+        return format_number_to_currency($this->unit_price * (1 - $this->percentage_applied / 100));
     }
 
     /**
@@ -143,9 +154,9 @@ class OrderDetail extends Model
     /**
      * Accessor: Get available stock for this product
      */
-    public function getFormattedLineSubtotalAttribute(): string
+    public function getLineSubtotalAsCurrencyAttribute(): string
     {
-        return $this->formatToCurrency($this->line_subtotal);
+        return format_number_to_currency($this->line_subtotal);
     }
 
     /**
@@ -191,15 +202,6 @@ class OrderDetail extends Model
     {
         $this->line_subtotal = $this->calculateLineSubtotal();
         $this->save();
-    }
-
-    public function formatToCurrency($amount)
-    {
-        $formatter = new NumberFormatter('es_AR', NumberFormatter::CURRENCY);
-        $formatter->setAttribute(NumberFormatter::MIN_FRACTION_DIGITS, 0);
-        $formatter->setSymbol(NumberFormatter::CURRENCY_SYMBOL, '$');
-
-        return $formatter->formatCurrency($amount, 'ARS');
     }
 
     /**

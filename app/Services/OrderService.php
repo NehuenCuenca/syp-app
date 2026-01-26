@@ -328,14 +328,12 @@ class OrderService
      */
     protected function generateStockMovementNotes(Order $order, OrderDetail $orderDetail): string
     {
-        $lineSubtotalAsCurrency = $orderDetail->formatToCurrency($orderDetail->line_subtotal);
         $movementAction = $order->getIsSaleAttribute()
-            ? "Vendí a $lineSubtotalAsCurrency"
-            : "Compré a $lineSubtotalAsCurrency";
+            ? "Vendí a {$orderDetail->line_subtotal_as_currency}"
+            : "Compré a {$orderDetail->line_subtotal_as_currency}";
 
         if ($orderDetail->quantity > 1) {
-            $unitPriceAsCurrency = $orderDetail->formatToCurrency($orderDetail->unit_price);
-            $movementAction .= " (x1: {$unitPriceAsCurrency})";
+            $movementAction .= " (x1: {$orderDetail->unit_price_with_discount_as_currency})";
         }
 
         return $movementAction;

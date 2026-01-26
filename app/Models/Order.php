@@ -6,7 +6,6 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use NumberFormatter;
 
 class Order extends Model
 {
@@ -53,7 +52,7 @@ class Order extends Model
 
     protected $appends = [
         'search_alias', 'order_type_with_total_net', 'is_exportable',
-        'subtotal_currency', 'adjustment_currency', 'total_net_currency'
+        'subtotal_as_currency', 'adjustment_as_currency', 'total_net_as_currency'
     ];
 
     /**
@@ -129,7 +128,7 @@ class Order extends Model
      */
     public function getOrderTypeWithTotalNetAttribute(): string
     {
-        return "{$this->movementType->name} de {$this->formatToCurrency($this->total_net)}";
+        return "{$this->movementType->name} de " . format_number_to_currency($this->total_net);
     }
 
     /**
@@ -143,26 +142,26 @@ class Order extends Model
     /**
      * Accessor: Get subtotal formatted as currency
      */
-    public function getSubtotalCurrencyAttribute(): string
+    public function getSubtotalAsCurrencyAttribute(): string
     {
-        return $this->formatToCurrency($this->subtotal);
+        return format_number_to_currency($this->subtotal);
     }
 
     /**
      * Accessor: Get adjustment formatted as currency 
      */
     
-    public function getAdjustmentCurrencyAttribute(): string
+    public function getAdjustmentAsCurrencyAttribute(): string
     {
-        return $this->formatToCurrency($this->adjustment_amount);
+        return format_number_to_currency($this->adjustment_amount);
     }
     
     /**
      * Accessor: Get total net formatted as currency 
      */
-    public function getTotalNetCurrencyAttribute(): string
+    public function getTotalNetAsCurrencyAttribute(): string
     {
-        return $this->formatToCurrency($this->total_net);
+        return format_number_to_currency($this->total_net);
     }
 
 
@@ -188,14 +187,5 @@ class Order extends Model
     public function getTotalProductsAttribute(): int
     {
         return $this->orderDetails->count();
-    }
-
-    private function formatToCurrency($amount)
-    {
-        $formatter = new NumberFormatter('es_AR', NumberFormatter::CURRENCY);
-        $formatter->setAttribute(NumberFormatter::MIN_FRACTION_DIGITS, 0);
-        $formatter->setSymbol(NumberFormatter::CURRENCY_SYMBOL, '$');
-
-        return $formatter->formatCurrency($amount, 'ARS');
     }
 }
