@@ -42,8 +42,8 @@ class ContactController extends Controller
             }
 
             // Ordenamiento
-            $sortBy = $request->input('sort_by', 'created_at');
-            $sortDirection = $request->input('sort_direction', 'desc');
+            $sortBy = $request->input('sort_by', 'deleted_at');
+            $sortDirection = $request->input('sort_direction', 'asc');
             if (in_array($sortBy, array_keys(self::ALLOWED_SORT_FIELDS))) {
                 $query->orderBy($sortBy, $sortDirection)
                     ->select(
@@ -99,6 +99,7 @@ class ContactController extends Controller
             'name' => 'Nombre de negocio', 
             'contact_type' => 'Tipo de contacto',
             'created_at' => 'Fecha de creación',
+            'deleted_at' => 'Fecha de eliminacion',
     ];
 
     public const ALLOWED_SORT_DIRECTIONS = [
