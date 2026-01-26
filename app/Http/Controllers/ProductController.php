@@ -60,10 +60,11 @@ class ProductController extends Controller
                 $query->orderBy($filters['sort_by'], $filters['sort_direction']);
             }
             
-            $query->orderBy('deleted_at')->select(
+            $query->select(
                 'id', 'code', 'name',
                 'current_stock', 'min_stock_alert', 'id_category',
-                DB::raw('(current_stock < min_stock_alert) as is_low_stock'), 'deleted_at'
+                DB::raw('(current_stock < min_stock_alert) as is_low_stock'), 
+                'deleted_at'
             );
 
             // Paginación

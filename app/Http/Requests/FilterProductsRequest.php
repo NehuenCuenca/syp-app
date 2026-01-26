@@ -32,7 +32,7 @@ class FilterProductsRequest extends BaseApiRequest
             'sort_by' => [
                 'nullable',
                 'string',
-                'in:name,id_category,current_stock,min_stock_alert,sale_price,buy_price,created_at,updated_at'
+                'in:name,id_category,current_stock,min_stock_alert,sale_price,buy_price,created_at,updated_at,deleted_at'
             ],
             'sort_direction' => 'nullable|string|in:asc,desc',
             'id_category' => 'nullable|integer|exists:categories,id',
@@ -68,8 +68,8 @@ class FilterProductsRequest extends BaseApiRequest
             'min_sale_price' => $this->integer('min_sale_price'),
             'max_sale_price' => $this->integer('max_sale_price'),
             'min_stock' => $this->integer('min_stock'),
-            'sort_by' => $this->input('sort_by', 'created_at'),
-            'sort_direction' => $this->input('sort_direction', 'desc'),
+            'sort_by' => $this->input('sort_by', 'deleted_at'),
+            'sort_direction' => $this->input('sort_direction', 'asc'),
             'per_page' => $this->integer('per_page', 9),
             'page' => $this->integer('page', 1)
         ];
