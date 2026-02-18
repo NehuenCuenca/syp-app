@@ -11,6 +11,9 @@ class User extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable;
 
+    const ROLE_ADMIN = 'admin';
+    const ROLE_USER  = 'usuario';
+
     protected $table = 'users';
     protected $primaryKey = 'id';
 
@@ -47,4 +50,11 @@ class User extends Authenticatable
         'created_at' => 'datetime:Y-m-d H:i:s',
         'updated_at' => 'datetime:Y-m-d H:i:s'
     ];
+
+    public static function getUserRoles(){
+        return [
+            self::ROLE_ADMIN,
+            self::ROLE_USER,
+        ];
+    }
 }
