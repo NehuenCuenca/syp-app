@@ -15,8 +15,8 @@ class UserSeeder extends Seeder
             'username' => 'Sofía Distribuciones',
             'email' => 'sergioross73@hotmail.com',
             'phone' => '3446001234',
-            'password' => Hash::make('Admin123'),
-            'role' => 'Admin'
+            'password' => Hash::make('admin123'),
+            'role' => User::ROLE_ADMIN
         ]);
 
         // Create a typical user
@@ -25,7 +25,7 @@ class UserSeeder extends Seeder
             'email' => 'john.doe@example.com',
             'phone' => '3446112233',
             'password' => Hash::make('user123'),
-            'role' => 'Usuario'
+            'role' => User::ROLE_USER
         ]);
     }
 }

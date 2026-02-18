@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
 
@@ -19,7 +20,7 @@ class UserFactory extends Factory
             'email' => fake()->unique()->safeEmail(),
             'phone' => fake()->phoneNumber(),
             'password' => Hash::make('password'),
-            'role' => 'Usuario',
+            'role' => User::ROLE_USER,
         ];
     }
 
@@ -30,7 +31,7 @@ class UserFactory extends Factory
     {
         return $this->state(function (array $attributes) {
             return [
-                'role' => 'Admin',
+                'role' => User::ROLE_ADMIN,
             ];
         });
     }
