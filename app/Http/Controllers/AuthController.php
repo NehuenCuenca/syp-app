@@ -6,74 +6,15 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use App\Http\Requests\RegisterUserRequest; 
 use App\Http\Requests\LoginUserRequest;
 use App\Http\Traits\ApiResponseTrait;
 use Exception;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException; 
 
 class AuthController extends Controller
 {
     use ApiResponseTrait;
-
-    /**
-     * Registro de un nuevo usuario.
-     *
-     * @param  \App\Http\Requests\RegisterUserRequest  $request
-     * @return \Illuminate\Http\JsonResponse
-     */
-    public function register(RegisterUserRequest $request)
-    {
-        DB::beginTransaction();
-        try {
-            $user = User::create([
-                'username' => $request->username,
-                'email' => $request->email,
-                'phone' => $request->phone,
-                'password' => Hash::make($request->password),
-                'role' => $request->role ?? 'Usuario',
-            ]);            
-
-            $token = $user->createToken('authToken')->plainTextToken;
-            
-            DB::commit();
-
-            Log::info('User created', [
-                'user_email' => $user->email,
-                'ip' => $request->ip(),
-            ]);
-            
-            return $this->createdResponse([
-                'id' => $user->id,
-                'username' => $user->username,
-                'email' => $user->email,
-                'phone' => $user->phone,
-                'role' => $user->role,
-                'token' => $token,
-            ], 'Usuario registrado exitosamente');
-        } catch (\Exception $e) { 
-            DB::rollBack();
-
-            Log::error('User register failed', [
-                'user_email' => $request->user()->email,
-                'ip' => $request->ip(),
-                'error' => $e->getMessage(),
-                'code' => $e->getCode(),
-                'line' => $e->getLine(),
-                'data' => $request->all()
-            ]);
-
-            return $this->errorResponse(
-                'Ocurrió un error inesperado al registrar el usuario.', 
-                [],
-                [],
-                500,
-                config('app.debug') ? $e : null
-            );
-        }
-    }
 
     /**
      * Autenticación de usuario y generación de token.
