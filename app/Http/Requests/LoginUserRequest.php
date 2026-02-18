@@ -20,11 +20,7 @@ class LoginUserRequest extends BaseApiRequest
     public function rules(): array
     {
         return [
-            // 'email': requerido, string, y con formato de email válido.
-            'email' => ['required', 'string', 'email'],
-
-            // 'password': requerido y string. No necesitamos una longitud mínima aquí,
-            // ya que solo estamos verificando si las credenciales son correctas.
+            'email' => ['required', 'string', 'email', 'exists:users,email'],
             'password' => ['required', 'string'],
         ];
     }
