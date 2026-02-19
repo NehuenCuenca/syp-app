@@ -61,12 +61,20 @@ class Handler extends ExceptionHandler
      * @param  \Illuminate\Auth\AuthenticationException  $exception
      * @return \Illuminate\Http\Response|\Illuminate\Http\JsonResponse
      */
-    protected function unauthenticated( $request, AuthenticationException $exception)
+    protected function unauthenticated($request, AuthenticationException $exception)
     {
         // Verifica si la solicitud es una API o si espera una respuesta JSON
         // Laravel automáticamente revisa el encabezado 'Accept' o si es una solicitud AJAX
         if ($request->expectsJson()) {
-            return response()->json(['message' => 'No autenticado. Por favor, inicie sesión.'], 401);
+            return
+                ApiResponseService::error(
+                    message: 'No autenticado. Por favor, inicie sesión.',
+                    errors: [
+                        'authentication' => ['Se requiere autenticación para acceder a este recurso.']
+                    ],
+                    meta: [],
+                    statusCode: 401
+                );
         }
 
         // Si no es una API (ej. una solicitud web), redirige a la ruta 'login' (comportamiento por defecto)
