@@ -24,11 +24,11 @@ class StoreContactRequest extends BaseApiRequest
     public function rules(): array
     {
         return [
-            'name' => 'required|string|max:255',
-            'email' => 'nullable|email|unique:contacts,email|max:255',
-            'phone' => 'nullable|string|max:255',
-            'address' => 'nullable|string',
-            'contact_type' => ['required', Rule::in(['Cliente', 'Proveedor'])],
+            'name' => 'required|string|max:100',
+            'email' => 'nullable|email|unique:contacts,email|max:100',
+            'phone' => 'nullable|string|max:50',
+            'address' => 'nullable|string|max:100',
+            'contact_type' => ['required', Rule::in(Contact::getContactTypes())],
         ];
     }
 }

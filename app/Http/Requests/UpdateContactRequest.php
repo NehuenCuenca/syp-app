@@ -25,16 +25,16 @@ class UpdateContactRequest extends BaseApiRequest
         $contactId = $this->route('contact')->id;
 
         return [
-            'name' => 'string|max:255',
+            'name' => 'string|max:100',
             'email' => [
                 'nullable',
                 'email',
-                'max:255',
+                'max:100',
                 Rule::unique('contacts', 'email')->ignore($contactId)
             ],
-            'phone' => 'nullable|string|max:255',
-            'address' => 'nullable|string',
-            'contact_type' => [Rule::in(['Cliente', 'Proveedor'])],
+            'phone' => 'nullable|string|max:50',
+            'address' => 'nullable|string|max:100',
+            'contact_type' => [Rule::in(Contact::getContactTypes())],
         ];
     }
 }
