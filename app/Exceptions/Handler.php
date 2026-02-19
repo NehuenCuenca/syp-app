@@ -2,9 +2,12 @@
 
 namespace App\Exceptions;
 
+use App\Services\ApiResponseService;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 use Illuminate\Http\Exceptions\ThrottleRequestsException;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Illuminate\Http\Request;
 use Throwable;
 
@@ -31,9 +34,23 @@ class Handler extends ExceptionHandler
                 'message' => 'Demasiados intentos. Intentá nuevamente en unos minutos.'
             ], 429);
         });
-        
+
         $this->reportable(function (Throwable $e) {
             //
+        });
+
+        // Capturar ModelNotFoundException → ApiResponseService::notFound()
+        $this->renderable(function (ModelNotFoundException $e, $request) {
+            return ApiResponseService::notFound(
+                'Recurso no encontrado'
+            );
+        });
+
+        // Capturar NotFoundHttpException → ApiResponseService::notFound()
+        $this->renderable(function (NotFoundHttpException $e, $request) {
+            return ApiResponseService::notFound(
+                'Recurso no encontrado'
+            );
         });
     }
 
