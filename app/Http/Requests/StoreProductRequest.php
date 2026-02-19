@@ -15,13 +15,13 @@ class StoreProductRequest extends BaseApiRequest
     public function rules(): array
     {
         return [
-            'name' => ['required', 'string', 'max:255'],
+            'name' => ['required', 'string', 'max:100'],
             'buy_price' => ['required', 'numeric', 'min:0'],
             'profit_percentage' => ['required', 'numeric', 'min:1'],
             'sale_price' => ['numeric', 'min:0', 'gte:buy_price'],
             'current_stock' => ['required', 'integer', 'min:0'],
             'min_stock_alert' => ['required', 'integer', 'min:0'],
-            'category' => ['required', 'string', 'max:100'],
+            'category' => ['required', 'string', 'max:30'],
         ];
     }
 }
