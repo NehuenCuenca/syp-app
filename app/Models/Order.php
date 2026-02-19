@@ -27,7 +27,7 @@ class Order extends Model
     protected $fillable = [
         'contact_id',
         'code',
-        'id_movement_type',
+        'movement_type_id',
         'adjustment_amount',
         'subtotal',
         'total_net',
@@ -74,7 +74,7 @@ class Order extends Model
      */
     public function movementType(): BelongsTo
     {
-        return $this->belongsTo(MovementType::class, 'id_movement_type');
+        return $this->belongsTo(MovementType::class);
     }
 
     public function getSearchAliasAttribute()
@@ -88,8 +88,8 @@ class Order extends Model
     public static function getOrderTypes(): array
     {
         return [
-            MovementType::firstWhere('name', self::ORDER_TYPE_PURCHASE),
-            MovementType::firstWhere('name', self::ORDER_TYPE_SALE)
+            self::ORDER_TYPE_PURCHASE,
+            self::ORDER_TYPE_SALE,
         ];
     }
 
@@ -170,7 +170,7 @@ class Order extends Model
      */
     public function getIsPurchaseAttribute(): bool
     {
-        return $this->id_movement_type === MovementType::firstWhere('name', self::ORDER_TYPE_PURCHASE)->id;
+        return $this->movement_type_id === MovementType::firstWhere('name', self::ORDER_TYPE_PURCHASE)->id;
     }
 
     /**
@@ -178,7 +178,7 @@ class Order extends Model
      */
     public function getIsSaleAttribute(): bool
     {
-        return $this->id_movement_type === MovementType::firstWhere('name', self::ORDER_TYPE_SALE)->id;
+        return $this->movement_type_id === MovementType::firstWhere('name', self::ORDER_TYPE_SALE)->id;
     }
 
     /**
