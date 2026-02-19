@@ -76,7 +76,7 @@ class OrderExportService
         
         // Verificar si el pedido tiene detalles de productos de la categoría
         $hasCategory = $order->orderDetails()->whereHas('product', function ($query) use ($categoryId) {
-            $query->where('id_category', $categoryId);
+            $query->where('category_id', $categoryId);
         })->exists();
 
         return $hasCategory;

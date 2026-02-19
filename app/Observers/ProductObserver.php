@@ -11,7 +11,7 @@ class ProductObserver
      */
     public function created(Product $product): void
     {    
-        $product->code = "{$product->id_category}{$product->id}";
+        $product->code = "{$product->category_id}{$product->id}";
         $product->save();
     } 
 
@@ -58,8 +58,8 @@ class ProductObserver
             $product->sale_price = $product->calculateSellPrice();
         }
 
-        if ($product->isDirty('id_category')) {
-            $product->code = "{$product->id_category}{$product->id}";
+        if ($product->isDirty('category_id')) {
+            $product->code = "{$product->category_id}{$product->id}";
         }
     }
 }

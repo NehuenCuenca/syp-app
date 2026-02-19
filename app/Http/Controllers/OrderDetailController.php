@@ -92,7 +92,7 @@ class OrderDetailController extends Controller
     {
         try {
             $products = Product::with('category:id,name')
-                ->select('id', 'code', 'name', 'current_stock', 'min_stock_alert', 'buy_price', 'sale_price', 'profit_percentage', 'id_category', 'deleted_at')
+                ->select('id', 'code', 'name', 'current_stock', 'min_stock_alert', 'buy_price', 'sale_price', 'profit_percentage', 'category_id', 'deleted_at')
                 ->orderBy('name')
                 ->get();
 

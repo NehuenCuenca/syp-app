@@ -18,7 +18,7 @@ class Product extends Model
         'sale_price',
         'current_stock',
         'min_stock_alert',
-        'id_category'
+        'category_id'
     ];
 
     protected $casts = [
@@ -61,7 +61,7 @@ class Product extends Model
 
     public function category()
     {
-        return $this->belongsTo(Category::class, 'id_category', 'id');
+        return $this->belongsTo(Category::class);
     }
 
     public function calculateSellPrice()

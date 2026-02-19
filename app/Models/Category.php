@@ -32,7 +32,7 @@ class Category extends Model
     // Relación: una categoría tiene muchos productos
     public function products()
     {
-        return $this->hasMany(Product::class, 'id_category')->withTrashed();
+        return $this->hasMany(Product::class, 'category_id')->withTrashed();
     }
 
     public function getSearchAliasAttribute()

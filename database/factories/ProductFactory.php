@@ -23,7 +23,7 @@ class ProductFactory extends Factory
             'sale_price' => (int)($avgPrice * $markup),
             'current_stock' => fake()->numberBetween(0, 100),
             'min_stock_alert' => fake()->numberBetween(5, 20),
-            'id_category' => fake()->numberBetween(1, $totalCategories),
+            'category_id' => fake()->numberBetween(1, $totalCategories),
         ];
     }
 }
