@@ -117,7 +117,7 @@ class ProductController extends Controller
         try {
             //create category if dont exist
             $category = Category::firstOrCreate(['name' => $request->input('category', 'Varios')]);
-            $request->merge(['id_category' => $category->id]);
+            $request->merge(['category_id' => $category->id]);
             
             $product = Product::create($request->only([
                 'name',
@@ -126,7 +126,7 @@ class ProductController extends Controller
                 'sale_price',
                 'current_stock',
                 'min_stock_alert',
-                'id_category',
+                'category_id',
             ]));
             
             $product->load('category');
@@ -241,11 +241,11 @@ class ProductController extends Controller
         
         try {
             // Actualizar categoria si es nueva
-            if ($request->input('id_category')) {
+            if ($request->input('category_id')) {
                 $category = Category::firstOrCreate([
                     'name' => $request->input('category', 'Varios')
                 ]);
-                $request->merge(['id_category' => $category->id]);
+                $request->merge(['category_id' => $category->id]);
             }
 
             $oldStock = $product->current_stock;
