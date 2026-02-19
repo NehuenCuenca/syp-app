@@ -20,7 +20,7 @@ class OrderFactory extends Factory
         $orderType = fake()->randomElement(['Compra', 'Venta']);
 
         return [
-            'id_contact' => Contact::factory(),
+            'contact_id' => Contact::factory(),
             'id_movement_type' => MovementType::firstWhere('name', $orderType)->id,
             'adjustment_amount' => $adjustmentAmount,
             'subtotal' => $subtotal,

@@ -25,7 +25,7 @@ class Order extends Model
      * The attributes that are mass assignable.
      */
     protected $fillable = [
-        'id_contact',
+        'contact_id',
         'code',
         'id_movement_type',
         'adjustment_amount',
@@ -66,7 +66,7 @@ class Order extends Model
      */
     public function contact(): BelongsTo
     {
-        return $this->belongsTo(Contact::class, 'id_contact')->withTrashed();
+        return $this->belongsTo(Contact::class)->withTrashed();
     }
 
     /**

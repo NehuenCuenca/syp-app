@@ -29,7 +29,7 @@ class OrderService
             
             // Create the order
             $order = Order::create([
-                'id_contact' => $contact->id,
+                'contact_id' => $contact->id,
                 'id_movement_type' => $data['id_movement_type'],
                 'notes' => $data['notes'] ?? null,
                 'adjustment_amount' => $data['adjustment_amount'] ?? 0,
@@ -70,7 +70,7 @@ class OrderService
 
             // Update order basic information
             $updated = $order->update([
-                'id_contact' => $contact->id,
+                'contact_id' => $contact->id,
                 'notes' => $data['notes'] ?? $order->notes,
                 'adjustment_amount' => $data['adjustment_amount'] ?? $order->adjustment_amount,
             ]);
@@ -138,10 +138,10 @@ class OrderService
      */
     protected function resolveContact(array $data): Contact
     {
-        if (isset($data['id_contact']) && $data['id_contact']) {
-            $contact = Contact::find($data['id_contact']);
+        if (isset($data['contact_id']) && $data['contact_id']) {
+            $contact = Contact::find($data['contact_id']);
             if (!$contact) {
-                throw new Exception("Contacto con ID {$data['id_contact']} no encontrado");
+                throw new Exception("Contacto con ID {$data['contact_id']} no encontrado");
             }
             return $contact;
         }

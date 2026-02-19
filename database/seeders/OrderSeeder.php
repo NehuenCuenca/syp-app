@@ -17,7 +17,7 @@ class OrderSeeder extends Seeder
 
         // Create a typical sale order
         Order::create([
-            'id_contact' => $contact->id,
+            'contact_id' => $contact->id,
             'id_movement_type' => MovementType::firstWhere('name', 'Venta')->id,
             'adjustment_amount' => 0,
             'subtotal' => 1512.50,

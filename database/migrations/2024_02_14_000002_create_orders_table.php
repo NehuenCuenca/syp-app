@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('orders', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('id_contact');
+            $table->unsignedBigInteger('contact_id');
             $table->unsignedBigInteger('id_movement_type');
             $table->string('code')->unique()->nullable();
             $table->integer('adjustment_amount')->nullable();
@@ -24,7 +24,7 @@ return new class extends Migration
             $table->timestamp('updated_at')->useCurrent()->useCurrentOnUpdate();
             
             // Claves foráneas
-            $table->foreign('id_contact')->references('id')->on('contacts')->onDelete('restrict');
+            $table->foreign('contact_id')->references('id')->on('contacts')->onDelete('restrict');
             $table->foreign('id_movement_type')->references('id')->on('movement_types')->onDelete('restrict');
         });
     }

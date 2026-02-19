@@ -36,8 +36,8 @@ class OrderController extends Controller
                 $query->where('id_movement_type', $request->id_movement_type);
             }
 
-            if ($request->filled('id_contact')) {
-                $query->where('id_contact', $request->id_contact);
+            if ($request->filled('contact_id')) {
+                $query->where('contact_id', $request->contact_id);
             }
 
             if ($request->filled('before_equal_date')) {

@@ -27,8 +27,8 @@ class StoreOrderRequest extends BaseApiRequest
     public function rules(): array
     {
         return [
-            'id_contact' => 'required_without:new_contact_name|integer|exists:contacts,id',
-            'new_contact_name' => 'required_without:id_contact|string|max:255',
+            'contact_id' => 'required_without:new_contact_name|integer|exists:contacts,id',
+            'new_contact_name' => 'required_without:contact_id|string|max:255',
 
             'id_movement_type' => 'required|exists:movement_types,id',
             'notes' => 'nullable|string|max:1000',
