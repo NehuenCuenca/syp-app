@@ -5,6 +5,7 @@ namespace App\Http\Requests;
 use App\Models\Product;
 use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Contracts\Validation\Validator;
+use Illuminate\Validation\Rule;
 
 class FilterProductsRequest extends BaseApiRequest
 {
@@ -15,6 +16,20 @@ class FilterProductsRequest extends BaseApiRequest
     {
         return auth()->user()->tokenCan('server:read', Product::class);
     }
+
+    public const ALLOWED_SORT_FIELDS = [
+        'code' => 'COD',
+        'category_id' => 'Categoria',
+        'current_stock' => 'Stock actual',
+        'name' => 'Nombre',
+        'created_at' => 'Fecha de creacion',
+        'deleted_at' => 'Fecha de eliminacion'
+    ];
+
+    public const ALLOWED_SORT_DIRECTIONS = [
+        'asc' => 'Ascendente',
+        'desc' => 'Descendente'
+    ];
 
     /**
      * Get the validation rules that apply to the request.
@@ -29,23 +44,13 @@ class FilterProductsRequest extends BaseApiRequest
             'sort_by' => [
                 'nullable',
                 'string',
-                'in:code,name,category_id,current_stock,created_at,deleted_at'
+                Rule::in(array_keys(self::ALLOWED_SORT_FIELDS))
             ],
-            'sort_direction' => 'nullable|string|in:asc,desc',
+            'sort_direction' => ['nullable', 'string', Rule::in(array_keys(self::ALLOWED_SORT_DIRECTIONS))],
             'category_id' => 'nullable|integer|exists:categories,id',
             'search' => 'nullable|string|max:255',
-            'low_stock' => 'nullable|boolean'
         ];
     }
-
-    /* protected function prepareForValidation()
-    {
-        if ($this->has('low_stock')) {
-            $value = strtolower($this->input('low_stock'));
-            $this->merge(['low_stock' => ($value === 'true') ? true : false]);
-            dd($value, $this);
-        }
-    } */
 
     /**
      * Get sanitized and processed data
@@ -56,7 +61,6 @@ class FilterProductsRequest extends BaseApiRequest
     {
         return [
             'category_id' => $this->input('category_id'),
-            // 'low_stock' => $this->boolean('low_stock'),
             'search' => $this->input('search'),
             'sort_by' => $this->input('sort_by', 'deleted_at'),
             'sort_direction' => $this->input('sort_direction', 'asc'),

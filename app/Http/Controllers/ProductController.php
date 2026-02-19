@@ -44,7 +44,7 @@ class ProductController extends Controller
             }
             
             // Ordenamiento
-            if (in_array($filters['sort_by'], array_keys(self::ALLOWED_SORT_FIELDS))) {
+            if (in_array($filters['sort_by'], array_keys(FilterProductsRequest::ALLOWED_SORT_FIELDS))) {
                 $query->orderBy($filters['sort_by'], $filters['sort_direction']);
             }
             
@@ -488,19 +488,6 @@ class ProductController extends Controller
         }
     }
 
-    public const ALLOWED_SORT_FIELDS = [
-        'code' => 'COD',   
-        'category_id' => 'Categoria',   
-        'current_stock' => 'Stock actual',   
-        'name' => 'Nombre',
-        'created_at' => 'Fecha de creacion',   
-        'deleted_at' => 'Fecha de eliminacion'
-    ];
-
-    public const ALLOWED_SORT_DIRECTIONS = [
-        'asc' => 'Ascendente',
-        'desc' => 'Descendente'
-    ];
 
     /**
      * Get filters to be used in the index view
@@ -515,8 +502,8 @@ class ProductController extends Controller
             $data = [
                 'categories' => $categories,
                 'products' => $products,
-                'sort_by' => self::ALLOWED_SORT_FIELDS,
-                'sort_direction' => self::ALLOWED_SORT_DIRECTIONS
+                'sort_by' => FilterProductsRequest::ALLOWED_SORT_FIELDS,
+                'sort_direction' => FilterProductsRequest::ALLOWED_SORT_DIRECTIONS
             ];
 
             Log::info('Retrieved filters for products', [
