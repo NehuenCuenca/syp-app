@@ -22,19 +22,20 @@ class ContactController extends Controller
     /**
      * Display a listing of all contacts.
      */
-    public function index(Request $request): JsonResponse
+    public function index(FilterContactsRequest $request): JsonResponse
     {
         try {
+            $filters = $request->getFilters();
             $query = Contact::query()->withTrashed();
 
             // Filtrar por tipo de contacto si se proporciona
-            if ($request->has('contact_type')) {
+            if (!empty($filters['contact_type'])) {
                 $query->where('contact_type', $request->contact_type);
             }
 
             // Búsqueda por nombre de empresa o contacto
             $search = $request->get('search', '');
-            if ($request->has('search')) {
+            if (!empty($filters['search'])) {
                 $query->where(function ($q) use ($search) {
                     $q->where('code', 'like', "{$search}%")
                       ->orWhere('name', 'like', "%{$search}%");
@@ -42,10 +43,8 @@ class ContactController extends Controller
             }
 
             // Ordenamiento
-            $sortBy = $request->input('sort_by', 'deleted_at');
-            $sortDirection = $request->input('sort_direction', 'asc');
-            if (in_array($sortBy, array_keys(self::ALLOWED_SORT_FIELDS))) {
-                $query->orderBy($sortBy, $sortDirection)
+            if (in_array($filters['sort_by'], array_keys(FilterContactsRequest::ALLOWED_SORT_FIELDS))) {
+                $query->orderBy($filters['sort_by'], $filters['sort_direction'])
                     ->select(
                         'id', 'code', 'name', 
                         'phone', 'contact_type', 'deleted_at'
@@ -53,16 +52,7 @@ class ContactController extends Controller
             }
 
             // Paginación
-            $perPage = $request->get('per_page', 9);
-            $contacts = $query->paginate($perPage);
-
-            $filtersApplied = [
-                'search' => $search,
-                'sort_by' => $sortBy,
-                'sort_direction' => $sortDirection,
-                'per_page' => $perPage,
-                'page' => $request->integer('page', 1)
-            ];
+            $contacts = $query->paginate($filters['per_page']);
 
             Log::info('Retrieved contacts filtered', [
                 'user_email' => $request->user()->email,
@@ -72,7 +62,7 @@ class ContactController extends Controller
             return $this->paginatedResponse(
                 $contacts,
                 'Contactos filtrados recuperados exitosamente.',
-                ['filters_applied' => $filtersApplied]
+                ['filters_applied' => $filters]
             );
         } catch (\Exception $e) {
             Log::error('Error trying to get filtered contacts ', [
@@ -94,19 +84,6 @@ class ContactController extends Controller
         }
     }
 
-    public const ALLOWED_SORT_FIELDS  = [
-            'code' => 'Codigo', 
-            'name' => 'Nombre de negocio', 
-            'contact_type' => 'Tipo de contacto',
-            'created_at' => 'Fecha de creación',
-            'deleted_at' => 'Fecha de eliminacion',
-    ];
-
-    public const ALLOWED_SORT_DIRECTIONS = [
-        'asc' => 'Ascendente',
-        'desc' => 'Descendente'
-    ];
-
     public function getFilters(Request $request): JsonResponse
     {
         try {
@@ -123,8 +100,8 @@ class ContactController extends Controller
             $filterData = [
                 'contact_types' => $contactTypes,
                 'contacts_alias' => $contacts,
-                'sort_by' => self::ALLOWED_SORT_FIELDS,
-                'sort_direction' => self::ALLOWED_SORT_DIRECTIONS
+                'sort_by' => FilterContactsRequest::ALLOWED_SORT_FIELDS,
+                'sort_direction' => FilterContactsRequest::ALLOWED_SORT_DIRECTIONS
             ];
 
             Log::info('Retrieved filters for contacts', [
