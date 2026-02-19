@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\MovementType;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -13,7 +14,7 @@ return new class extends Migration
     {
         Schema::create('movement_types', function (Blueprint $table) {
             $table->id();
-            $table->string('name'); //'Compra', 'Venta', 'Ajuste_Positivo', 'Ajuste_Negativo'
+            $table->enum('name', MovementType::getMovementTypes());
             $table->boolean('increase_stock');
             $table->timestamps();
         });
