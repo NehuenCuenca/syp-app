@@ -13,19 +13,15 @@ return new class extends Migration
     {
         Schema::create('orders', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('contact_id');
-            $table->unsignedBigInteger('id_movement_type');
-            $table->string('code')->unique()->nullable();
+            $table->foreignId('contact_id')->constrained()->onDelete('restrict');
+            $table->foreignId('movement_type_id')->constrained()->onDelete('restrict');
+            $table->string('code', 11)->unique()->nullable();
             $table->integer('adjustment_amount')->nullable();
             $table->integer('subtotal')->nullable();
             $table->integer('total_net')->nullable();
             $table->text('notes')->nullable();
             $table->timestamp('created_at')->useCurrent();
             $table->timestamp('updated_at')->useCurrent()->useCurrentOnUpdate();
-            
-            // Claves foráneas
-            $table->foreign('contact_id')->references('id')->on('contacts')->onDelete('restrict');
-            $table->foreign('id_movement_type')->references('id')->on('movement_types')->onDelete('restrict');
         });
     }
 
