@@ -135,7 +135,10 @@ class ProductController extends Controller
                 'id_product' => $product->id,
                 'id_order' => null,
                 'id_order_detail' => null,
-                'id_movement_type' => MovementType::where('name', 'Ajuste Positivo')->first()->id,
+                'id_movement_type' => MovementType::firstOrCreate(
+                    ['name' => MovementType::MOVEMENT_TYPE_POSITIVE_ADJUSTMENT],
+                    ['name' => MovementType::MOVEMENT_TYPE_POSITIVE_ADJUSTMENT, 'increase_stock' => true],
+                    )->id,
                 'quantity_moved' => $product->current_stock,
                 'notes' => "Inicio de stock",
             ]);
@@ -252,13 +255,18 @@ class ProductController extends Controller
             $newStock = $request->input('current_stock');
             if($oldStock !== $newStock) {
                 $stockDifference = $newStock - $oldStock;
-                $movementType = $stockDifference > 0 ? 'Ajuste Positivo' : 'Ajuste Negativo';
+                $movementType = $stockDifference > 0 
+                                    ? MovementType::MOVEMENT_TYPE_POSITIVE_ADJUSTMENT 
+                                    : MovementType::MOVEMENT_TYPE_NEGATIVE_ADJUSTMENT;
 
                 StockMovement::create([
                     'id_product' => $product->id,
                     'id_order' => null,
                     'id_order_detail' => null,
-                    'id_movement_type' => MovementType::where('name', $movementType)->first()->id,
+                    'id_movement_type' => MovementType::firstOrCreate(
+                                                ['name' => $movementType],
+                                                ['name' => $movementType, 'increase_stock' => ($stockDifference > 0)],
+                                        )->id,
                     'quantity_moved' => $stockDifference,
                     'notes' => "Actualización de stock",
                 ]);
