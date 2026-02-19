@@ -38,12 +38,12 @@ class Contact extends Model
     /**
      * Constants for contacts types
      */
-    const CONTACT_TYPE_CLIENT = 'Cliente';
-    const CONTACT_TYPE_SUPPLIER = 'Proveedor';    
+    const CONTACT_TYPE_CLIENT = 'cliente';
+    const CONTACT_TYPE_SUPPLIER = 'proveedor';    
 
     public function orders()
     {
-        return $this->hasMany(Order::class, 'id_contact') ;
+        return $this->hasMany(Order::class, 'contact_id') ;
     }
 
     public function getFullNameAttribute()
@@ -79,14 +79,10 @@ class Contact extends Model
                         . $lastOrder->created_at->format('d/m/Y');
     }
     
-    // Scopes para filtrar por tipo de contacto
-    public function scopeClients($query)
-    {
-        return $query->where('contact_type', 'Cliente');
-    }
-
-    public function scopeSuppliers($query)
-    {
-        return $query->where('contact_type', 'Proveedor');
-    }
+    public static function getContactTypes(){
+        return [
+            self::CONTACT_TYPE_CLIENT,
+            self::CONTACT_TYPE_SUPPLIER,
+        ];
+    } 
 }
