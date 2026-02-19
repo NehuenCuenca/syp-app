@@ -13,15 +13,14 @@ return new class extends Migration
     {
         Schema::create('products', function (Blueprint $table) {
             $table->id();
-            $table->string('code')->unique()->nullable(); //$id_category + $id
-            $table->string('name');
+            $table->string('code', 10)->unique()->nullable(); //$category_id + $id
+            $table->string('name', 100);
             $table->integer('buy_price')->default(0);
             $table->integer('profit_percentage')->default(0);
             $table->integer('sale_price')->default(0);
             $table->integer('current_stock')->default(0);
             $table->integer('min_stock_alert')->default(5);
-            $table->unsignedBigInteger('id_category');
-            $table->foreign('id_category')->references('id')->on('categories')->onDelete('cascade');
+            $table->foreignId('category_id')->constrained('categories')->onDelete('cascade');
             $table->timestamps();
             $table->softDeletesTz();
         });
