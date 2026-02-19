@@ -19,7 +19,7 @@ class StockMovementSeeder extends Seeder
             'id_product' => $product->id,
             'id_order' => 1, // Initial stock movement
             'id_order_detail' => 1, // Initial stock movement
-            'id_movement_type' => 1,
+            'movement_type_id' => 1,
             'quantity_moved' => 100,
             'notes' => 'Initial stock purchase for ' . $product->name
         ]);

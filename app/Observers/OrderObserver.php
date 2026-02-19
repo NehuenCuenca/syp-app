@@ -12,7 +12,7 @@ class OrderObserver
      */
     public function created(Order $order): void
     {
-        $movementType = MovementType::find($order->id_movement_type)->name;
+        $movementType = MovementType::find($order->movement_type_id)->name;
         $order->code = substr($movementType, 0, 1) . $order->id;
         $order->save();
     }

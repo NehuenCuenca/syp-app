@@ -30,7 +30,7 @@ class StockMovementFactory extends Factory
                 ? Order::factory() 
                 : 1,
             'id_order_detail' => OrderDetail::factory() || 1,
-            'id_movement_type' => MovementType::where('name', $movementType)->first()->id,
+            'movement_type_id' => MovementType::where('name', $movementType)->first()->id,
             'quantity_moved' => $quantity,
             'notes' => fake()->boolean(70) 
                 ? fake()->sentence() 
@@ -42,7 +42,7 @@ class StockMovementFactory extends Factory
     {
         return $this->state(function (array $attributes) {
             return [
-                'id_movement_type' => MovementType::where('name', 'Compra')->first()->id,
+                'movement_type_id' => MovementType::where('name', 'Compra')->first()->id,
                 'quantity_moved' => fake()->numberBetween(1, 100),
                 'external_reference' => fake()->bothify('PO##-####')
             ];
@@ -53,7 +53,7 @@ class StockMovementFactory extends Factory
     {
         return $this->state(function (array $attributes) {
             return [
-                'id_movement_type' => MovementType::where('name', 'Venta')->first()->id,
+                'movement_type_id' => MovementType::where('name', 'Venta')->first()->id,
                 'quantity_moved' => fake()->numberBetween(-100, -1),
                 'external_reference' => fake()->bothify('SO##-####')
             ];
@@ -66,7 +66,7 @@ class StockMovementFactory extends Factory
             $quantity = fake()->numberBetween(1, 50);
             $movementType = $positive ? 'Ajuste_Positivo' : 'Ajuste_Negativo';
             return [
-                'id_movement_type' => MovementType::where('name', $movementType)->first()->id,
+                'movement_type_id' => MovementType::where('name', $movementType)->first()->id,
                 'quantity_moved' => $positive ? $quantity : -$quantity,
                 'external_reference' => fake()->bothify('ADJ##-####')
             ];

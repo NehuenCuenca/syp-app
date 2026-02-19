@@ -39,7 +39,7 @@ class UpdateOrderRequest extends BaseApiRequest
             'order_details.*.unit_price' => 'numeric|min:0|max:9999999',
             'order_details.*.percentage_applied' => 'numeric|min:0',
 
-            'id_movement_type' => 'missing', //el frontend no deberia actualizar el tipo del pedido..
+            'movement_type_id' => 'missing', //el frontend no deberia actualizar el tipo del pedido..
             'sub_total' => 'missing', // el frontend no deberia actualizar el sub_total
             'total_net' => 'missing', // el frontend no deberia actualizar el total_net
         ];

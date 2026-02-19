@@ -30,7 +30,7 @@ class StoreOrderRequest extends BaseApiRequest
             'contact_id' => 'required_without:new_contact_name|integer|exists:contacts,id',
             'new_contact_name' => 'required_without:contact_id|string|max:255',
 
-            'id_movement_type' => 'required|exists:movement_types,id',
+            'movement_type_id' => 'required|exists:movement_types,id',
             'notes' => 'nullable|string|max:1000',
             'adjustment_amount' => 'nullable|numeric',
             'sub_total' => 'missing',
@@ -42,8 +42,8 @@ class StoreOrderRequest extends BaseApiRequest
             'order_details.*.quantity' => 'required|integer|min:1',
             'order_details.*.unit_price' => 'required|numeric|min:0|max:9999999',
             'order_details.*.percentage_applied' => 'required|numeric|min:0', 
-            // 'order_details.*.percentage_applied' => 'prohibited_if:id_movement_type,1|required_if:id_movement_type,2|numeric|min:0', 
-            // 'order_details.*.profit_percentage' => 'prohibited_if:id_movement_type,2|required_if:id_movement_type,1|numeric|min:1',
+            // 'order_details.*.percentage_applied' => 'prohibited_if:movement_type_id,1|required_if:movement_type_id,2|numeric|min:0', 
+            // 'order_details.*.profit_percentage' => 'prohibited_if:movement_type_id,2|required_if:movement_type_id,1|numeric|min:1',
         ];
     }
 
@@ -62,8 +62,8 @@ class StoreOrderRequest extends BaseApiRequest
                 MovementType::firstWhere('name', Order::ORDER_TYPE_PURCHASE)->id,
             ];
             
-            if (!in_array($this->id_movement_type, $validMovementTypes)) {
-                $validator->errors()->add('id_movement_type', 'Tipo de movimiento inválido (solo se permiten compras y ventas).');
+            if (!in_array($this->movement_type_id, $validMovementTypes)) {
+                $validator->errors()->add('movement_type_id', 'Tipo de movimiento inválido (solo se permiten compras y ventas).');
             }
 
             // Validar duplicados de productos
@@ -78,7 +78,7 @@ class StoreOrderRequest extends BaseApiRequest
             $orderService = app(\App\Services\OrderService::class);
             $stockErrors = $orderService->validateStockAvailability(
                 $this->order_details,
-                $this->id_movement_type
+                $this->movement_type_id
             );
 
             foreach ($stockErrors as $field => $message) {

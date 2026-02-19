@@ -32,13 +32,13 @@ class MovementType extends Model
 
     public function orders()
     {
-        return $this->hasMany(Order::class, 'id_movement_type');
+        return $this->hasMany(Order::class, 'movement_type_id');
     }
 
     //define the inverse relationship with the stock movement model
     public function stockMovements(): HasMany
     {
-        return $this->hasMany(StockMovement::class, 'id_movement_type');
+        return $this->hasMany(StockMovement::class, 'movement_type_id');
     }
 
     /**

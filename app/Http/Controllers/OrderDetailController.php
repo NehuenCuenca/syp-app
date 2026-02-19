@@ -189,7 +189,7 @@ class OrderDetailController extends Controller
                     'id_product' => $orderData['id_product'],
                     'id_order' => $orderId,
                     'id_order_detail' => $orderDetail->id,
-                    'id_movement_type' => $order->id_movement_type,
+                    'movement_type_id' => $order->movement_type_id,
                     'quantity_moved' => $quantityMoved,
                     'notes' => "Detalle de pedido '{$order->code}' agregado"
                 ]);
@@ -372,7 +372,7 @@ class OrderDetailController extends Controller
                             'id_product' => $orderDetail->id_product,
                             'id_order' => $order->id,
                             'id_order_detail' => $orderDetail->id,
-                            'id_movement_type' => $order->id_movement_type,
+                            'movement_type_id' => $order->movement_type_id,
                             'quantity_moved' => ($order->getIsSaleAttribute()) ? -$validatedData['quantity'] : $validatedData['quantity'],
                             'notes' => "Actualización de cantidad en detalle de pedido '{$order->code}'"
                         ]);

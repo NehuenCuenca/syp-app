@@ -32,8 +32,8 @@ class OrderController extends Controller
             $query = Order::with(['contact']);
             
             // Filtros
-            if ($request->filled('id_movement_type')) {
-                $query->where('id_movement_type', $request->id_movement_type);
+            if ($request->filled('movement_type_id')) {
+                $query->where('movement_type_id', $request->movement_type_id);
             }
 
             if ($request->filled('contact_id')) {
@@ -495,7 +495,7 @@ class OrderController extends Controller
     public const ALLOWED_SORT_FIELDS = [
         'id' => 'ID', 
         'created_at' => 'Fecha de creacion', 
-        'id_movement_type' => 'Tipo de pedido',
+        'movement_type_id' => 'Tipo de pedido',
         // 'total_net' => 'Total neto'
     ];
 

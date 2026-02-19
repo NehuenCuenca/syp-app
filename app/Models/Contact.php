@@ -66,7 +66,7 @@ class Contact extends Model
     {
         $lastOrder = $this->orders()
                             ->with(['movementType'])
-                            ->select('id', 'id_movement_type', 'total_net', 'created_at')
+                            ->select('id', 'movement_type_id', 'total_net', 'created_at')
                             ->orderBy('created_at', 'desc')
                             ->first();
         

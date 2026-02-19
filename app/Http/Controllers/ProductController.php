@@ -135,7 +135,7 @@ class ProductController extends Controller
                 'id_product' => $product->id,
                 'id_order' => null,
                 'id_order_detail' => null,
-                'id_movement_type' => MovementType::firstOrCreate(
+                'movement_type_id' => MovementType::firstOrCreate(
                     ['name' => MovementType::MOVEMENT_TYPE_POSITIVE_ADJUSTMENT],
                     ['name' => MovementType::MOVEMENT_TYPE_POSITIVE_ADJUSTMENT, 'increase_stock' => true],
                     )->id,
@@ -263,7 +263,7 @@ class ProductController extends Controller
                     'id_product' => $product->id,
                     'id_order' => null,
                     'id_order_detail' => null,
-                    'id_movement_type' => MovementType::firstOrCreate(
+                    'movement_type_id' => MovementType::firstOrCreate(
                                                 ['name' => $movementType],
                                                 ['name' => $movementType, 'increase_stock' => ($stockDifference > 0)],
                                         )->id,

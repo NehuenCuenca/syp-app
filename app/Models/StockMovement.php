@@ -27,7 +27,7 @@ class StockMovement extends Model
         'id_product',
         'id_order',
         'id_order_detail',
-        'id_movement_type',
+        'movement_type_id',
         'quantity_moved',
         'movement_date',
         'external_reference',
@@ -41,7 +41,7 @@ class StockMovement extends Model
         'id_product' => 'integer',
         'id_order' => 'integer',
         'id_order_detail' => 'integer',
-        'id_movement_type' => 'integer',
+        'movement_type_id' => 'integer',
         'quantity_moved' => 'integer',
         'notes' => 'string',
         'created_at' => 'datetime:Y-m-d H:i:s',
@@ -79,7 +79,7 @@ class StockMovement extends Model
      */
     public function movementType(): BelongsTo
     {
-        return $this->belongsTo(MovementType::class, 'id_movement_type');
+        return $this->belongsTo(MovementType::class, 'movement_type_id');
     }
 
     /**

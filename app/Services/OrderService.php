@@ -30,7 +30,7 @@ class OrderService
             // Create the order
             $order = Order::create([
                 'contact_id' => $contact->id,
-                'id_movement_type' => $data['id_movement_type'],
+                'movement_type_id' => $data['movement_type_id'],
                 'notes' => $data['notes'] ?? null,
                 'adjustment_amount' => $data['adjustment_amount'] ?? 0,
             ]);
@@ -284,7 +284,7 @@ class OrderService
                 'id_product' => $orderDetail->id_product,
                 'id_order' => $order->id,
                 'id_order_detail' => $orderDetail->id,
-                'id_movement_type' => $order->id_movement_type,
+                'movement_type_id' => $order->movement_type_id,
                 'quantity_moved' => $quantity,
                 'notes' => $notes,
             ]);
@@ -398,7 +398,7 @@ class OrderService
     {
         // Generate order code if not exists
         if (!$order->code) {
-            $movementType = MovementType::find($order->id_movement_type);
+            $movementType = MovementType::find($order->movement_type_id);
             $orderCode = substr($movementType->name, 0, 1) . $order->id;
             $order->update(['code' => $orderCode]);
         }

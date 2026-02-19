@@ -32,7 +32,7 @@ class UpdateStockMovementRequest extends BaseApiRequest
                 'integer',
                 'min:1'
             ],
-            'id_movement_type' => [
+            'movement_type_id' => [
                 'required',
                 'exists:movement_types,id'
             ],

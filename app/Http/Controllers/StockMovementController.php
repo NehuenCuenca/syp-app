@@ -33,8 +33,8 @@ class StockMovementController extends Controller
                 $query->where('id_product', $request->id_product);
             }
 
-            if ($request->filled('id_movement_type')) {
-                $query->where('id_movement_type', $request->id_movement_type);
+            if ($request->filled('movement_type_id')) {
+                $query->where('movement_type_id', $request->movement_type_id);
             }
 
             if ($request->filled('date_from')) {
@@ -148,7 +148,7 @@ class StockMovementController extends Controller
     public const ALLOWED_SORT_FIELDS = [
         'id_order' => 'Pedido',
         'id_product' => 'Producto',
-        'id_movement_type' => 'Tipo de movimiento',
+        'movement_type_id' => 'Tipo de movimiento',
         'created_at' => 'Fecha de creacion',
     ];
 
@@ -163,7 +163,7 @@ class StockMovementController extends Controller
     public function getFilters(Request $request): JsonResponse
     {
         try {
-            $orders = Order::select('id', 'code', 'contact_id', 'id_movement_type', 'subtotal', 'adjustment_amount', 'total_net', 'created_at')->get();
+            $orders = Order::select('id', 'code', 'contact_id', 'movement_type_id', 'subtotal', 'adjustment_amount', 'total_net', 'created_at')->get();
             $products = Product::select('name', 'id', 'code', 'current_stock', 'min_stock_alert', 'deleted_at')->get();
             $movementTypes = MovementType::select('name', 'id')->get();
             $dateFrom = StockMovement::min('created_at');
