@@ -10,6 +10,11 @@ class MovementType extends Model
 {
     use HasFactory;
 
+    const MOVEMENT_TYPE_BUY  = 'compra';
+    const MOVEMENT_TYPE_SALE = 'venta';
+    const MOVEMENT_TYPE_POSITIVE_ADJUSTMENT = 'ajuste positivo';
+    const MOVEMENT_TYPE_NEGATIVE_ADJUSTMENT = 'ajuste negativo';
+
     protected $fillable = [
         'name',
         'increase_stock',
@@ -50,5 +55,18 @@ class MovementType extends Model
     public static function getDecrementMovementTypes(): array
     {
         return MovementType::where('increase_stock', false)->pluck('id')->toArray();
+    }
+
+    /**
+     * retorna todos los tipos de movimientos
+     */
+    public static function getMovementTypes(): array
+    {
+        return [
+            self::MOVEMENT_TYPE_BUY,
+            self::MOVEMENT_TYPE_SALE,
+            self::MOVEMENT_TYPE_POSITIVE_ADJUSTMENT,
+            self::MOVEMENT_TYPE_NEGATIVE_ADJUSTMENT,
+        ];
     }
 }
