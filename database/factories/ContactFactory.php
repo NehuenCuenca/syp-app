@@ -11,7 +11,7 @@ class ContactFactory extends Factory
 
     public function definition(): array
     {
-        $type = $this->faker->randomElement(['Cliente', 'Proveedor']);
+        $type = $this->faker->randomElement(Contact::getContactTypes());
         $companyName = $this->faker->company();
 
         return [
