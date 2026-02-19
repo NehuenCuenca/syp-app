@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Exports\ContactsExport;
+use App\Http\Requests\FilterContactsRequest;
 use App\Models\Contact;
 use App\Http\Requests\StoreContactRequest;
 use App\Http\Requests\UpdateContactRequest;
@@ -157,7 +158,7 @@ class ContactController extends Controller
 
             Log::info('Contact has been created', [
                 'user_email' => $request->user()->email,
-                'id_contact' => $contact->id,
+                'contact_id' => $contact->id,
                 'ip' => $request->ip(),
             ]);
 
@@ -185,14 +186,14 @@ class ContactController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Request $request, $id): JsonResponse
+    public function show(Request $request, Contact $contact): JsonResponse
     {
         try {
-            $contact = Contact::withTrashed()->findOrFail($id);
+            // $contact = Contact::withTrashed()->findOrFail($id);
 
             Log::info('Contact has been shown', [
                 'user_email' => $request->user()->email,
-                'id_contact' => $contact->id,
+                'contact_id' => $contact->id,
                 'ip' => $request->ip(),
             ]);
 
@@ -200,7 +201,7 @@ class ContactController extends Controller
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
             Log::error('Contact to show was not founded', [
                 'user_email' => $request->user()->email,
-                'id_contact' => $id,
+                'contact_id' => $contact->id,
                 'ip' => $request->ip(),
                 'error' => $e->getMessage(),
                 'code' => $e->getCode(),
@@ -212,7 +213,7 @@ class ContactController extends Controller
         } catch (\Exception $e) {
             Log::error('Unexpected error trying to show a contact', [
                 'user_email' => $request->user()->email,
-                'id_contact' => $id,
+                'contact_id' => $contact->id,
                 'ip' => $request->ip(),
                 'error' => $e->getMessage(),
                 'code' => $e->getCode(),
@@ -240,7 +241,7 @@ class ContactController extends Controller
 
             Log::info('Contact has been updated', [
                 'user_email' => $request->user()->email,
-                'id_contact' => $contact->id,
+                'contact_id' => $contact->id,
                 'ip' => $request->ip(),
             ]);
 
@@ -248,7 +249,7 @@ class ContactController extends Controller
         } catch (\Exception $e) {
             Log::error('Error trying updating a contact', [
                 'user_email' => $request->user()->email,
-                'id_contact' => $contact->id,
+                'contact_id' => $contact->id,
                 'ip' => $request->ip(),
                 'error' => $e->getMessage(),
                 'code' => $e->getCode(),
@@ -276,7 +277,7 @@ class ContactController extends Controller
 
             Log::info('Contact has been soft deleted', [
                 'user_email' => $request->user()->email,
-                'id_contact' => $contact->id,
+                'contact_id' => $contact->id,
                 'ip' => $request->ip(),
             ]);
 
@@ -284,7 +285,7 @@ class ContactController extends Controller
         } catch (QueryException $e) {
             Log::error('Error trying deleting a contact because it has orders', [
                 'user_email' => $request->user()->email,
-                'id_contact' => $contact->id,
+                'contact_id' => $contact->id,
                 'ip' => $request->ip(),
                 'error' => $e->getMessage(),
                 'code' => $e->getCode(),
@@ -302,7 +303,7 @@ class ContactController extends Controller
         } catch (\Exception $e) {
             Log::error('Unexpeted error trying to delete a contact', [
                 'user_email' => $request->user()->email,
-                'id_contact' => $contact->id,
+                'contact_id' => $contact->id,
                 'ip' => $request->ip(),
                 'error' => $e->getMessage(),
                 'code' => $e->getCode(),
@@ -335,7 +336,7 @@ class ContactController extends Controller
 
             Log::info('Contact has been restored', [
                 'user_email' => $request->user()->email,
-                'id_contact' => $contact->id,
+                'contact_id' => $contact->id,
                 'ip' => $request->ip(),
             ]);
 
@@ -343,7 +344,7 @@ class ContactController extends Controller
         } catch (\Exception $e) {
             Log::error('Error trying to restore a contact', [
                 'user_email' => $request->user()->email,
-                'id_contact' => $contact->id,
+                'contact_id' => $contact->id,
                 'ip' => $request->ip(),
                 'error' => $e->getMessage(),
                 'code' => $e->getCode(),
