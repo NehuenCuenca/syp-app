@@ -490,11 +490,10 @@ class ProductController extends Controller
 
     public const ALLOWED_SORT_FIELDS = [
         'code' => 'COD',   
-        'id_category' => 'Categoria',   
-        'sale_price' => 'Precio de venta',   
+        'category_id' => 'Categoria',   
         'current_stock' => 'Stock actual',   
-        'created_at' => 'Fecha de creacion',   
         'name' => 'Nombre',
+        'created_at' => 'Fecha de creacion',   
         'deleted_at' => 'Fecha de eliminacion'
     ];
 
