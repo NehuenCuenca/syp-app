@@ -32,12 +32,8 @@ class ProductController extends Controller
             $query = Product::query()->withTrashed()->with(['category']);
             
             // Aplicar filtros
-            if (!empty($filters['id_category'])) {
-                $query->where('id_category', $filters['id_category']);
-            }
-            
-            if ($filters['low_stock']) {
-                $query->whereRaw('current_stock < min_stock_alert');
+            if (!empty($filters['category_id'])) {
+                $query->where('category_id', $filters['category_id']);
             }
             
             if (!empty($filters['search'])) {
@@ -47,14 +43,6 @@ class ProductController extends Controller
                 });
             }
             
-            if (!empty($filters['min_sale_price'])) {
-                $query->where('sale_price', '>=', $filters['min_sale_price']);
-            }
-            
-            if (!empty($filters['max_sale_price'])) {
-                $query->where('sale_price', '<=', $filters['max_sale_price']);
-            }
-            
             // Ordenamiento
             if (in_array($filters['sort_by'], array_keys(self::ALLOWED_SORT_FIELDS))) {
                 $query->orderBy($filters['sort_by'], $filters['sort_direction']);
@@ -62,7 +50,7 @@ class ProductController extends Controller
             
             $query->select(
                 'id', 'code', 'name',
-                'current_stock', 'min_stock_alert', 'id_category',
+                'current_stock', 'min_stock_alert', 'category_id',
                 DB::raw('(current_stock < min_stock_alert) as is_low_stock'), 
                 'deleted_at'
             );
