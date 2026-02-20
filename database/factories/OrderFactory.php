@@ -17,15 +17,15 @@ class OrderFactory extends Factory
         $adjustmentAmount = fake()->numberBetween(-1000, 1000);
         $subtotal = fake()->numberBetween(100, 1000);
         $totalNet =  $subtotal + $adjustmentAmount;
-        $orderType = fake()->randomElement(['Compra', 'Venta']);
+        $orderType = fake()->randomElement([MovementType::MOVEMENT_TYPE_BUY, MovementType::MOVEMENT_TYPE_SALE]);
 
         return [
             'contact_id' => Contact::factory(),
-            'id_movement_type' => MovementType::firstWhere('name', $orderType)->id,
+            'movement_type_id' => MovementType::firstWhere('name', $orderType)->id,
             'adjustment_amount' => $adjustmentAmount,
             'subtotal' => $subtotal,
             'total_net' => $totalNet,
-            'notes' => fake()->optional(0.7)->text(200), // 70% chance of having notes
+            'notes' => fake()->text(40),
         ];
     }
 
@@ -35,7 +35,7 @@ class OrderFactory extends Factory
     public function purchase(): static
     {
         return $this->state(function (array $attributes) {
-            return ['id_movement_type' => MovementType::firstWhere('name', 'Compra')->id];
+            return ['movement_type_id' => MovementType::firstWhere('name', 'Compra')->id];
         });
     }
 
@@ -45,7 +45,7 @@ class OrderFactory extends Factory
     public function sale(): static
     {
         return $this->state(function (array $attributes) {
-            return ['id_movement_type' =>  MovementType::firstWhere('name', 'Venta')->id];
+            return ['movement_type_id' =>  MovementType::firstWhere('name', 'Venta')->id];
         });
     }
 }
