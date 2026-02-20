@@ -30,7 +30,7 @@ class OrderDetail extends Model
      */
     protected $fillable = [
         'id_order',
-        'id_product',
+        'product_id',
         'quantity',
         'unit_price',
         'percentage_applied',
@@ -70,7 +70,7 @@ class OrderDetail extends Model
      */
     public function product(): BelongsTo
     {
-        return $this->belongsTo(Product::class, 'id_product')->withTrashed();
+        return $this->belongsTo(Product::class)->withTrashed();
     }
 
     /**
@@ -94,7 +94,7 @@ class OrderDetail extends Model
      */
     public function scopeForProduct($query, int $productId)
     {
-        return $query->where('id_product', $productId);
+        return $query->where('product_id', $productId);
     }
 
     /**

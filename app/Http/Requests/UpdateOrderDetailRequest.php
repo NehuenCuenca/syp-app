@@ -23,7 +23,7 @@ class UpdateOrderDetailRequest extends BaseApiRequest
     public function rules(): array
     {
         return [
-            'id_product' => ['missing'],
+            'product_id' => ['missing'],
             'quantity' => [
                 'integer',
                 'min:1',

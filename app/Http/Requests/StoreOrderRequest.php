@@ -38,7 +38,7 @@ class StoreOrderRequest extends BaseApiRequest
             
             // Validaciones para los detalles del pedido
             'order_details' => 'required|array|min:1',
-            'order_details.*.id_product' => 'required|integer|exists:products,id',
+            'order_details.*.product_id' => 'required|integer|exists:products,id',
             'order_details.*.quantity' => 'required|integer|min:1',
             'order_details.*.unit_price' => 'required|numeric|min:0|max:9999999',
             'order_details.*.percentage_applied' => 'required|numeric|min:0', 
@@ -67,7 +67,7 @@ class StoreOrderRequest extends BaseApiRequest
             }
 
             // Validar duplicados de productos
-            $productIds = collect($this->order_details)->pluck('id_product')->toArray();
+            $productIds = collect($this->order_details)->pluck('product_id')->toArray();
             $uniqueProductIds = array_unique($productIds);
             
             if (count($productIds) !== count($uniqueProductIds)) {

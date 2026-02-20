@@ -24,7 +24,7 @@ class StockMovement extends Model
      * The attributes that are mass assignable.
      */
     protected $fillable = [
-        'id_product',
+        'product_id',
         'id_order',
         'id_order_detail',
         'movement_type_id',
@@ -38,7 +38,7 @@ class StockMovement extends Model
      * The attributes that should be cast.
      */
     protected $casts = [
-        'id_product' => 'integer',
+        'product_id' => 'integer',
         'id_order' => 'integer',
         'id_order_detail' => 'integer',
         'movement_type_id' => 'integer',
@@ -63,7 +63,7 @@ class StockMovement extends Model
      */
     public function product(): BelongsTo
     {
-        return $this->belongsTo(Product::class, 'id_product');
+        return $this->belongsTo(Product::class);
     }
 
     /**
@@ -95,7 +95,7 @@ class StockMovement extends Model
      */
     public function scopeByProduct($query, $productId)
     {
-        return $query->where('id_product', $productId);
+        return $query->where('product_id', $productId);
     }
 
     /**

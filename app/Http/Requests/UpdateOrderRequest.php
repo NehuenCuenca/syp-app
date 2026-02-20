@@ -34,7 +34,7 @@ class UpdateOrderRequest extends BaseApiRequest
 
             // Validaciones para los detalles del pedido
             'order_details' => 'array|min:1',
-            'order_details.*.id_product' => 'integer|exists:products,id',
+            'order_details.*.product_id' => 'integer|exists:products,id',
             'order_details.*.quantity' => 'integer|min:1',
             'order_details.*.unit_price' => 'numeric|min:0|max:9999999',
             'order_details.*.percentage_applied' => 'numeric|min:0',
@@ -53,7 +53,7 @@ class UpdateOrderRequest extends BaseApiRequest
             }
 
             // Validar duplicados de productos
-            $productIds = collect($this->order_details)->pluck('id_product')->toArray();
+            $productIds = collect($this->order_details)->pluck('product_id')->toArray();
             $uniqueProductIds = array_unique($productIds);
 
             if (count($productIds) !== count($uniqueProductIds)) {

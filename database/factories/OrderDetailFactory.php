@@ -21,7 +21,7 @@ class OrderDetailFactory extends Factory
         
         return [
             'id_order' => Order::factory(),
-            'id_product' => $product ? $product->id : Product::factory(),
+            'product_id' => $product ? $product->id : Product::factory(),
             'quantity' => $quantity,
             'unit_price' => $unit_price,
             'percentage_applied' => $percentage_applied,
@@ -45,7 +45,7 @@ class OrderDetailFactory extends Factory
             $line_subtotal = 0;
 
             return [
-                'id_product' => $product->id,
+                'product_id' => $product->id,
                 'quantity' => $qty,
                 'unit_price' => $unit_price,
                 'percentage_applied' => $percentage_applied,

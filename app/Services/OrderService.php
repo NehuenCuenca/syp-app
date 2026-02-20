@@ -174,10 +174,10 @@ class OrderService
         }
 
         foreach ($details as $detail) {
-            $product = Product::find($detail['id_product']);
+            $product = Product::find($detail['product_id']);
             
             if (!$product) {
-                throw new Exception("Producto con ID {$detail['id_product']} no encontrado");
+                throw new Exception("Producto con ID {$detail['product_id']} no encontrado");
             }
 
             // Calculate quantity to discount (handle stock limits for sales)
@@ -190,7 +190,7 @@ class OrderService
             // Create order detail
             $orderDetail = OrderDetail::create([
                 'id_order' => $order->id,
-                'id_product' => $detail['id_product'],
+                'product_id' => $detail['product_id'],
                 'quantity' => $quantityToProcess,
                 'unit_price' => $detail['unit_price'],
                 'percentage_applied' => $detail['percentage_applied'] ?? 0,
@@ -202,7 +202,7 @@ class OrderService
 
             Log::info('Order detail created', [
                 'order_detail_id' => $orderDetail->id,
-                'product_id' => $detail['id_product'],
+                'product_id' => $detail['product_id'],
                 'quantity' => $quantityToProcess,
             ]);
 
@@ -281,7 +281,7 @@ class OrderService
 
             // Create stock movement
             $stockMovement = StockMovement::create([
-                'id_product' => $orderDetail->id_product,
+                'product_id' => $orderDetail->product_id,
                 'id_order' => $order->id,
                 'id_order_detail' => $orderDetail->id,
                 'movement_type_id' => $order->movement_type_id,
@@ -294,9 +294,9 @@ class OrderService
             }
 
             // Update product stock
-            $product = Product::find($orderDetail->id_product);
+            $product = Product::find($orderDetail->product_id);
             if (!$product) {
-                throw new Exception("Producto con ID {$orderDetail->id_product} no encontrado");
+                throw new Exception("Producto con ID {$orderDetail->product_id} no encontrado");
             }
 
             $product->increment('current_stock', $quantity);
@@ -353,11 +353,11 @@ class OrderService
 
         foreach ($order->orderDetails as $detail) {
             $quantityToRevert = StockMovement::where('id_order', $order->id)
-                ->where('id_product', $detail->id_product)
+                ->where('product_id', $detail->product_id)
                 ->sum('quantity_moved');
 
             if ($quantityToRevert != 0) {
-                $product = Product::find($detail->id_product);
+                $product = Product::find($detail->product_id);
                 if ($product) {
                     // Revert the stock (opposite sign)
                     $product->decrement('current_stock', $quantityToRevert);
@@ -452,7 +452,7 @@ class OrderService
         }
 
         foreach ($orderDetails as $index => $detail) {
-            $product = Product::find($detail['id_product']);
+            $product = Product::find($detail['product_id']);
             if ($product && $product->current_stock < $detail['quantity']) {
                 $errors["order_details.{$index}.quantity"] = 
                     "Stock insuficiente para el producto {$product->name}. Stock disponible: {$product->current_stock}";
@@ -478,13 +478,13 @@ class OrderService
         }
 
         foreach ($newOrderDetails as $index => $newDetail) {
-            $product = Product::find($newDetail['id_product']);
+            $product = Product::find($newDetail['product_id']);
             if (!$product) {
                 continue;
             }
 
             // Find existing order detail for this product
-            $existingDetail = $order->orderDetails->where('id_product', $product->id)->first();
+            $existingDetail = $order->orderDetails->where('product_id', $product->id)->first();
 
             // Calculate valid stock (current stock + previously ordered quantity if same product)
             $validStock = $existingDetail

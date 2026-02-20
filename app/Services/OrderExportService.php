@@ -101,7 +101,7 @@ class OrderExportService
 
         // Obtener detalles del pedido con productos
         $orderDetails = DB::table('order_details as od')
-            ->join('products as p', 'od.id_product', '=', 'p.id')
+            ->join('products as p', 'od.product_id', '=', 'p.id')
             ->where('od.id_order', $orderId)
             ->select([
                 'od.id',

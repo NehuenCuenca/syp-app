@@ -16,7 +16,7 @@ class StockMovementSeeder extends Seeder
 
         // Create a typical purchase movement
         StockMovement::create([
-            'id_product' => $product->id,
+            'product_id' => $product->id,
             'id_order' => 1, // Initial stock movement
             'id_order_detail' => 1, // Initial stock movement
             'movement_type_id' => 1,

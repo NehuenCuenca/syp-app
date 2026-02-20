@@ -140,7 +140,7 @@ class OrderDetailController extends Controller
             }
             
             // Verificar que el producto existe
-            $product = Product::find($orderData['id_product']);
+            $product = Product::find($orderData['product_id']);
             if (!$product) {
                 DB::rollBack();
                 return $this->notFoundResponse('El producto especificado no existe');
@@ -167,7 +167,7 @@ class OrderDetailController extends Controller
             // Crear el detalle del pedido
             $orderDetail = OrderDetail::create([
                 'id_order' => $orderId,
-                'id_product' => $orderData['id_product'],
+                'product_id' => $orderData['product_id'],
                 'quantity' => $orderData['quantity'],
                 'unit_price' => $orderData['unit_price'],
                 'line_subtotal' => $lineSubtotal,
@@ -186,7 +186,7 @@ class OrderDetailController extends Controller
                 $quantityMoved = $order->getIsSaleAttribute() ? -$orderData['quantity'] : $orderData['quantity'];
                 // Registrar movimiento de stock
                 StockMovement::create([
-                    'id_product' => $orderData['id_product'],
+                    'product_id' => $orderData['product_id'],
                     'id_order' => $orderId,
                     'id_order_detail' => $orderDetail->id,
                     'movement_type_id' => $order->movement_type_id,
@@ -198,7 +198,7 @@ class OrderDetailController extends Controller
                 DB::rollBack();
                 Log::error('Error al manejar stock en OrderDetailController@store', [
                     'error' => $e->getMessage(),
-                    'product_id' => $orderData['id_product'],
+                    'product_id' => $orderData['product_id'],
                     'order_id' => $orderId
                 ]);
                 
@@ -292,7 +292,7 @@ class OrderDetailController extends Controller
         
         try {
             $validatedData = [
-                'id_product' => $request->validated('id_product', $orderDetail->id_product),
+                'product_id' => $request->validated('product_id', $orderDetail->product_id),
                 'quantity' => abs($request->validated('quantity', $orderDetail->quantity)),
                 'unit_price' => $request->validated('unit_price', $orderDetail->unit_price),
                 'percentage_applied' => $request->validated('percentage_applied', $orderDetail->percentage_applied),
@@ -306,8 +306,8 @@ class OrderDetailController extends Controller
             }
             
             // Verificar que el nuevo producto existe (si cambió)
-            if (isset($validatedData['id_product']) && $validatedData['id_product'] != $orderDetail->id_product) {
-                $newProduct = Product::find($validatedData['id_product']);
+            if (isset($validatedData['product_id']) && $validatedData['product_id'] != $orderDetail->product_id) {
+                $newProduct = Product::find($validatedData['product_id']);
                 if (!$newProduct) {
                     DB::rollBack();
                     return $this->notFoundResponse('El nuevo producto especificado no existe');
@@ -331,7 +331,7 @@ class OrderDetailController extends Controller
             try {
                 if ($quantityChanged) {
                     // Solo cambió la cantidad
-                    $product = Product::find($orderDetail->id_product);
+                    $product = Product::find($orderDetail->product_id);
                     if (!$product) {
                         DB::rollBack();
                         return $this->notFoundResponse('Producto asociado no encontrado');
@@ -369,7 +369,7 @@ class OrderDetailController extends Controller
                     } else {
                         //Crear nuevo movimiento si no existe
                         StockMovement::create([
-                            'id_product' => $orderDetail->id_product,
+                            'product_id' => $orderDetail->product_id,
                             'id_order' => $order->id,
                             'id_order_detail' => $orderDetail->id,
                             'movement_type_id' => $order->movement_type_id,
@@ -474,7 +474,7 @@ class OrderDetailController extends Controller
             try {
                 
                 // Revertir stock
-                $product = Product::find($orderDetail->id_product);
+                $product = Product::find($orderDetail->product_id);
                 if ($order->getIsSaleAttribute()) {
                     $product->increment('current_stock', $orderDetail->quantity);
                 } else {
@@ -489,7 +489,7 @@ class OrderDetailController extends Controller
                 Log::error('Error al revertir stock en OrderDetailController@destroy', [
                     'error' => $e->getMessage(),
                     'order_detail_id' => $orderDetail->id,
-                    'product_id' => $orderDetail->id_product
+                    'product_id' => $orderDetail->product_id
                 ]);
                 
                 return $this->errorResponse(

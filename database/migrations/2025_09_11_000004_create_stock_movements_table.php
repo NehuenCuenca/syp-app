@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::create('stock_movements', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('id_product')
+            $table->foreignId('product_id')
                   ->constrained('products', 'id')
                   ->onDelete('restrict');
             $table->foreignId('id_order')

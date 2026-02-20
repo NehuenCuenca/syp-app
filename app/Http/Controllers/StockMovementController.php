@@ -29,8 +29,8 @@ class StockMovementController extends Controller
                 $query->where('id_order', $request->id_order);
             }
 
-            if ($request->filled('id_product')) {
-                $query->where('id_product', $request->id_product);
+            if ($request->filled('product_id')) {
+                $query->where('product_id', $request->product_id);
             }
 
             if ($request->filled('movement_type_id')) {
@@ -147,7 +147,7 @@ class StockMovementController extends Controller
 
     public const ALLOWED_SORT_FIELDS = [
         'id_order' => 'Pedido',
-        'id_product' => 'Producto',
+        'product_id' => 'Producto',
         'movement_type_id' => 'Tipo de movimiento',
         'created_at' => 'Fecha de creacion',
     ];

@@ -32,7 +32,7 @@ class StoreOrderDetailRequest extends BaseApiRequest
                 'required',
                 'array'
             ],
-            'order_detail.id_product' => [
+            'order_detail.product_id' => [
                 'required',
                 'integer',
                 'exists:products,id'
@@ -71,13 +71,13 @@ class StoreOrderDetailRequest extends BaseApiRequest
         $validator->after(function ($validator) {
            
             // Validación personalizada: verificar que no exista ya un detalle con el mismo producto
-            if ($this->filled('id_order') && $this->filled('order_detail.id_product')) {
+            if ($this->filled('id_order') && $this->filled('order_detail.product_id')) {
                 $existingDetail = OrderDetail::where('id_order', $this->id_order)
-                    ->where('id_product', $this->input('order_detail.id_product'))
+                    ->where('product_id', $this->input('order_detail.product_id'))
                     ->first();
                     
                 if ($existingDetail) {
-                    $validator->errors()->add('order_detail.id_product', 'Ya existe un detalle con este producto en el pedido. Debe editarlo en lugar de crear uno nuevo.');
+                    $validator->errors()->add('order_detail.product_id', 'Ya existe un detalle con este producto en el pedido. Debe editarlo en lugar de crear uno nuevo.');
                 }
             }
 

@@ -13,7 +13,7 @@ return new class extends Migration
             $table->foreignId('id_order')
                   ->constrained('orders', 'id')
                   ->onDelete('cascade');
-            $table->foreignId('id_product')
+            $table->foreignId('product_id')
                   ->constrained('products', 'id')
                   ->onDelete('restrict');
             $table->integer('quantity');

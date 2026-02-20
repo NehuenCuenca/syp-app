@@ -132,7 +132,7 @@ class ProductController extends Controller
             $product->load('category');
 
             StockMovement::create([
-                'id_product' => $product->id,
+                'product_id' => $product->id,
                 'id_order' => null,
                 'id_order_detail' => null,
                 'movement_type_id' => MovementType::firstOrCreate(
@@ -148,7 +148,7 @@ class ProductController extends Controller
             Log::info('Product has been created', [
                 'user_email' => $request->user()->email,
                 'ip' => $request->ip(),
-                'id_product' => $product->id,
+                'product_id' => $product->id,
             ]);
             
             return $this->createdResponse(
@@ -260,7 +260,7 @@ class ProductController extends Controller
                                     : MovementType::MOVEMENT_TYPE_NEGATIVE_ADJUSTMENT;
 
                 StockMovement::create([
-                    'id_product' => $product->id,
+                    'product_id' => $product->id,
                     'id_order' => null,
                     'id_order_detail' => null,
                     'movement_type_id' => MovementType::firstOrCreate(
