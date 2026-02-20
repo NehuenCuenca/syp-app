@@ -13,7 +13,7 @@ class OrderDetail extends Model
     /**
      * The primary key associated with the table.
      */
-    // protected $primaryKey = 'id_order_detail';
+    // protected $primaryKey = 'order_detail_id';
 
     /**
      * The table associated with the model.
@@ -78,7 +78,7 @@ class OrderDetail extends Model
      */
     public function stockMovement()
     {
-        return $this->hasOne(StockMovement::class, 'id_order_detail');
+        return $this->hasOne(StockMovement::class);
     }
 
     /**

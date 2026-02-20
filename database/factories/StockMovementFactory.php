@@ -29,7 +29,7 @@ class StockMovementFactory extends Factory
             'id_order' => $movementType === 'Compra' || $movementType === 'Venta' 
                 ? Order::factory() 
                 : 1,
-            'id_order_detail' => OrderDetail::factory() || 1,
+            'order_detail_id' => OrderDetail::factory() || 1,
             'movement_type_id' => MovementType::where('name', $movementType)->first()->id,
             'quantity_moved' => $quantity,
             'notes' => fake()->boolean(70) 

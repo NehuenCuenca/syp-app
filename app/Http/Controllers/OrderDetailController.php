@@ -188,7 +188,7 @@ class OrderDetailController extends Controller
                 StockMovement::create([
                     'product_id' => $orderData['product_id'],
                     'id_order' => $orderId,
-                    'id_order_detail' => $orderDetail->id,
+                    'order_detail_id' => $orderDetail->id,
                     'movement_type_id' => $order->movement_type_id,
                     'quantity_moved' => $quantityMoved,
                     'notes' => "Detalle de pedido '{$order->code}' agregado"
@@ -371,7 +371,7 @@ class OrderDetailController extends Controller
                         StockMovement::create([
                             'product_id' => $orderDetail->product_id,
                             'id_order' => $order->id,
-                            'id_order_detail' => $orderDetail->id,
+                            'order_detail_id' => $orderDetail->id,
                             'movement_type_id' => $order->movement_type_id,
                             'quantity_moved' => ($order->getIsSaleAttribute()) ? -$validatedData['quantity'] : $validatedData['quantity'],
                             'notes' => "Actualización de cantidad en detalle de pedido '{$order->code}'"

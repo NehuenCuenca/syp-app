@@ -25,7 +25,7 @@ class StoreStockMovementRequest extends BaseApiRequest
     {
         return [
             'id_order' => ['exists:orders,id'],
-            'id_order_detail' => ['exists:order_details,id'],
+            'order_detail_id' => ['exists:order_details,id'],
             'product_id' => [
                 'required',
                 'integer',

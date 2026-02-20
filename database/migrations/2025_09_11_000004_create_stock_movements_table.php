@@ -17,7 +17,7 @@ return new class extends Migration
                   ->nullable()
                   ->constrained('orders', 'id')
                   ->onDelete('restrict');
-            $table->foreignId('id_order_detail')
+            $table->foreignId('order_detail_id')
                   ->nullable()
                   ->constrained('order_details', 'id')
                   ->onDelete('restrict');

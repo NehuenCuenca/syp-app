@@ -26,7 +26,7 @@ class UpdateStockMovementRequest extends BaseApiRequest
     {
         return [
             'id_order' => ['missing'],
-            'id_order_detail' => ['missing'],
+            'order_detail_id' => ['missing'],
             'quantity_moved' => [
                 'required',
                 'integer',
