@@ -24,7 +24,7 @@ class StoreStockMovementRequest extends BaseApiRequest
     public function rules(): array
     {
         return [
-            'id_order' => ['exists:orders,id'],
+            'order_id' => ['exists:orders,id'],
             'order_detail_id' => ['exists:order_details,id'],
             'product_id' => [
                 'required',

@@ -200,7 +200,7 @@ class OrderController extends Controller
             Log::info('Order has been retrieved', [
                 'user_email' => $request->user()->email,
                 'ip' => $request->ip(),
-                'id_order' => $order->id,
+                'order_id' => $order->id,
             ]);
             
             return $this->successResponse(
@@ -211,7 +211,7 @@ class OrderController extends Controller
             Log::error('Error trying to retrieve a order', [
                 'user_email' => $request->user()->email,
                 'ip' => $request->ip(),
-                'id_order' => $order->id,
+                'order_id' => $order->id,
                 'error' => $e->getMessage(),
                 'code' => $e->getCode(),
                 'line' => $e->getLine(),
@@ -262,7 +262,7 @@ class OrderController extends Controller
             Log::info('Retrieved data to edit an order', [
                 'user_email' => $request->user()->email,
                 'ip' => $request->ip(),
-                'id_order' => $order->id,
+                'order_id' => $order->id,
             ]);
 
             return $this->successResponse(
@@ -424,7 +424,7 @@ class OrderController extends Controller
             Log::info('Order and his details has been retrieved', [
                 'user_email' => $request->user()->email,
                 'ip' => $request->ip(),
-                'id_order' => $order->id,
+                'order_id' => $order->id,
             ]);
 
             return $this->successResponse(
@@ -435,7 +435,7 @@ class OrderController extends Controller
             Log::error('Error trying to show order and his details', [
                 'user_email' => $request->user()->email,
                 'ip' => $request->ip(),
-                'id_order' => $order->id,
+                'order_id' => $order->id,
                 'error' => $e->getMessage(),
                 'code' => $e->getCode(),
                 'line' => $e->getLine(),
@@ -463,7 +463,7 @@ class OrderController extends Controller
             Log::info('Order and his stock movements has been retrieved', [
                 'user_email' => $request->user()->email,
                 'ip' => $request->ip(),
-                'id_order' => $order->id,
+                'order_id' => $order->id,
             ]);
             
             return $this->successResponse(
@@ -474,7 +474,7 @@ class OrderController extends Controller
             Log::error('Error trying to show order and his details', [
                 'user_email' => $request->user()->email,
                 'ip' => $request->ip(),
-                'id_order' => $order->id,
+                'order_id' => $order->id,
                 'error' => $e->getMessage(),
                 'code' => $e->getCode(),
                 'line' => $e->getLine(),

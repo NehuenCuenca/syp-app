@@ -25,7 +25,7 @@ class StockMovement extends Model
      */
     protected $fillable = [
         'product_id',
-        'id_order',
+        'order_id',
         'order_detail_id',
         'movement_type_id',
         'quantity_moved',
@@ -39,7 +39,7 @@ class StockMovement extends Model
      */
     protected $casts = [
         'product_id' => 'integer',
-        'id_order' => 'integer',
+        'order_id' => 'integer',
         'order_detail_id' => 'integer',
         'movement_type_id' => 'integer',
         'quantity_moved' => 'integer',
@@ -87,7 +87,7 @@ class StockMovement extends Model
      */
     public function order(): BelongsTo
     {
-        return $this->belongsTo(Order::class, 'id_order');
+        return $this->belongsTo(Order::class, 'order_id');
     }
 
     /**

@@ -189,7 +189,7 @@ class OrderService
 
             // Create order detail
             $orderDetail = OrderDetail::create([
-                'id_order' => $order->id,
+                'order_id' => $order->id,
                 'product_id' => $detail['product_id'],
                 'quantity' => $quantityToProcess,
                 'unit_price' => $detail['unit_price'],
@@ -282,7 +282,7 @@ class OrderService
             // Create stock movement
             $stockMovement = StockMovement::create([
                 'product_id' => $orderDetail->product_id,
-                'id_order' => $order->id,
+                'order_id' => $order->id,
                 'order_detail_id' => $orderDetail->id,
                 'movement_type_id' => $order->movement_type_id,
                 'quantity_moved' => $quantity,
@@ -352,7 +352,7 @@ class OrderService
         }
 
         foreach ($order->orderDetails as $detail) {
-            $quantityToRevert = StockMovement::where('id_order', $order->id)
+            $quantityToRevert = StockMovement::where('order_id', $order->id)
                 ->where('product_id', $detail->product_id)
                 ->sum('quantity_moved');
 

@@ -23,7 +23,7 @@ class StoreOrderDetailRequest extends BaseApiRequest
     public function rules(): array
     {
         return [
-            'id_order' => [
+            'order_id' => [
                 'required',
                 'integer',
                 'exists:orders,id'
@@ -71,8 +71,8 @@ class StoreOrderDetailRequest extends BaseApiRequest
         $validator->after(function ($validator) {
            
             // Validación personalizada: verificar que no exista ya un detalle con el mismo producto
-            if ($this->filled('id_order') && $this->filled('order_detail.product_id')) {
-                $existingDetail = OrderDetail::where('id_order', $this->id_order)
+            if ($this->filled('order_id') && $this->filled('order_detail.product_id')) {
+                $existingDetail = OrderDetail::where('order_id', $this->order_id)
                     ->where('product_id', $this->input('order_detail.product_id'))
                     ->first();
                     
@@ -82,15 +82,15 @@ class StoreOrderDetailRequest extends BaseApiRequest
             }
 
             // Validación personalizada: verificar que profit_percentage no este presente si el pedido es una venta
-            $order = Order::find($this->id_order);
+            $order = Order::find($this->order_id);
 
-            if ($this->filled('id_order') && $this->filled('order_detail.profit_percentage')) {
+            if ($this->filled('order_id') && $this->filled('order_detail.profit_percentage')) {
                 if ($order && $order->getIsSaleAttribute()) {
                     $validator->errors()->add('order_detail.profit_percentage', 'No se puede agregar un porcentaje de ganancia si el pedido es una venta.');
                 }
             }
 
-            if ($this->filled('id_order') && $this->filled('order_detail.percentage_applied')) {
+            if ($this->filled('order_id') && $this->filled('order_detail.percentage_applied')) {
                  if ($order && $order->getIsPurchaseAttribute()) {
                     $validator->errors()->add('order_detail.percentage_applied', 'No se puede agregar un porcentaje de descuento si el pedido es una compra.');
                 }

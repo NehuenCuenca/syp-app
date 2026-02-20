@@ -20,7 +20,7 @@ class OrderDetailFactory extends Factory
         $line_subtotal = (int)($quantity * $unit_price) * ($percentage_applied / 100);
         
         return [
-            'id_order' => Order::factory(),
+            'order_id' => Order::factory(),
             'product_id' => $product ? $product->id : Product::factory(),
             'quantity' => $quantity,
             'unit_price' => $unit_price,
@@ -32,7 +32,7 @@ class OrderDetailFactory extends Factory
     public function forOrder(Order $order): Factory
     {
         return $this->state(function (array $attributes) use ($order) {
-            return ['id_order' => $order->id];
+            return ['order_id' => $order->id];
         });
     }
 

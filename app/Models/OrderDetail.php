@@ -29,7 +29,7 @@ class OrderDetail extends Model
      * The attributes that are mass assignable.
      */
     protected $fillable = [
-        'id_order',
+        'order_id',
         'product_id',
         'quantity',
         'unit_price',
@@ -62,7 +62,7 @@ class OrderDetail extends Model
      */
     public function order(): BelongsTo
     {
-        return $this->belongsTo(Order::class, 'id_order');
+        return $this->belongsTo(Order::class, 'order_id');
     }
 
     /**
@@ -86,7 +86,7 @@ class OrderDetail extends Model
      */
     public function scopeForOrder($query, int $orderId)
     {
-        return $query->where('id_order', $orderId);
+        return $query->where('order_id', $orderId);
     }
 
     /**

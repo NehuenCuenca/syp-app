@@ -29,14 +29,14 @@ class OrderDetailController extends Controller
             $query = null;
             $specifiedOrder = null;
             
-            if ($request->has('id_order')) {
+            if ($request->has('order_id')) {
                 // Validar que el pedido existe
-                $specifiedOrder = Order::find($request->id_order);
+                $specifiedOrder = Order::find($request->order_id);
                 if (!$specifiedOrder) {
                     return $this->notFoundResponse('El pedido especificado no existe');
                 }
                 
-                $query = OrderDetail::where('id_order', $request->id_order)
+                $query = OrderDetail::where('order_id', $request->order_id)
                     ->with(['product.category'])
                     ->get();
             } else {
@@ -130,7 +130,7 @@ class OrderDetailController extends Controller
         try {
             $validatedData = $request->validated();
             $orderData = $validatedData['order_detail'];
-            $orderId = $validatedData['id_order'];
+            $orderId = $validatedData['order_id'];
             
             // Verificar que el pedido existe 
             $order = Order::find($orderId);
@@ -166,7 +166,7 @@ class OrderDetailController extends Controller
             
             // Crear el detalle del pedido
             $orderDetail = OrderDetail::create([
-                'id_order' => $orderId,
+                'order_id' => $orderId,
                 'product_id' => $orderData['product_id'],
                 'quantity' => $orderData['quantity'],
                 'unit_price' => $orderData['unit_price'],
@@ -187,7 +187,7 @@ class OrderDetailController extends Controller
                 // Registrar movimiento de stock
                 StockMovement::create([
                     'product_id' => $orderData['product_id'],
-                    'id_order' => $orderId,
+                    'order_id' => $orderId,
                     'order_detail_id' => $orderDetail->id,
                     'movement_type_id' => $order->movement_type_id,
                     'quantity_moved' => $quantityMoved,
@@ -370,7 +370,7 @@ class OrderDetailController extends Controller
                         //Crear nuevo movimiento si no existe
                         StockMovement::create([
                             'product_id' => $orderDetail->product_id,
-                            'id_order' => $order->id,
+                            'order_id' => $order->id,
                             'order_detail_id' => $orderDetail->id,
                             'movement_type_id' => $order->movement_type_id,
                             'quantity_moved' => ($order->getIsSaleAttribute()) ? -$validatedData['quantity'] : $validatedData['quantity'],

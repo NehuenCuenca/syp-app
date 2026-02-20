@@ -14,7 +14,7 @@ class Order extends Model
     /**
      * The primary key associated with the table.
      */
-    // protected $primaryKey = 'id_order';
+    // protected $primaryKey = 'order_id';
 
     /**
      * The table associated with the model.
@@ -99,7 +99,7 @@ class Order extends Model
      */
     public function orderDetails(): HasMany
     {
-        return $this->hasMany(OrderDetail::class, 'id_order');
+        return $this->hasMany(OrderDetail::class, 'order_id');
     }
 
     /**
@@ -107,7 +107,7 @@ class Order extends Model
      */
     public function stockMovements(): HasMany
     {
-        return $this->hasMany(StockMovement::class, 'id_order');
+        return $this->hasMany(StockMovement::class, 'order_id');
     }
 
 
