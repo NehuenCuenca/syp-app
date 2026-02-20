@@ -151,7 +151,7 @@ class AuthController extends Controller
 
         return $this->successResponse([
             'user' => [
-                'id_user' => $request->user()->id,
+                'user_id' => $request->user()->id,
                 'username' => $request->user()->username,
                 'email' => $request->user()->email,
                 'phone' => $request->user()->phone,

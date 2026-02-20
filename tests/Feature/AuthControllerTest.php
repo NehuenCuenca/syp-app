@@ -246,7 +246,7 @@ class AuthControllerTest extends TestCase
                 'message',
                 'data' => [
                     'user' => [
-                        'id_user',
+                        'user_id',
                         'username',
                         'email',
                         'phone',
@@ -257,7 +257,7 @@ class AuthControllerTest extends TestCase
                 'errors',
             ]);
 
-        $this->assertSame($user->id, $response->json('data.user.id_user'));
+        $this->assertSame($user->id, $response->json('data.user.user_id'));
         $this->assertSame($user->username, $response->json('data.user.username'));
         $this->assertSame($user->email, $response->json('data.user.email'));
         $this->assertSame($user->phone, $response->json('data.user.phone'));
