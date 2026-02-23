@@ -499,7 +499,7 @@ class ProductControllerTest extends TestCase
         ];
 
         $response = $this->patchJson("/api/products/{$product->id}", $payload);
-        // dd($response->json());
+
         $response->assertStatus(422)
             ->assertJson([
                 'success' => false,
