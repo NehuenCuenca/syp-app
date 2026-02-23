@@ -13,7 +13,6 @@ class OrderDetailFactory extends Factory
 
     public function definition(): array
     {
-        $product = Product::inRandomOrder()->first();
         $quantity = fake()->numberBetween(1, 10);
         $unit_price =  fake()->numberBetween(500, 2000);
         $percentage_applied = fake()->numberBetween(15, 120);
@@ -21,7 +20,7 @@ class OrderDetailFactory extends Factory
         
         return [
             'order_id' => Order::factory(),
-            'product_id' => $product ? $product->id : Product::factory(),
+            'product_id' => Product::factory(),
             'quantity' => $quantity,
             'unit_price' => $unit_price,
             'percentage_applied' => $percentage_applied,
