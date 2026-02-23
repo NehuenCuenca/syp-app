@@ -25,7 +25,8 @@ class OrderSeeder extends Seeder
             'notes' => 'Standard office equipment order for Acme Corporation'
         ]);
 
-        // Create 5 random orders
-        Order::factory(5)->create();
+        // Create 10 random orders
+        Order::factory(5)->create([ 'movement_type_id' => MovementType::firstWhere('name', MovementType::MOVEMENT_TYPE_SALE)->id, ]);
+        Order::factory(5)->create([ 'movement_type_id' => MovementType::firstWhere('name', MovementType::MOVEMENT_TYPE_BUY)->id, ]);
     }
 }
