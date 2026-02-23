@@ -2,12 +2,8 @@
 
 namespace App\Http\Requests;
 
-use App\Models\Contact;
 use App\Models\MovementType;
 use App\Models\Order;
-use Illuminate\Contracts\Validation\Validator;
-use App\Models\Product;
-use Illuminate\Http\Exceptions\HttpResponseException;
 
 class StoreOrderRequest extends BaseApiRequest
 {
@@ -58,8 +54,8 @@ class StoreOrderRequest extends BaseApiRequest
         $validator->after(function ($validator) {
             // Validar tipo de movimiento
             $validMovementTypes = [
-                MovementType::firstWhere('name', Order::ORDER_TYPE_SALE)->id,
-                MovementType::firstWhere('name', Order::ORDER_TYPE_PURCHASE)->id,
+                MovementType::firstWhere('name', MovementType::MOVEMENT_TYPE_SALE)->id,
+                MovementType::firstWhere('name', MovementType::MOVEMENT_TYPE_BUY)->id,
             ];
             
             if (!in_array($this->movement_type_id, $validMovementTypes)) {
