@@ -445,7 +445,7 @@ class OrderService
     public function validateStockAvailability(array $orderDetails, int $movementTypeId): array
     {
         $errors = [];
-        $saleMovementTypeId = MovementType::firstWhere('name', Order::ORDER_TYPE_SALE)->id;
+        $saleMovementTypeId = MovementType::firstWhere('name', MovementType::MOVEMENT_TYPE_SALE)->id;
 
         if ($movementTypeId !== $saleMovementTypeId) {
             return $errors; // Only validate for sales
