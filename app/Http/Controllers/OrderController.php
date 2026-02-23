@@ -9,15 +9,12 @@ use App\Http\Traits\ApiResponseTrait;
 use App\Models\Contact;
 use App\Models\MovementType;
 use App\Models\Order;
-use App\Models\OrderDetail;
-use App\Models\StockMovement;
 use App\Models\Product;
 use App\Services\OrderService;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class OrderController extends Controller
@@ -109,7 +106,10 @@ class OrderController extends Controller
                 ->get();
 
             $data = [
-                'order_types' => Order::getOrderTypes(),
+                'order_types' => [
+                    MovementType::firstWhere('name', MovementType::MOVEMENT_TYPE_BUY),
+                    MovementType::firstWhere('name', MovementType::MOVEMENT_TYPE_SALE)
+                ],
                 'contacts' => $contacts,
                 'products' => $products
             ];
@@ -244,7 +244,10 @@ class OrderController extends Controller
                 'order' => $order,
                 'contacts' => $contacts,
                 'products' => $products,
-                'order_types' => Order::getOrderTypes(),
+                'order_types' => [
+                    MovementType::firstWhere('name', MovementType::MOVEMENT_TYPE_BUY),
+                    MovementType::firstWhere('name', MovementType::MOVEMENT_TYPE_SALE)
+                ],
             ];
 
             Log::info('Retrieved data to edit an order', [
@@ -365,7 +368,10 @@ class OrderController extends Controller
                                     ->makeHidden(['last_order', 'phone_number_info']);
                                     
             $data = [
-                'order_types' => Order::getOrderTypes(),
+                'order_types' => [
+                    MovementType::firstWhere('name', MovementType::MOVEMENT_TYPE_BUY),
+                    MovementType::firstWhere('name', MovementType::MOVEMENT_TYPE_SALE)
+                ],
                 'contacts' => $contacts,
                 'before_equal_date' => Carbon::parse(Order::min('created_at'))->format('Y-m-d'),
                 'sort_by' => FilterOrdersRequest::ALLOWED_SORT_FIELDS,
