@@ -28,10 +28,10 @@ class StoreOrderRequest extends BaseApiRequest
     {
         return [
             'contact_id' => 'required_without:new_contact_name|integer|exists:contacts,id',
-            'new_contact_name' => 'required_without:contact_id|string|max:255',
+            'new_contact_name' => 'required_without:contact_id|string|max:100',
 
             'movement_type_id' => 'required|exists:movement_types,id',
-            'notes' => 'nullable|string|max:1000',
+            'notes' => 'nullable|string|max:255',
             'adjustment_amount' => 'nullable|numeric',
             'sub_total' => 'missing',
             'total_net' => 'missing',

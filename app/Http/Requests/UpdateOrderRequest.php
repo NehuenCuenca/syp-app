@@ -28,9 +28,9 @@ class UpdateOrderRequest extends BaseApiRequest
     {
         return [
             'contact_id' => 'required_without:new_contact_name|integer|exists:contacts,id',
-            'new_contact_name' => 'required_without:contact_id|string|max:255',
+            'new_contact_name' => 'required_without:contact_id|string|max:100',
             'adjustment_amount' => 'nullable|numeric',
-            'notes' => 'nullable|string|max:1000',
+            'notes' => 'nullable|string|max:255',
 
             // Validaciones para los detalles del pedido
             'order_details' => 'array|min:1',
