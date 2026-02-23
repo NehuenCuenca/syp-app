@@ -55,11 +55,6 @@ class Order extends Model
         'subtotal_as_currency', 'adjustment_as_currency', 'total_net_as_currency'
     ];
 
-    /**
-     * Constants for order types
-     */
-    const ORDER_TYPE_PURCHASE = 'Compra';
-    const ORDER_TYPE_SALE = 'Venta';
 
         /**
      * Relationship: Order belongs to a Contact
@@ -88,8 +83,8 @@ class Order extends Model
     public static function getOrderTypes(): array
     {
         return [
-            self::ORDER_TYPE_PURCHASE,
-            self::ORDER_TYPE_SALE,
+            MovementType::MOVEMENT_TYPE_BUY,
+            MovementType::MOVEMENT_TYPE_SALE,
         ];
     }
 
@@ -108,19 +103,6 @@ class Order extends Model
     public function stockMovements(): HasMany
     {
         return $this->hasMany(StockMovement::class, 'order_id');
-    }
-
-
-    /**
-     * Accessor: Get formatted order type
-     */
-    public function getFormattedOrderTypeAttribute(): string
-    {
-        return match ($this->movementType->name) {
-            self::ORDER_TYPE_PURCHASE => 'Compra Entrante',
-            self::ORDER_TYPE_SALE => 'Venta Saliente',
-            default => $this->movementType->name,
-        };
     }
 
     /**
@@ -170,7 +152,7 @@ class Order extends Model
      */
     public function getIsPurchaseAttribute(): bool
     {
-        return $this->movement_type_id === MovementType::firstWhere('name', self::ORDER_TYPE_PURCHASE)->id;
+        return $this->movement_type_id === MovementType::firstWhere('name', MovementType::MOVEMENT_TYPE_BUY)->id;
     }
 
     /**
@@ -178,7 +160,7 @@ class Order extends Model
      */
     public function getIsSaleAttribute(): bool
     {
-        return $this->movement_type_id === MovementType::firstWhere('name', self::ORDER_TYPE_SALE)->id;
+        return $this->movement_type_id === MovementType::firstWhere('name', MovementType::MOVEMENT_TYPE_SALE)->id;
     }
 
     /**
