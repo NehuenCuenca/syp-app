@@ -14,7 +14,6 @@ class ProductFactory extends Factory
     {
         $avgPrice = fake()->numberBetween(10, 1000);
         $markup = fake()->numberBetween(15, 120);
-        $totalCategories = Category::count();
 
         return [
             'name' => fake()->words(3, true),
@@ -23,7 +22,7 @@ class ProductFactory extends Factory
             'sale_price' => (int)($avgPrice * $markup),
             'current_stock' => fake()->numberBetween(0, 100),
             'min_stock_alert' => fake()->numberBetween(5, 20),
-            'category_id' => fake()->numberBetween(1, $totalCategories),
+            'category_id' => Category::factory(),
         ];
     }
 }
