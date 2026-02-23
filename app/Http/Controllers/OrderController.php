@@ -368,8 +368,8 @@ class OrderController extends Controller
                 'order_types' => Order::getOrderTypes(),
                 'contacts' => $contacts,
                 'before_equal_date' => Carbon::parse(Order::min('created_at'))->format('Y-m-d'),
-                'sort_by' => self::ALLOWED_SORT_FIELDS,
-                'sort_direction' => self::ALLOWED_SORT_DIRECTIONS
+                'sort_by' => FilterOrdersRequest::ALLOWED_SORT_FIELDS,
+                'sort_direction' => FilterOrdersRequest::ALLOWED_SORT_DIRECTIONS
             ];
 
             Log::info('Retrieved the filters for orders', [
@@ -478,17 +478,4 @@ class OrderController extends Controller
             );
         }
     }
-
-    // Constantes para filtros
-    public const ALLOWED_SORT_FIELDS = [
-        'id' => 'ID', 
-        'created_at' => 'Fecha de creacion', 
-        'movement_type_id' => 'Tipo de pedido',
-        // 'total_net' => 'Total neto'
-    ];
-
-    public const ALLOWED_SORT_DIRECTIONS = [
-        'asc' => 'Ascendente',
-        'desc' => 'Descendente'
-    ];
 }
