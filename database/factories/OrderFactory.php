@@ -17,11 +17,10 @@ class OrderFactory extends Factory
         $adjustmentAmount = fake()->numberBetween(-1000, 1000);
         $subtotal = fake()->numberBetween(100, 1000);
         $totalNet =  $subtotal + $adjustmentAmount;
-        $orderType = fake()->randomElement([MovementType::MOVEMENT_TYPE_BUY, MovementType::MOVEMENT_TYPE_SALE]);
 
         return [
             'contact_id' => Contact::factory(),
-            'movement_type_id' => MovementType::firstWhere('name', $orderType)->id,
+            'movement_type_id' => MovementType::factory(), 
             'adjustment_amount' => $adjustmentAmount,
             'subtotal' => $subtotal,
             'total_net' => $totalNet,
