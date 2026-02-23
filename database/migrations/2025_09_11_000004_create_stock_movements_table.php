@@ -11,18 +11,18 @@ return new class extends Migration
         Schema::create('stock_movements', function (Blueprint $table) {
             $table->id();
             $table->foreignId('product_id')
-                  ->constrained('products', 'id')
+                  ->constrained()
                   ->onDelete('restrict');
             $table->foreignId('order_id')
                   ->nullable()
-                  ->constrained('orders', 'id')
+                  ->constrained()
                   ->onDelete('restrict');
             $table->foreignId('order_detail_id')
                   ->nullable()
-                  ->constrained('order_details', 'id')
+                  ->constrained()
                   ->onDelete('restrict');
             $table->foreignId('movement_type_id')
-                  ->constrained('movement_types', 'id')
+                  ->constrained()
                   ->onDelete('restrict');
             $table->integer('quantity_moved');
             $table->text('notes')

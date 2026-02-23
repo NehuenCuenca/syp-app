@@ -79,7 +79,7 @@ class StockMovement extends Model
      */
     public function movementType(): BelongsTo
     {
-        return $this->belongsTo(MovementType::class, 'movement_type_id');
+        return $this->belongsTo(MovementType::class);
     }
 
     /**
@@ -87,7 +87,7 @@ class StockMovement extends Model
      */
     public function order(): BelongsTo
     {
-        return $this->belongsTo(Order::class, 'order_id');
+        return $this->belongsTo(Order::class);
     }
 
     /**
