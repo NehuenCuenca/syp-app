@@ -66,6 +66,6 @@ class Product extends Model
 
     public function calculateSellPrice()
     {
-        return $this->buy_price * (1 + $this->profit_percentage / 100);
+        return (int)($this->buy_price * (1 + $this->profit_percentage / 100));
     }
 }
