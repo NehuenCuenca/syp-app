@@ -26,7 +26,7 @@ class StockMovementFactory extends Factory
 
         return [
             'product_id' => Product::factory(),
-            'order_id' => $movementType === 'Compra' || $movementType === 'Venta' 
+            'order_id' => $movementType === MovementType::MOVEMENT_TYPE_BUY || $movementType === MovementType::MOVEMENT_TYPE_SALE 
                 ? Order::factory() 
                 : 1,
             'order_detail_id' => OrderDetail::factory() || 1,
