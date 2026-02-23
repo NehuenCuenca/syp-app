@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\FilterOrdersRequest;
 use App\Http\Requests\StoreOrderRequest;
 use App\Http\Requests\UpdateOrderRequest;
 use App\Http\Traits\ApiResponseTrait;
@@ -26,26 +27,27 @@ class OrderController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index(Request $request)
+    public function index(FilterOrdersRequest $request)
     {
         try {
+            $filters = $request->getFilters();
             $query = Order::with(['contact']);
             
             // Filtros
-            if ($request->filled('movement_type_id')) {
+            if (!empty($filters['movement_type_id'])) {
                 $query->where('movement_type_id', $request->movement_type_id);
             }
 
-            if ($request->filled('contact_id')) {
+            if (!empty($filters['contact_id'])) {
                 $query->where('contact_id', $request->contact_id);
             }
 
-            if ($request->filled('before_equal_date')) {
+            if (!empty($filters['before_equal_date'])) {
                 $query->whereDate('created_at', '<=', $request->before_equal_date);
             }
 
             $search = $request->get('search', '');
-            if ($request->has('search')) {
+            if (!empty($filters['search'])) {
                 $query->where(function ($q) use ($search) {
                     $q->where('code', 'like', "{$search}%")
                     ->orWhereRelation('contact', 'name', 'like', "%{$search}%");
@@ -53,26 +55,12 @@ class OrderController extends Controller
             }
             
             // Ordenamiento
-            $sortBy = $request->get('sort_by', 'created_at');
-            $sortDirection = $request->get('sort_direction', 'desc');
-
-            if (in_array($sortBy, array_keys(self::ALLOWED_SORT_FIELDS))) {
-                $query->orderBy($sortBy, $sortDirection);
+            if (in_array($filters['sort_by'], array_keys(FilterOrdersRequest::ALLOWED_SORT_FIELDS))) {
+                $query->orderBy($filters['sort_by'], $filters['sort_direction']);
             }
 
             // Paginación
-            $perPage = $request->get('per_page', 9);
-            $orders = $query->paginate($perPage);
-
-            $meta = [
-                'filters_applied' => [
-                    'search' => $search,
-                    'sort_by' => $sortBy,
-                    'sort_direction' => $sortDirection,
-                    'per_page' => $perPage,
-                    'page' => $request->integer('page', 1)
-                ]
-            ];
+            $orders = $query->paginate($filters['per_page']);
 
             Log::info('Retrieved orders filtered', [
                 'user_email' => $request->user()->email,
@@ -82,7 +70,7 @@ class OrderController extends Controller
             return $this->paginatedResponse(
                 $orders,
                 'Pedidos filtrados recuperados exitosamente',
-                $meta
+                ['filters_applied' => $filters]
             );
         } catch (Exception $e) {
             Log::error('Error trying to get filtered orders', [
