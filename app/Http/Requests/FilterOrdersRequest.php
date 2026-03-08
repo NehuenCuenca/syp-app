@@ -65,8 +65,8 @@ class FilterOrdersRequest extends BaseApiRequest
             'contact_id' => $this->input('contact_id'),
             'before_equal_date' => $this->input('before_equal_date'),
             'search' => $this->input('search'),
-            'sort_by' => $this->input('sort_by', 'deleted_at'),
-            'sort_direction' => $this->input('sort_direction', 'asc'),
+            'sort_by' => $this->input('sort_by', 'created_at'),
+            'sort_direction' => $this->input('sort_direction', 'desc'),
             'per_page' => $this->integer('per_page', 9),
             'page' => $this->integer('page', 1)
         ];
