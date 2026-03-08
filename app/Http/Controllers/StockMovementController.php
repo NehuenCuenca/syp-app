@@ -164,7 +164,7 @@ class StockMovementController extends Controller
     {
         try {
             $orders = Order::select('id', 'code', 'contact_id', 'movement_type_id', 'subtotal', 'adjustment_amount', 'total_net', 'created_at')->get();
-            $products = Product::select('name', 'id', 'code', 'current_stock', 'min_stock_alert', 'deleted_at')->get();
+            $products = Product::select('name', 'id', 'code', 'current_stock', 'min_stock_alert', 'sale_price', 'deleted_at')->get();
             $movementTypes = MovementType::select('name', 'id')->get();
             $dateFrom = StockMovement::min('created_at');
             $dateTo = StockMovement::max('created_at');
