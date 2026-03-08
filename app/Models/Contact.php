@@ -75,7 +75,7 @@ class Contact extends Model
         }
         
         // Retornar un array con los datos necesarios y el alias creado manualmente
-        return  'Ultima ' . strtolower($lastOrder->movementType->name) . ': '
+        return  strtolower($lastOrder->movementType->name) . ': '
                         . $lastOrder->created_at->format('d/m/Y');
     }
     
