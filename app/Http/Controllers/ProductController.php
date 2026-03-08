@@ -52,7 +52,7 @@ class ProductController extends Controller
                 'id', 'code', 'name',
                 'current_stock', 'min_stock_alert', 'category_id',
                 DB::raw('(current_stock < min_stock_alert) as is_low_stock'), 
-                'deleted_at'
+                'sale_price', 'deleted_at'
             );
 
             // Paginación
@@ -495,7 +495,7 @@ class ProductController extends Controller
     public function getFilters(Request $request): JsonResponse
     {
         try {
-            $products = Product::select('id', 'code', 'name', 'deleted_at')->get();
+            $products = Product::select('id', 'code', 'name', 'sale_price', 'deleted_at')->get();
 
             $categories = Category::select('id', 'name')->orderBy('id', 'asc')->get();
 
