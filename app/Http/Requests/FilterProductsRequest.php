@@ -19,7 +19,6 @@ class FilterProductsRequest extends BaseApiRequest
 
     public const ALLOWED_SORT_FIELDS = [
         'code' => 'COD',
-        'category_id' => 'Categoria',
         'current_stock' => 'Stock actual',
         'name' => 'Nombre',
         'created_at' => 'Fecha de creacion',
@@ -62,8 +61,8 @@ class FilterProductsRequest extends BaseApiRequest
         return [
             'category_id' => $this->input('category_id'),
             'search' => $this->input('search'),
-            'sort_by' => $this->input('sort_by', 'deleted_at'),
-            'sort_direction' => $this->input('sort_direction', 'asc'),
+            'sort_by' => $this->input('sort_by', 'created_at'),
+            'sort_direction' => $this->input('sort_direction', 'desc'),
             'per_page' => $this->integer('per_page', 9),
             'page' => $this->integer('page', 1)
         ];
