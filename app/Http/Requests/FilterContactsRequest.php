@@ -18,7 +18,7 @@ class FilterContactsRequest extends BaseApiRequest
     }
 
     public const ALLOWED_SORT_FIELDS  = [
-        'name' => 'Nombre de negocio',
+        'name' => 'Nombre de contacto',
         'contact_type' => 'Tipo de contacto',
         'created_at' => 'Fecha de creación',
         'deleted_at' => 'Fecha de eliminacion',
@@ -60,8 +60,8 @@ class FilterContactsRequest extends BaseApiRequest
         return [
             'contact_type' => $this->input('contact_type'),
             'search' => $this->input('search'),
-            'sort_by' => $this->input('sort_by', 'deleted_at'),
-            'sort_direction' => $this->input('sort_direction', 'asc'),
+            'sort_by' => $this->input('sort_by', 'created_at'),
+            'sort_direction' => $this->input('sort_direction', 'desc'),
             'per_page' => $this->integer('per_page', 9),
             'page' => $this->integer('page', 1)
         ];
