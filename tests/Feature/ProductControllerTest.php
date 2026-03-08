@@ -132,7 +132,7 @@ class ProductControllerTest extends TestCase
             'current_stock'     => 10,
             'min_stock_alert'   => 1,
             // El controller crea Category::firstOrCreate(['name' => category])
-            'category'          => 'Varios',
+            'category'          => Category::CATEGORY_VARIOUS,
         ];
 
         $response = $this->postJson('/api/products', $payload);
@@ -452,6 +452,7 @@ class ProductControllerTest extends TestCase
         ];
 
         $response = $this->postJson('/api/products', $payload);
+        // dump($response->json());
 
         $response->assertStatus(422)
             ->assertJson([
@@ -499,6 +500,7 @@ class ProductControllerTest extends TestCase
         ];
 
         $response = $this->patchJson("/api/products/{$product->id}", $payload);
+        // dump($response->json());
 
         $response->assertStatus(422)
             ->assertJson([
@@ -589,7 +591,7 @@ class ProductControllerTest extends TestCase
             'sale_price'        => 120,
             'current_stock'     => 10,
             'min_stock_alert'   => 1,
-            'category'          => 'Varios',
+            'category'          => Category::CATEGORY_VARIOUS,
         ];
 
         $response = $this->postJson('/api/products', $payload);
