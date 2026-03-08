@@ -57,7 +57,11 @@ class Product extends Model
 
     public function getStockAvailabilityAttribute()
     {
-        return ($this->current_stock > 0) ? "{$this->current_stock} disponibles" : 'Agotado';
+        if($this->current_stock > 0){
+            return custom_format_number($this->current_stock);
+        } else{
+            return 'Agotado';
+        }
     }
 
     public function category()
