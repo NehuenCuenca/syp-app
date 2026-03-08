@@ -218,48 +218,92 @@ class OrderController extends Controller
 
     /**
      * Show the form for editing the specified resource.
+     * 
+     * Este método revierte temporalmente el stock de los productos del pedido
+     * para permitir que el usuario edite el pedido como si nunca se hubiera realizado.
+     * 
+     * Lógica de reversión:
+     * - Si el pedido es una VENTA: el stock aumenta (se devuelven las unidades)
+     * - Si el pedido es una COMPRA: el stock disminuye (se quitan las unidades)
+     * 
+     * @param Request $request
+     * @param Order $order
+     * @return \Illuminate\Http\JsonResponse
      */
     public function edit(Request $request, Order $order)
     {
         try {
-            $order->load(['contact', 'orderDetails.product.category']);
+            // Cargar relaciones necesarias
+            $order->load([
+                'contact',
+                'orderDetails.product.category',
+                'movementType'
+            ]);
 
+            // Obtener todos los contactos
             $contacts = Contact::select('id', 'code', 'name', 'deleted_at', 'contact_type')
                 ->orderBy('name')
                 ->get()
                 ->makeHidden(['last_order', 'phone_number_info']);
 
+            // Obtener todos los productos
             $products = Product::with('category:id,name')
                 ->select('id', 'code', 'name', 'current_stock', 'min_stock_alert', 'profit_percentage', 'sale_price', 'buy_price', 'category_id', 'deleted_at')
                 ->orderBy('name')
                 ->get();
 
-            foreach($order->orderDetails as $detail) {
-                // Modificación temporal del stock
-                $quantityToRevert = ($order->getIsSaleAttribute()) ? $detail->quantity : -$detail->quantity;
-                $detail->product->current_stock = $detail->product->current_stock + $quantityToRevert;
+            // Crear un mapa de productos para acceso rápido
+            $productsMap = $products->keyBy('id');
+
+            // Revertir el stock temporalmente para cada producto del pedido
+            foreach ($order->orderDetails as $detail) {
+                if (isset($productsMap[$detail->product_id])) {
+                    $product = $productsMap[$detail->product_id];
+                    
+                    if ($order->is_sale) {
+                        // VENTA: Revertir significa AUMENTAR el stock
+                        // (porque cuando se vendió, se disminuyó el stock)
+                        $product->current_stock += $detail->quantity;
+                    } elseif ($order->is_purchase) {
+                        // COMPRA: Revertir significa DISMINUIR el stock
+                        // (porque cuando se compró, se aumentó el stock)
+                        $product->current_stock -= $detail->quantity;
+                    }
+
+                    // Asegurar que el stock nunca sea negativo
+                    if ($product->current_stock < 0) {
+                        $product->current_stock = 0;
+                    }
+                }
             }
 
-            $data = [
-                'order' => $order,
-                'contacts' => $contacts,
-                'products' => $products,
-                'order_types' => [
-                    MovementType::firstWhere('name', MovementType::MOVEMENT_TYPE_BUY),
-                    MovementType::firstWhere('name', MovementType::MOVEMENT_TYPE_SALE)
-                ],
+            // Preparar los tipos de pedido disponibles
+            $orderTypes = [
+                MovementType::firstWhere('name', MovementType::MOVEMENT_TYPE_BUY),
+                MovementType::firstWhere('name', MovementType::MOVEMENT_TYPE_SALE)
             ];
 
-            Log::info('Retrieved data to edit an order', [
+            // Preparar la respuesta
+            $data = [
+                'order' => $order,
+                'order_types' => $orderTypes,
+                'contacts' => $contacts,
+                'products' => $products->values() // Valores actualizados con stock revertido
+            ];
+
+            Log::info('Retrieved order data for editing with reverted stock', [
                 'user_email' => $request->user()->email,
                 'ip' => $request->ip(),
                 'order_id' => $order->id,
+                'order_type' => $order->movementType->name,
+                'products_affected' => $order->orderDetails->count()
             ]);
 
             return $this->successResponse(
                 $data,
                 'Datos para editar pedido obtenidos exitosamente'
             );
+
         } catch (Exception $e) {
             Log::error('Error trying to retrieve the data to edit an order', [
                 'user_email' => $request->user()->email,
@@ -268,11 +312,12 @@ class OrderController extends Controller
                 'error' => $e->getMessage(),
                 'code' => $e->getCode(),
                 'line' => $e->getLine(),
-                'data' => $request->all()
+                'file' => $e->getFile(),
+                'trace' => config('app.debug') ? $e->getTraceAsString() : null
             ]);
             
             return $this->errorResponse(
-                'Error inesperado del servidor al obtener los datos de edición',
+                'Error inesperado al obtener los datos de edición',
                 ['exception' => $e->getMessage()],
                 [],
                 500,
