@@ -39,7 +39,7 @@ class OrderExportControllerTest extends TestCase
         Storage::fake('local');
 
         $category = Category::factory()->create([
-            'name' => Category::SPECIAL_CATEGORY ?? 'Analgésicos',
+            'name' => Category::CATEGORY_SPECIAL ?? 'Analgesicos',
         ]);
 
         $product = Product::factory()->create(['category_id' => $category->id]);
@@ -201,7 +201,7 @@ class OrderExportControllerTest extends TestCase
     public function historical_order_can_be_exported_even_if_product_is_soft_deleted()
     {
         $category = Category::factory()->create([
-            'name' => Category::SPECIAL_CATEGORY ?? 'Analgésicos',
+            'name' => Category::CATEGORY_SPECIAL ?? 'Analgesicos',
         ]);
 
         $product = Product::factory()->create(['category_id' => $category->id]);
@@ -242,7 +242,7 @@ class OrderExportControllerTest extends TestCase
         Storage::fake('local');
 
         $category = Category::factory()->create([
-            'name' => Category::SPECIAL_CATEGORY, // "Analgesicos"/"Analgésicos"
+            'name' => Category::CATEGORY_SPECIAL,
         ]);
 
         $product = Product::factory()->create(['category_id' => $category->id]);
