@@ -55,9 +55,9 @@ class BaseApiRequest extends FormRequest
             'boolean' => "El campo ':attribute' debe ser verdadero o falso.",
             'array' => "El campo ':attribute' debe ser un array.",
             'required_without' => "El campo ':attribute' es obligatorio cuando ':other' no está presente.",
-            'contact_id.required_without' => "El campo 'contact_id' es obligatorio cuando no se proporciona 'new_contact'.",
-            'new_contact_name.required_without' => "El campo 'new_contact' es obligatorio cuando no se proporciona 'contact_id'.",
-            'new_contact_name.required_with' => "El campo 'name' dentro de 'new_contact' es obligatorio.",
+            'contact_id.required_without' => "El campo 'contacto' es obligatorio cuando no se proporciona 'nombre de contacto nuevo'.",
+            'new_contact_name.required_without' => "El campo 'nombre de contacto nuevo' es obligatorio cuando no se proporciona 'contacto'.",
+            'new_contact_name.required_with' => "El campo 'nombre de contacto nuevo' es obligatorio.",
             'prohibited_if' => "El campo ':attribute' no puede ser adjuntado cuando ':other' tiene ese valor especificado.",
             'required_if' => "El campo ':attribute' es requerido junto con el campo ':other'.",
 
