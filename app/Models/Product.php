@@ -36,6 +36,7 @@ class Product extends Model
         'stock_availability',
         'is_low_stock',
         'is_empty_stock',
+        'sale_price_as_currency'
     ];
 
     public function getIsLowStockAttribute()
@@ -67,5 +68,10 @@ class Product extends Model
     public function calculateSellPrice()
     {
         return (int)($this->buy_price * (1 + $this->profit_percentage / 100));
+    }
+
+    public function getSalePriceAsCurrencyAttribute(): string
+    {
+        return format_number_to_currency($this->sale_price);
     }
 }
