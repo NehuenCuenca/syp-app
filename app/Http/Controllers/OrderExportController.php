@@ -60,12 +60,13 @@ class OrderExportController extends Controller
             }
 
             // Get if an order has details of products belonging to a certain category
-            $specialCategory = Category::where('name', Category::SPECIAL_CATEGORY)->first();
+            $specialCategory = Category::where('name', Category::CATEGORY_SPECIAL)->first();
             
             if (!$specialCategory) {
+                $specialCategoryName = Category::CATEGORY_SPECIAL;
                 return $this->errorResponse(
                     'No se pudo encontrar la categoría especial requerida',
-                    ['category' => 'Categoría "Analgésicos" no encontrada'],
+                    ['category' => "Categoría '{$specialCategoryName}' no encontrada"],
                     ['order_id' => $order->id],
                     500
                 );
