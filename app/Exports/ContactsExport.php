@@ -89,8 +89,8 @@ class ContactsExport implements FromCollection, WithStyles, WithColumnWidths, Wi
     protected function getGroupName($contactType)
     {
         $names = [
-            'Cliente' => 'Clientes',
-            'Proveedor' => 'Proveedores',
+            Contact::CONTACT_TYPE_CLIENT => 'Clientes',
+            Contact::CONTACT_TYPE_SUPPLIER => 'Proveedores',
         ];
 
         return $names[$contactType] ?? $contactType . 's';
