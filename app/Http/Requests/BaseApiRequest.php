@@ -114,7 +114,7 @@ class BaseApiRequest extends FormRequest
             'profit_percentage' => 'porcentaje de ganancia',
             'sale_price' => 'precio de venta',
             'current_stock' => 'stock actual',
-            'min_stock_alert' => 'alerta de stock minimo',
+            'min_stock_alert' => 'alerta de stock',
             'category' => 'categoria',
             
             // Product filters
@@ -130,12 +130,12 @@ class BaseApiRequest extends FormRequest
             'page' => 'página',
             'sort_by' => 'campo de ordenamiento',
             'sort_direction' => 'orden',
-            'search' => 'búsqueda',
+            'search' => 'termino de búsqueda',
 
             // Order
             'contact_id' => 'contacto',
             'new_contact' => 'nuevo contacto',
-            'new_contact.name' => 'nombre de empresa del nuevo contacto',
+            'new_contact_name' => 'nombre de contacto nuevo',
             'notes' => 'notas',
             'total_net' => 'total neto',
             'order_details' => 'detalles del pedido',
