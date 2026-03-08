@@ -40,8 +40,8 @@ class BaseApiRequest extends FormRequest
             'required' => "El campo ':attribute' es obligatorio.",
             'email' => "El campo ':attribute' debe ser una dirección de email válida.",
             'unique' => "El campo ':attribute' ya existe en el sistema.",
-            'min' => "El campo ':attribute' debe tener al menos :min caracteres.",
-            'max' => "El campo ':attribute' no debe tener más de :max caracteres.",
+            // 'min' => "El campo ':attribute' debe tener al menos :min caracteres.",
+            // 'max' => "El campo ':attribute' no debe tener más de :max caracteres.",
             'string' => "El campo ':attribute' debe ser una cadena de texto.",
             'confirmed' => "La confirmación del campo ':attribute' no coincide.",
             'in' => "El campo ':attribute' es inválido. Debe ser uno de los siguientes valores: :values",
@@ -60,6 +60,32 @@ class BaseApiRequest extends FormRequest
             'new_contact_name.required_with' => "El campo 'name' dentro de 'new_contact' es obligatorio.",
             'prohibited_if' => "El campo ':attribute' no puede ser adjuntado cuando ':other' tiene ese valor especificado.",
             'required_if' => "El campo ':attribute' es requerido junto con el campo ':other'.",
+
+            // PAGINACION
+            'per_page.min' => "El campo ':attribute' debe paginar 1 elemento como MINIMO.",
+            'per_page.max' => "El campo ':attribute' puede paginar hasta 100 elementos como MAXIMO.",
+            'page.min' => "El campo ':attribute' debe empezar desde la 1er pagina.",
+            'search.max' => "El campo ':attribute' puede recibir hasta 255 caracteres como MAXIMO.",
+
+            'name.max' => "El campo ':attribute' debe tener hasta 100 caracteres como MAXIMO.",
+            'email.max' => "El campo ':attribute' debe tener hasta 100 caracteres como MAXIMO.",
+            'phone.max' => "El campo ':attribute' debe tener hasta 50 caracteres como MAXIMO.",
+            'address.max' => "El campo ':attribute' debe tener hasta 100 caracteres como MAXIMO.",
+
+            'new_contact_name.max' => "El campo ':attribute' debe tener hasta 100 caracteres como MAXIMO.",
+            'notes.max' => "El campo ':attribute' debe tener hasta 255 caracteres como MAXIMO.",
+            'order_details.min' => "El campo ':attribute' debe tener :min elementos como MINIMO.",
+            'order_details.*.quantity.min' => "El campo ':attribute' debe tener :min unidades como MINIMO.",
+            'order_details.*.unit_price.min' => "El campo ':attribute' debe tener $:min (PESOS) como MINIMO.",
+            'order_details.*.unit_price.max' => "El campo ':attribute' debe tener hasta $:max como MAXIMO.",
+            'order_details.*.percentage_applied.min' => "El campo ':attribute' debe tener :min% (por ciento) como MINIMO.",
+
+            'buy_price.min' => "El campo ':attribute' debe tener $:min (PESOS) como MINIMO.",
+            'profit_percentage.min' => "El campo ':attribute' debe tener :min% (por ciento) como MINIMO.",
+            'sale_price.min' => "El campo ':attribute' debe tener $:min (PESOS) como MINIMO.",
+            'current_stock.min' => "El campo ':attribute' debe tener :min elementos como MINIMO.",
+            'min_stock_alert.min' => "El campo ':attribute' debe tener :min elementos como MINIMO.",
+            'category.max' => "El campo ':attribute' debe tener hasta 30 caracteres como MAXIMO.",
         ];
     }
 
