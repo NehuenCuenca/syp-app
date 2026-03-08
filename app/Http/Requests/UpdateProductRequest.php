@@ -17,9 +17,9 @@ class UpdateProductRequest extends BaseApiRequest
             'name' => ['string', 'max:100'],
             'buy_price' => ['numeric', 'min:0'],
             'profit_percentage' => ['numeric', 'min:1'],
-            'sale_price' => ['numeric', 'min:0', 'gte:buy_price'],
+            'sale_price' => ['numeric', 'min:0'],
             'current_stock' => ['integer', 'min:0'],
-            'min_stock_alert' => ['integer', 'min:1'],
+            'min_stock_alert' => ['integer', 'min:0'],
             'category' => ['string', 'max:30'],
         ];
     }
