@@ -38,7 +38,7 @@ class CategorySeeder extends Seeder
             ['name' => 'Hilos'],
             ['name' => 'Librería'],
             ['name' => 'Gases y Bencinas'],
-            ['name' => 'Analgésicos'],
+            ['name' => Category::CATEGORY_SPECIAL],
             ['name' => 'Naipes'],
             ['name' => 'Pañuelitos'],
             ['name' => 'Papelillos (hojillas)'],
@@ -57,7 +57,7 @@ class CategorySeeder extends Seeder
             ['name' => 'Memorias y pendrive'],
             ['name' => 'Toallitas y Protectores'],
             ['name' => 'Velas'],
-            ['name' => 'Varios'],
+            ['name' => Category::CATEGORY_VARIOUS],
         ];
 
         foreach ($categories as $cat) {
