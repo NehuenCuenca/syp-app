@@ -116,7 +116,7 @@ class ProductController extends Controller
         DB::beginTransaction();
         try {
             //create category if dont exist
-            $category = Category::firstOrCreate(['name' => $request->input('category', 'Varios')]);
+            $category = Category::firstOrCreate(['name' => $request->input('category', Category::CATEGORY_VARIOUS)]);
             $request->merge(['category_id' => $category->id]);
             
             $product = Product::create($request->only([
@@ -244,9 +244,9 @@ class ProductController extends Controller
         
         try {
             // Actualizar categoria si es nueva
-            if ($request->input('category_id')) {
+            if ($request->input('category')) {
                 $category = Category::firstOrCreate([
-                    'name' => $request->input('category', 'Varios')
+                    'name' => $request->input('category', Category::CATEGORY_VARIOUS)
                 ]);
                 $request->merge(['category_id' => $category->id]);
             }
