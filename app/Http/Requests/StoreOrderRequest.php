@@ -57,9 +57,11 @@ class StoreOrderRequest extends BaseApiRequest
                 MovementType::firstWhere('name', MovementType::MOVEMENT_TYPE_SALE)->id,
                 MovementType::firstWhere('name', MovementType::MOVEMENT_TYPE_BUY)->id,
             ];
+
+            $validMovementTypesNames = implode(", ", [MovementType::MOVEMENT_TYPE_SALE, MovementType::MOVEMENT_TYPE_BUY]);
             
             if (!in_array($this->movement_type_id, $validMovementTypes)) {
-                $validator->errors()->add('movement_type_id', 'Tipo de movimiento inválido (solo se permiten compras y ventas).');
+                $validator->errors()->add('movement_type_id', "Tipo de movimiento inválido (solo se permiten: {$validMovementTypesNames}).");
             }
 
             // Validar duplicados de productos
