@@ -70,9 +70,7 @@ class Contact extends Model
                             ->orderBy('created_at', 'desc')
                             ->first();
         
-        if (!$lastOrder) {
-            return 'No tiene ultimo pedido';
-        }
+        if (!$lastOrder) { return null; }
         
         // Retornar un array con los datos necesarios y el alias creado manualmente
         return  strtolower($lastOrder->movementType->name) . ': '
