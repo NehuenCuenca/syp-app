@@ -5,12 +5,14 @@ namespace App\Http\Controllers;
 use App\Exports\CatalogExport;
 use App\Http\Requests\FilterProductsRequest;
 use App\Http\Requests\StoreProductRequest;
+use App\Http\Requests\UpdateProductPricesRequest;
 use App\Http\Requests\UpdateProductRequest;
 use App\Http\Traits\ApiResponseTrait;
 use App\Models\Category;
 use App\Models\MovementType;
 use App\Models\Product;
 use App\Models\StockMovement;
+use App\Services\ProductPriceService;
 use Exception;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
@@ -20,10 +22,20 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Http\Request;
+use Throwable;
+use App\Models\OrderDetail;
 
 class ProductController extends Controller
 {
     use ApiResponseTrait;
+    
+    protected ProductPriceService $productPriceService;
+
+    public function __construct(ProductPriceService $productPriceService)
+    {
+        $this->productPriceService = $productPriceService;
+    }
+
 
     public function index(FilterProductsRequest $request): JsonResponse
     {
@@ -503,7 +515,15 @@ class ProductController extends Controller
                 'categories' => $categories,
                 'products' => $products,
                 'sort_by' => FilterProductsRequest::ALLOWED_SORT_FIELDS,
-                'sort_direction' => FilterProductsRequest::ALLOWED_SORT_DIRECTIONS
+                'sort_direction' => FilterProductsRequest::ALLOWED_SORT_DIRECTIONS,
+                'update_prices_modes' => [
+                    UpdateProductPricesRequest::PERCENTAGE_MODE,
+                    UpdateProductPricesRequest::ABSOLUTE_PRICE_MODE,
+                ],
+                'update_prices_directions' => [
+                    UpdateProductPricesRequest::UPGRADE_PRICE_DIRECTION,
+                    UpdateProductPricesRequest::DOWNGRADE_PRICE_DIRECTION,
+                ]
             ];
 
             Log::info('Retrieved filters for products', [
@@ -623,4 +643,43 @@ class ProductController extends Controller
             );
         }
     }
+
+    
+/**
+     * POST /api/products/update-prices
+     *
+     * Actualiza en lote el precio de compra de los productos seleccionados.
+     *
+     * Payload esperado:
+     * {
+     *   "products_ids": [1, 2, 3, 4],
+     *   "mode": "porcentaje",   // "porcentaje" | "precio"
+     *   "value": 10,            // 1–500 si es porcentaje, 1–50_000 si es precio
+     *   "direction": "subir"    // "subir" | "bajar"
+     * }
+     */
+    public function updatePrices(UpdateProductPricesRequest $request): JsonResponse
+    {
+        $payload = $request->validated();
+
+        try {            
+            $updatedProducts = $this->productPriceService
+                ->bulkUpdatePurchasePrices($payload);
+
+            return $this->successResponse(
+                $updatedProducts,
+                'Precios de compra actualizados exitosamente.'
+            );
+        } catch (Throwable $e) {
+            // Podés agregar aquí más lógica de logging si querés
+            return $this->errorResponse(
+                'No se pudieron actualizar los precios de compra.',
+                [],
+                [],
+                500,
+                config('app.debug') ? $e : null
+            );
+        }
+    }
+
 }
