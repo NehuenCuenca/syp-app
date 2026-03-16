@@ -2,8 +2,10 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Product extends Model
@@ -28,7 +30,8 @@ class Product extends Model
         'current_stock' => 'integer',
         'min_stock_alert' => 'integer',
         'created_at' => 'datetime:Y-m-d H:i:s',
-        'updated_at' => 'datetime:Y-m-d H:i:s'
+        'updated_at' => 'datetime:Y-m-d H:i:s',
+        'last_buyed_at'     => 'datetime',
     ];
 
     protected $appends = [
@@ -68,6 +71,37 @@ class Product extends Model
     {
         return $this->belongsTo(Category::class);
     }
+
+    
+/**
+     * Accessor para formatear last_buyed_at como:
+     * "Hace X días (d-m-Y)".
+     */
+    public function getLastBuyedAtAttribute($value): ?string
+    {
+        if (!$value) {
+            // Nunca se compró -> puedes devolver null o un texto como "Nunca comprado"
+            return null;
+        }
+
+        $date = $value instanceof Carbon ? $value : Carbon::parse($value);
+
+        // Calculamos la diferencia en días "enteros"
+        $daysDiff = $date->startOfDay()->diffInDays(now()->startOfDay());
+
+        $formattedDate = $date->format('d-m-Y');
+
+        if ($daysDiff === 0) {
+            return "Hoy ({$formattedDate})";
+        }
+
+        if ($daysDiff === 1) {
+            return "Hace 1 día ({$formattedDate})";
+        }
+
+        return "Hace {$daysDiff} días ({$formattedDate})";
+    }
+
 
     public function calculateSellPrice()
     {
