@@ -60,12 +60,28 @@ class ProductController extends Controller
                 $query->orderBy($filters['sort_by'], $filters['sort_direction']);
             }
             
-            $query->select(
-                'id', 'code', 'name',
-                'current_stock', 'min_stock_alert', 'category_id',
-                DB::raw('(current_stock < min_stock_alert) as is_low_stock'), 
-                'sale_price', 'deleted_at'
-            );
+            $query = Product::query()
+                        ->withTrashed()
+                        ->with(['category'])
+                        ->select([
+                            'id',
+                            'code',
+                            'name',
+                            'current_stock',
+                            'min_stock_alert',
+                            'category_id',
+                            'sale_price',
+                            'deleted_at',
+                            DB::raw('(current_stock < min_stock_alert) as is_low_stock'),
+                        ])
+                        ->addSelect([
+                            'last_buyed_at' => OrderDetail::query()
+                                ->join('orders', 'order_details.order_id', '=', 'orders.id')
+                                ->join('movement_types', 'orders.movement_type_id', '=', 'movement_types.id')
+                                ->whereColumn('order_details.product_id', 'products.id')
+                                ->where('movement_types.name', '=', 'compra') // o MovementType::MOVEMENT_TYPE_PURCHASE si usas constante
+                                ->selectRaw('MAX(orders.created_at)')
+                        ]);
 
             // Paginación
             $products = $query->paginate($filters['per_page']);
