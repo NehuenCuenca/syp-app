@@ -418,7 +418,7 @@ class OrderController extends Controller
                     MovementType::firstWhere('name', MovementType::MOVEMENT_TYPE_SALE)
                 ],
                 'contacts' => $contacts,
-                'before_equal_date' => Carbon::parse(Order::min('created_at'))->format('Y-m-d'),
+                'before_equal_date' => Carbon::parse(Order::max('created_at'))->format('Y-m-d'),
                 'sort_by' => FilterOrdersRequest::ALLOWED_SORT_FIELDS,
                 'sort_direction' => FilterOrdersRequest::ALLOWED_SORT_DIRECTIONS
             ];
