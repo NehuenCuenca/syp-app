@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\FilterStockMovementsRequest;
 use App\Models\StockMovement;
 use App\Models\Product;
 use App\Http\Traits\ApiResponseTrait;
+use App\Models\Contact;
 use App\Models\MovementType;
 use App\Models\Order;
 use Illuminate\Http\JsonResponse;
@@ -19,63 +21,48 @@ class StockMovementController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index(Request $request): JsonResponse
+    public function index(FilterStockMovementsRequest $request): JsonResponse
     {
         try {
-            $query = StockMovement::with(['product', 'order', 'movementType', 'orderDetail']);
+            $filters = $request->getFilters();
+            $query = StockMovement::with(['product', 'order.contact', 'movementType', 'orderDetail']);
 
             // Filtros
-            if ($request->filled('order_id')) {
+            if (!empty($filters['order_id'])) {
                 $query->where('order_id', $request->order_id);
             }
 
-            if ($request->filled('product_id')) {
+            if (!empty($filters['product_id'])) {
                 $query->where('product_id', $request->product_id);
             }
 
-            if ($request->filled('movement_type_id')) {
+            if (!empty($filters['movement_type_id'])) {
                 $query->where('movement_type_id', $request->movement_type_id);
             }
 
-            if ($request->filled('date_from')) {
-                $query->whereDate('movement_date', '>=', $request->date_from);
+            if (!empty($filters['date_from'])) {
+                $query->whereDate('created_at', '>=', $request->date_from);
             }
 
-            if ($request->filled('date_to')) {
-                $query->whereDate('movement_date', '<=', $request->date_to);
+            if (!empty($filters['date_to'])) {
+                $query->whereDate('created_at', '<=', $request->date_to);
             }
 
             $search = $request->get('search', '');
-            if ($request->filled('search')) {
+            if (!empty($filters['search'])) {
                 $query->where(function ($q) use ($search) {
-                        $q->whereRelation('product', 'code', 'like', "{$search}%")
-                            ->orWhereRelation('product', 'name', 'like', "%{$search}%");
+                        $q->where('notes', 'like', "%{$search}%")
+                            ->orWhereRelation('orders', 'notes', 'like', "%{$search}%");
                 });
             }
 
-
             // Ordenamiento
-            $sortBy = $request->get('sort_by', 'created_at');
-            $sortDirection = $request->get('sort_direction', 'desc');
-
-            if (in_array($sortBy, array_keys(self::ALLOWED_SORT_FIELDS))) {
-                $query->orderBy($sortBy, $sortDirection);
-            } else {
-                // Fallback a ordenamiento por defecto si el campo no es válido
-                $query->orderBy('created_at', 'desc');
+            if (in_array($filters['sort_by'], array_keys(FilterStockMovementsRequest::ALLOWED_SORT_FIELDS))) {
+                $query->orderBy($filters['sort_by'], $filters['sort_direction']);
             }
 
             // Paginación
-            $perPage = $request->get('per_page', 9);
-            $stockMovements = $query->paginate($perPage);
-
-            $filtersApplied = [
-                // 'search' => $search,
-                'sort_by' => $sortBy, 
-                'sort_direction' => $sortDirection,
-                'per_page' => $perPage,
-                'page' => $request->integer('page', 1)
-            ];
+            $stockMovements = $query->paginate($filters['per_page']);
 
             Log::info('Retrieve filtered stock movements', [
                 'user_email' => $request->user()->email,
@@ -85,7 +72,7 @@ class StockMovementController extends Controller
             return $this->paginatedResponse(
                 $stockMovements,
                 'Movimientos de stock filtrados recuperados exitosamente.',
-                ['filters_applied' => $filtersApplied]
+                ['filters_applied' => $filters]
             );
         } catch (Exception $e) {
             Log::error('Error trying to retrieve filtered stock movements', [
@@ -145,17 +132,17 @@ class StockMovementController extends Controller
         }
     }
 
-    public const ALLOWED_SORT_FIELDS = [
-        'order_id' => 'Pedido',
-        'product_id' => 'Producto',
-        'movement_type_id' => 'Tipo de movimiento',
-        'created_at' => 'Fecha de creacion',
-    ];
+    // public const ALLOWED_SORT_FIELDS = [
+    //     'order_id' => 'Pedido',
+    //     'product_id' => 'Producto',
+    //     'movement_type_id' => 'Tipo de movimiento',
+    //     'created_at' => 'Fecha de creacion',
+    // ];
 
-    public const ALLOWED_SORT_DIRECTIONS = [
-        'asc' => 'Ascendente',
-        'desc' => 'Descendente'
-    ];
+    // public const ALLOWED_SORT_DIRECTIONS = [
+    //     'asc' => 'Ascendente',
+    //     'desc' => 'Descendente'
+    // ];
 
     /**
      * Get filters to be used in the index view
@@ -163,20 +150,25 @@ class StockMovementController extends Controller
     public function getFilters(Request $request): JsonResponse
     {
         try {
-            $orders = Order::select('id', 'code', 'contact_id', 'movement_type_id', 'subtotal', 'adjustment_amount', 'total_net', 'created_at')->get();
-            $products = Product::select('name', 'id', 'code', 'current_stock', 'min_stock_alert', 'sale_price', 'deleted_at')->get();
-            $movementTypes = MovementType::select('name', 'id')->get();
+            $orders = Order::all('id', 'code', 'contact_id', 'movement_type_id', 'subtotal', 'adjustment_amount', 'total_net', 'created_at')
+                            ->makeHidden(['is_exportable', 'subtotal_as_currency', 'subtotal_as_currency', 'adjustment_as_currency', 'total_net_as_currency', 'contact']);
+            $products = Product::all(['id', 'code', 'name'])
+                                ->makeHidden(['stock_availability', 'sale_price_as_currency', 'is_empty_stock', 'is_low_stock']);
+            $contacts = Contact::all('name', 'id', 'code', 'deleted_at')
+                                ->makeHidden(['last_order', 'phone_number_info']);
+            $movementTypes = MovementType::whereIn('id', [1, 2, 3,4])->get();
             $dateFrom = StockMovement::min('created_at');
             $dateTo = StockMovement::max('created_at');
 
             $data = [
-                'orders' => $orders,
-                'products' => $products,
-                'movement_types' => $movementTypes,
                 'date_from' => $dateFrom,
                 'date_to' => $dateTo,
-                'sort_by' => self::ALLOWED_SORT_FIELDS,
-                'sort_direction' => self::ALLOWED_SORT_DIRECTIONS
+                'movement_types' => $movementTypes,
+                'orders' => $orders,
+                'products' => $products,
+                'contacts' => $contacts,
+                'sort_by' => FilterStockMovementsRequest::ALLOWED_SORT_FIELDS,
+                'sort_direction' => FilterStockMovementsRequest::ALLOWED_SORT_DIRECTIONS
             ];
 
             Log::info('Retrieve filters for stock movements', [
