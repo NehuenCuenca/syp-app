@@ -59,7 +59,7 @@ class Contact extends Model
 
     public function getPhoneNumberInfoAttribute()
     {
-        return (!$this->phone) ? "Telefono sin registrar" : $this->phone;
+        return (!$this->phone) ? null : $this->phone;
     }
 
     public function getLastOrderAttribute()
